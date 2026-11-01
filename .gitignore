@@ -1,0 +1,17 @@
+node_modules/
+tools/dev/node_modules/
+shared/test-harness/.tmp/
+shared/test-harness/smoke/screenshots/
+/screenshots/
+/reference-samples/
+*.log
+.DS_Store
+Thumbs.db
+# raw renders and paintings (the packed WebP files in art-src/packed/ are committed)
+art-src/sprites/*.png
+art-src/paint/*.png
+art-src/pilot-*.png
+art-src/sheet.png
+art-src/**/*.blend1
+# benchmark screenshots of other games (review only, never shipped)
+/benchmarks/

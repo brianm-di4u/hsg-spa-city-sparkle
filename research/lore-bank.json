@@ -1,0 +1,1026 @@
+{
+ "note": "Snapshot of the audited bank items (games/trivia/data/questions.json) that data/lore.json uses, so tools/check-facts.mjs runs in the standalone game repo. Regenerate when lore changes.",
+ "date": "2026-11-01",
+ "questions": [
+  {
+   "id": "hs-0022",
+   "category": "History",
+   "difficulty": "easy",
+   "era": "gilded-spa",
+   "question": "How many baths made up a standard prescribed \"course\" at Hot Springs in 1920?",
+   "answer": "21",
+   "wrong": [
+    "7",
+    "12",
+    "47"
+   ],
+   "explanation": "A 21-bath course cost $9–$15 in 1920.",
+   "source": "NPS 1920 brochure",
+   "sourceUrl": "https://npshistory.com/publications/hosp/brochures/1920/sec1.htm",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0052",
+   "category": "History",
+   "difficulty": "medium",
+   "era": "modern",
+   "question": "About how much is the Maurice Bathhouse restoration that broke ground in August 2025?",
+   "answer": "About $31.6 million",
+   "wrong": [
+    "About $3.16 million",
+    "About $316 million",
+    "About $1 million"
+   ],
+   "explanation": "NPS celebrated the groundbreaking on Aug. 19, 2025; the Maurice is the last Bathhouse Row building to undergo rehabilitation.",
+   "source": "NPS: Groundbreaking celebrated for Maurice Bathhouse rehabilitation",
+   "sourceUrl": "https://www.nps.gov/hosp/learn/news/maurice-gaoa-groundbreaking.htm",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0060",
+   "category": "Places & Landmarks",
+   "difficulty": "easy",
+   "era": "gilded-spa",
+   "question": "What was Hot Springs' Central Avenue originally called before it was named Central Avenue by the late 1870s?",
+   "answer": "Valley Street",
+   "wrong": [
+    "Hot Water Street",
+    "Spring Row",
+    "Bathhouse Avenue"
+   ],
+   "explanation": "The street, originally Valley Street, was named Central Avenue by the late 1870s to reflect its status as the commercial center.",
+   "source": "Encyclopedia of Arkansas: Central Avenue Historic District",
+   "sourceUrl": "https://encyclopediaofarkansas.net/entries/hot-springs-central-avenue-historic-district-7954/",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0061",
+   "category": "Places & Landmarks",
+   "difficulty": "easy",
+   "era": "gilded-spa",
+   "question": "Which is the oldest surviving bathhouse on Hot Springs' Bathhouse Row?",
+   "answer": "The Hale",
+   "wrong": [
+    "The Buckstaff",
+    "The Lamar",
+    "The Fordyce"
+   ],
+   "explanation": "EoA calls the Hale, built in 1892-93, the oldest surviving bathhouse; the Buckstaff (1912), Fordyce (1914-15) and Lamar (1923) came later.",
+   "source": "Encyclopedia of Arkansas: Bathhouse Row",
+   "sourceUrl": "https://encyclopediaofarkansas.net/entries/bathhouse-row-437/",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0062",
+   "category": "Places & Landmarks",
+   "difficulty": "easy",
+   "era": "gilded-spa",
+   "question": "Which Bathhouse Row bathhouse has offered baths continuously since 1912?",
+   "answer": "The Buckstaff",
+   "wrong": [
+    "The Fordyce",
+    "The Quapaw",
+    "The Maurice"
+   ],
+   "explanation": "NPS says the Buckstaff opened on February 1, 1912, and has been in continuous operation since.",
+   "source": "NPS: Buckstaff Bathhouse",
+   "sourceUrl": "https://www.nps.gov/hosp/learn/historyculture/buckstaff-bathhouse.htm",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0064",
+   "category": "Places & Landmarks",
+   "difficulty": "hard",
+   "era": "gilded-spa",
+   "question": "What did the Fordyce Bathhouse cost to build in 1914–15, including fixtures?",
+   "answer": "$212,749.55",
+   "wrong": [
+    "$21,274.95",
+    "$2,127,495.50",
+    "$1.6 million"
+   ],
+   "explanation": "The Fordyce was the most elaborate and most expensive of the bathhouses, the cost including fixtures and furniture.",
+   "source": "Wikipedia: Bathhouse Row",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Bathhouse_Row",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0065",
+   "category": "Places & Landmarks",
+   "difficulty": "easy",
+   "era": "gilded-spa",
+   "question": "Which fountain sits beneath the Fordyce Bathhouse's stained-glass skylight?",
+   "answer": "The DeSoto Fountain",
+   "wrong": [
+    "The Noble Fountain",
+    "The Maurice Spring fountain",
+    "The Hemicycle Fountain"
+   ],
+   "explanation": "The massive stained-glass skylight is in the men's area, with the DeSoto fountain centered on the floor directly below it.",
+   "source": "Wikipedia: Bathhouse Row",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Bathhouse_Row",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0068",
+   "category": "Places & Landmarks",
+   "difficulty": "hard",
+   "era": "gilded-spa",
+   "question": "Which two older bathhouses stood on the site of the 1922 Quapaw Bathhouse?",
+   "answer": "Horseshoe and Magnesia",
+   "wrong": [
+    "Crystal and Pythian",
+    "Lamar and Ozark",
+    "Maurice and Hale"
+   ],
+   "explanation": "The Quapaw was built on the sites of two earlier bathhouses, the Horseshoe and the Magnesia.",
+   "source": "Wikipedia: Bathhouse Row",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Bathhouse_Row",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0070",
+   "category": "Places & Landmarks",
+   "difficulty": "easy",
+   "era": "gilded-spa",
+   "question": "What bronze figures guard Bathhouse Row's 1890s main entrance?",
+   "answer": "Two federal eagles",
+   "wrong": [
+    "Two lions",
+    "Two bears",
+    "Two swans"
+   ],
+   "explanation": "Army engineer Lt. Robert Stevens designed the reservation's entrances, including the historic main entrance.",
+   "source": "Wikipedia: Bathhouse Row",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Bathhouse_Row",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0073",
+   "category": "Places & Landmarks",
+   "difficulty": "easy",
+   "era": "gilded-spa",
+   "question": "In what year was the Ohio Club on Hot Springs' Central Avenue founded?",
+   "answer": "1905",
+   "wrong": [
+    "1875",
+    "1924",
+    "1960"
+   ],
+   "explanation": "During Prohibition the Ohio Club officially became the Ohio Cigar Store, a front with a fake wall.",
+   "source": "Encyclopedia of Arkansas: Ohio Club",
+   "sourceUrl": "https://encyclopediaofarkansas.net/entries/ohio-club-9408/",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0074",
+   "category": "Places & Landmarks",
+   "difficulty": "medium",
+   "era": "gilded-spa",
+   "question": "In what year was Hot Springs' Southern Club built as a private club?",
+   "answer": "1893",
+   "wrong": [
+    "1835",
+    "1913",
+    "1960"
+   ],
+   "explanation": "Charles Dugan and Dan Stuart built it.",
+   "source": "Encyclopedia of Arkansas: Southern Club",
+   "sourceUrl": "https://encyclopediaofarkansas.net/entries/southern-club-1208/",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0076",
+   "category": "Places & Landmarks",
+   "difficulty": "hard",
+   "era": "roaring",
+   "question": "In which year was the current (third) Arlington Hotel completed after the 1923 fire?",
+   "answer": "1924",
+   "wrong": [
+    "1893",
+    "1923",
+    "1931"
+   ],
+   "explanation": "Per the Arlington's history page, construction on the third Arlington began Oct. 25, 1923, and the new hotel was completed Nov. 28, 1924.",
+   "source": "Arlington Hotel: History",
+   "sourceUrl": "https://www.arlingtonhotel.com/history/",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0077",
+   "category": "Places & Landmarks",
+   "difficulty": "easy",
+   "era": "roaring",
+   "question": "Which bathhouse's 1923 opening completed Hot Springs' Bathhouse Row?",
+   "answer": "The Lamar",
+   "wrong": [
+    "The Hale",
+    "The Maurice",
+    "The Superior"
+   ],
+   "explanation": "NPS: the final metamorphosis of Bathhouse Row was completed when the Lamar opened in 1923; it closed in 1985.",
+   "source": "NPS: History & Culture",
+   "sourceUrl": "https://www.nps.gov/hosp/learn/historyculture/index.htm",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0084",
+   "category": "Places & Landmarks",
+   "difficulty": "medium",
+   "era": "roaring",
+   "question": "Which fish decorates the parapets of Hot Springs' Quapaw Bathhouse?",
+   "answer": "Sculpin",
+   "wrong": [
+    "Bass",
+    "Trout",
+    "Catfish"
+   ],
+   "explanation": "Scalloped shells frame the sculpin, originally gold and now white.",
+   "source": "Wikipedia: Bathhouse Row",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Bathhouse_Row",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0088",
+   "category": "Places & Landmarks",
+   "difficulty": "medium",
+   "era": "roaring",
+   "question": "After buying the Southern Club building in 1927, what material did William Jacobs use to encase its front, helping hide the gambling?",
+   "answer": "Dark Pittsburgh glass",
+   "wrong": [
+    "Stained glass",
+    "Red brick",
+    "Neon tubing"
+   ],
+   "explanation": "Capone reportedly played poker there at an elevated table.",
+   "source": "Encyclopedia of Arkansas: Southern Club",
+   "sourceUrl": "https://encyclopediaofarkansas.net/entries/southern-club-1208/",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0094",
+   "category": "Places & Landmarks",
+   "difficulty": "easy",
+   "era": "revival",
+   "question": "How tall is the Hot Springs Mountain Tower?",
+   "answer": "216 feet",
+   "wrong": [
+    "65 feet",
+    "120 feet",
+    "573 feet"
+   ],
+   "explanation": "The lattice steel observation tower was officially opened to the public on June 3, 1983.",
+   "source": "Wikipedia: Hot Springs Mountain Tower",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Hot_Springs_Mountain_Tower",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0096",
+   "category": "Places & Landmarks",
+   "difficulty": "easy",
+   "era": "revival",
+   "question": "In what year did the Fordyce Bathhouse reopen as Hot Springs National Park's visitor center?",
+   "answer": "1989",
+   "wrong": [
+    "1962",
+    "1974",
+    "2008"
+   ],
+   "explanation": "The Fordyce closed June 29, 1962, and has served as the park visitor center since 1989.",
+   "source": "Wikipedia: Bathhouse Row",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Bathhouse_Row",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0101",
+   "category": "Places & Landmarks",
+   "difficulty": "easy",
+   "era": "modern",
+   "question": "Which Bathhouse Row bathhouse is now the nine-suite Hotel Hale?",
+   "answer": "The Hale",
+   "wrong": [
+    "The Lamar",
+    "The Ozark",
+    "The Maurice"
+   ],
+   "explanation": "NPS says the Hale Bathhouse is now Hotel Hale, with 9 suites whose soaking tubs get hot springs mineral water.",
+   "source": "NPS: Hale Bathhouse",
+   "sourceUrl": "https://www.nps.gov/places/hale-bathhouse.htm",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0103",
+   "category": "Places & Landmarks",
+   "difficulty": "medium",
+   "era": "modern",
+   "question": "When did Quapaw Baths & Spa open in the restored Quapaw Bathhouse?",
+   "answer": "July 2008",
+   "wrong": [
+    "July 1922",
+    "May 1989",
+    "May 2019"
+   ],
+   "explanation": "NPS restored the building in 2004.",
+   "source": "Wikipedia: Bathhouse Row",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Bathhouse_Row",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0104",
+   "category": "Places & Landmarks",
+   "difficulty": "easy",
+   "era": "modern",
+   "question": "What does the Ozark Bathhouse on Bathhouse Row house today?",
+   "answer": "Hot Springs NP Cultural Center",
+   "wrong": [
+    "The park visitor center",
+    "A brewery and distillery",
+    "A nine-room hotel"
+   ],
+   "explanation": "It reopened in 2014 as a cultural center showing artist-in-residence work.",
+   "source": "Wikipedia: Bathhouse Row",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Bathhouse_Row",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0108",
+   "category": "Places & Landmarks",
+   "difficulty": "easy",
+   "era": "modern",
+   "question": "Which 2006 wood-and-glass chapel stands in Garvan Woodland Gardens?",
+   "answer": "Anthony Chapel",
+   "wrong": [
+    "Thorncrown Chapel",
+    "Visitors Chapel",
+    "Park Place Chapel"
+   ],
+   "explanation": "Designed by architects Maurice Jennings and David McKee of Fayetteville; it officially opened in September 2006.",
+   "source": "Encyclopedia of Arkansas: Garvan Woodland Gardens",
+   "sourceUrl": "https://encyclopediaofarkansas.net/entries/garvan-woodland-gardens-4197",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0109",
+   "category": "Places & Landmarks",
+   "difficulty": "easy",
+   "era": "any",
+   "question": "How many historic bathhouses stand on Hot Springs' Bathhouse Row?",
+   "answer": "Eight",
+   "wrong": [
+    "Six",
+    "Twelve",
+    "Forty-seven"
+   ],
+   "explanation": "Superior, Hale, Maurice, Fordyce, Quapaw, Ozark, Buckstaff and Lamar line Central Avenue.",
+   "source": "Wikipedia: Bathhouse Row",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Bathhouse_Row",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0120",
+   "category": "Nature & Lakes",
+   "difficulty": "medium",
+   "era": "roaring",
+   "question": "In what decade was Hot Springs' Display Spring uncovered so visitors could see thermal water in its natural state?",
+   "answer": "The 1930s",
+   "wrong": [
+    "The 1830s",
+    "The 1880s",
+    "The 1980s"
+   ],
+   "explanation": "It had been covered by a grate for decades.",
+   "source": "NPS: Maurice Historic Display Spring",
+   "sourceUrl": "https://www.nps.gov/places/maurice-historic-display-spring.htm",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0121",
+   "category": "Nature & Lakes",
+   "difficulty": "easy",
+   "era": "roaring",
+   "question": "Which dam formed Lake Hamilton, and when was it completed?",
+   "answer": "Carpenter Dam, 1931",
+   "wrong": [
+    "Remmel Dam, 1924",
+    "Blakely Mountain Dam, 1953",
+    "DeGray Dam, 1972"
+   ],
+   "explanation": "Arkansas Power & Light developed the lake; Carpenter Dam, a concrete gravity dam, was completed in 1931 and the lake was created in 1932.",
+   "source": "Wikipedia: Lake Hamilton",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Lake_Hamilton_(Arkansas)",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0122",
+   "category": "Nature & Lakes",
+   "difficulty": "medium",
+   "era": "roaring",
+   "question": "About how many acres is Lake Hamilton?",
+   "answer": "About 7,200",
+   "wrong": [
+    "About 720",
+    "About 1,940",
+    "About 72,000"
+   ],
+   "explanation": "Wikipedia gives Lake Hamilton as 7,200 acres; Lake Catherine, the smaller of the two lakes, is about 1,940 acres.",
+   "source": "Wikipedia: Lake Hamilton",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Lake_Hamilton_(Arkansas)",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0123",
+   "category": "Nature & Lakes",
+   "difficulty": "medium",
+   "era": "roaring",
+   "question": "Which dam forms Lake Catherine, and when was it built?",
+   "answer": "Remmel Dam, 1924",
+   "wrong": [
+    "Carpenter Dam, 1931",
+    "Blakely Mountain Dam, 1953",
+    "Couch Dam, 1912"
+   ],
+   "explanation": "Both Remmel and Carpenter dams were listed on the National Register in 1992.",
+   "source": "Wikipedia: Lake Catherine",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Lake_Catherine_(Arkansas)",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0126",
+   "category": "Nature & Lakes",
+   "difficulty": "easy",
+   "era": "midcentury",
+   "question": "Which dam creates Lake Ouachita near Hot Springs?",
+   "answer": "Blakely Mountain Dam",
+   "wrong": [
+    "Carpenter Dam",
+    "Remmel Dam",
+    "DeGray Dam"
+   ],
+   "explanation": "The Army Corps of Engineers built the 231-ft dam from 1948 to 1953.",
+   "source": "Wikipedia: Lake Ouachita",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Lake_Ouachita",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0127",
+   "category": "Nature & Lakes",
+   "difficulty": "easy",
+   "era": "midcentury",
+   "question": "About how many islands does Lake Ouachita have?",
+   "answer": "About 200",
+   "wrong": [
+    "About 20",
+    "About 12",
+    "About 2,000"
+   ],
+   "explanation": "Wikipedia's infobox lists 200 islands for the lake.",
+   "source": "Wikipedia: Lake Ouachita",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Lake_Ouachita",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0128",
+   "category": "Nature & Lakes",
+   "difficulty": "medium",
+   "era": "midcentury",
+   "question": "Which historic healing springs does Lake Ouachita State Park preserve?",
+   "answer": "Three Sisters Springs",
+   "wrong": [
+    "Happy Hollow Springs",
+    "Ral Spring",
+    "Display Spring"
+   ],
+   "explanation": "The 360-acre park opened in 1955.",
+   "source": "Wikipedia: Lake Ouachita State Park",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Lake_Ouachita_State_Park",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0129",
+   "category": "Nature & Lakes",
+   "difficulty": "medium",
+   "era": "midcentury",
+   "question": "In what year did quartz crystal become Arkansas's state mineral?",
+   "answer": "1967",
+   "wrong": [
+    "1836",
+    "1921",
+    "2004"
+   ],
+   "explanation": "EoA says Gov. Winthrop Rockefeller signed Act 128 on Feb. 22, 1967, naming quartz crystal the state mineral.",
+   "source": "Encyclopedia of Arkansas: Official State Mineral",
+   "sourceUrl": "https://encyclopediaofarkansas.net/entries/official-state-mineral-3138/",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0141",
+   "category": "Nature & Lakes",
+   "difficulty": "easy",
+   "era": "modern",
+   "question": "How many acres is Garvan Woodland Gardens on Lake Hamilton?",
+   "answer": "210",
+   "wrong": [
+    "21",
+    "2,100",
+    "5,839"
+   ],
+   "explanation": "The University of Arkansas owns the garden.",
+   "source": "Wikipedia: Garvan Woodland Gardens",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Garvan_Woodland_Gardens",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0145",
+   "category": "Nature & Lakes",
+   "difficulty": "easy",
+   "era": "any",
+   "question": "About how old is most Hot Springs thermal water, per USGS tritium and carbon-14 dating?",
+   "answer": "About 4,400 years",
+   "wrong": [
+    "About 44 years",
+    "About 440,000 years",
+    "About 4.4 million years"
+   ],
+   "explanation": "USGS found the water is a mix: a very small amount under 20 years old and a preponderance about 4,400 years old.",
+   "source": "USGS Professional Paper 1044-C: Abstract (npshistory.com mirror)",
+   "sourceUrl": "https://npshistory.com/publications/geology/pp/1044-C/abstract.htm",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0146",
+   "category": "Nature & Lakes",
+   "difficulty": "medium",
+   "era": "any",
+   "question": "Per the National Park Service, about how much water do the Hot Springs thermal springs produce per day?",
+   "answer": "Over 700,000 gallons",
+   "wrong": [
+    "About 7,000 gallons",
+    "About 70 million gallons",
+    "About 7 billion gallons"
+   ],
+   "explanation": "NPS says the springs produce over 700,000 gallons of water a day.",
+   "source": "NPS: Maurice Historic Display Spring",
+   "sourceUrl": "https://www.nps.gov/places/maurice-historic-display-spring.htm",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0148",
+   "category": "Nature & Lakes",
+   "difficulty": "easy",
+   "era": "any",
+   "question": "According to the USGS, how many hot springs emerge from Hot Springs Mountain in Hot Springs National Park?",
+   "answer": "47",
+   "wrong": [
+    "7",
+    "12",
+    "92"
+   ],
+   "explanation": "USGS says the park is best known for its 47 hot springs, which emerge from Hot Springs Mountain at an average temperature of 143 degrees Fahrenheit.",
+   "source": "USGS: Hot Springs National Park",
+   "sourceUrl": "https://www.usgs.gov/geology-and-ecology-of-national-parks/hot-springs-national-park",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0151",
+   "category": "Nature & Lakes",
+   "difficulty": "medium",
+   "era": "any",
+   "question": "What are the names of the two faults the National Park Service says help carry Hot Springs' heated water back to the surface?",
+   "answer": "Alpha and beta",
+   "wrong": [
+    "North and south",
+    "Zig and zag",
+    "One and two"
+   ],
+   "explanation": "NPS says fault lines help direct the heated water back to the surface.",
+   "source": "NPS: Maurice Historic Display Spring",
+   "sourceUrl": "https://www.nps.gov/places/maurice-historic-display-spring.htm",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0153",
+   "category": "Nature & Lakes",
+   "difficulty": "easy",
+   "era": "any",
+   "question": "About how hot does Hot Springs' rainwater get deep underground before it rises?",
+   "answer": "About 160°F",
+   "wrong": [
+    "About 120°F",
+    "About 212°F",
+    "About 300°F"
+   ],
+   "explanation": "It heats through the geothermal gradient roughly a mile down.",
+   "source": "NPS: Maurice Historic Display Spring",
+   "sourceUrl": "https://www.nps.gov/places/maurice-historic-display-spring.htm",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0154",
+   "category": "Nature & Lakes",
+   "difficulty": "easy",
+   "era": "any",
+   "question": "NPS calls the Hot Springs thermal springs the hottest east of what landmark?",
+   "answer": "The Rocky Mountains",
+   "wrong": [
+    "The Mississippi River",
+    "The Appalachian Mountains",
+    "The Ohio River"
+   ],
+   "explanation": "NPS says the springs average 143 degrees Fahrenheit.",
+   "source": "NPS: Maurice Historic Display Spring",
+   "sourceUrl": "https://www.nps.gov/places/maurice-historic-display-spring.htm",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0156",
+   "category": "Nature & Lakes",
+   "difficulty": "easy",
+   "era": "any",
+   "question": "What is the white-to-tan rock deposited around Hot Springs' spring openings called?",
+   "answer": "Tufa (travertine)",
+   "wrong": [
+    "Novaculite",
+    "Obsidian",
+    "Shale"
+   ],
+   "explanation": "Dissolved minerals in the water precipitate to form the white-to-tan travertine, or tufa rock, seen near the spring openings.",
+   "source": "Wikipedia: Hot Springs National Park",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Hot_Springs_National_Park",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0159",
+   "category": "Nature & Lakes",
+   "difficulty": "easy",
+   "era": "any",
+   "question": "Into which lake does Hot Springs Creek empty after flowing under Bathhouse Row?",
+   "answer": "Lake Hamilton",
+   "wrong": [
+    "Lake Ouachita",
+    "Lake Catherine",
+    "DeGray Lake"
+   ],
+   "explanation": "Wikipedia says the creek flows from Whittington Avenue through the southern city before emptying into Lake Hamilton.",
+   "source": "Wikipedia: Hot Springs, Arkansas",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Hot_Springs,_Arkansas",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0163",
+   "category": "Nature & Lakes",
+   "difficulty": "medium",
+   "era": "any",
+   "question": "How long is the Grand Promenade, the National Recreation Trail in Hot Springs National Park?",
+   "answer": "About 0.5 mile",
+   "wrong": [
+    "About 0.05 mile",
+    "About 2.5 miles",
+    "About 5 miles"
+   ],
+   "explanation": "It is a National Recreation Trail and the entry point from downtown.",
+   "source": "NPS: Hot Springs & North Mountain Trails",
+   "sourceUrl": "https://www.nps.gov/hosp/planyourvisit/hot-springs-and-north-mountain-trails.htm",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0173",
+   "category": "Nature & Lakes",
+   "difficulty": "easy",
+   "era": "any",
+   "question": "Which fish does the AGFC stock from November through April in the Ouachita River tailwaters below Carpenter Dam?",
+   "answer": "Rainbow trout",
+   "wrong": [
+    "Striped bass",
+    "Walleye",
+    "Northern pike"
+   ],
+   "explanation": "The AGFC stocks catchable rainbow trout there to take advantage of cooler water temperatures.",
+   "source": "AGFC: Trout stocking (Ouachita River tailwaters)",
+   "sourceUrl": "https://agfc.com/?p=466",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0175",
+   "category": "Nature & Lakes",
+   "difficulty": "easy",
+   "era": "any",
+   "question": "Eagle-watch cruises at Lake Ouachita State Park in January and February look for which bird?",
+   "answer": "Bald eagle",
+   "wrong": [
+    "California condor",
+    "Harpy eagle",
+    "Andean condor"
+   ],
+   "explanation": "Per the Democrat-Gazette, Lake Ouachita State Park runs eagle-watch cruises in winter, and DeGray Lake holds its Eagles Et Cetera festival.",
+   "source": "Arkansas Democrat-Gazette: Eagle-watching excursions take off at state parks (2019)",
+   "sourceUrl": "https://www.arkansasonline.com/news/2019/jan/10/eagle-watching-excursions-take-off-at-s/",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0183",
+   "category": "Sports",
+   "difficulty": "easy",
+   "era": "gilded-spa",
+   "question": "Where did Babe Ruth's famous long home run of March 17, 1918, in Hot Springs land?",
+   "answer": "In the Arkansas Alligator Farm",
+   "wrong": [
+    "In Lake Hamilton",
+    "On the Arlington Hotel roof",
+    "In Hot Springs Creek"
+   ],
+   "explanation": "The exhibition game was at Whittington Park; Wikipedia says Ruth hit a home run into the Arkansas Alligator Farm and Petting Zoo.",
+   "source": "Wikipedia: Hot Springs, Arkansas",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Hot_Springs,_Arkansas",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0184",
+   "category": "Sports",
+   "difficulty": "easy",
+   "era": "gilded-spa",
+   "question": "According to a 2011 engineering measurement, about how far did Babe Ruth's 1918 Whittington Park home run travel?",
+   "answer": "About 573 feet",
+   "wrong": [
+    "About 357 feet",
+    "About 420 feet",
+    "About 750 feet"
+   ],
+   "explanation": "B&F Engineering measured it at 573 feet in 2011; a Boston newspaper had thought it went more than 500 feet.",
+   "source": "KNWA/KFTA: The home run that made Babe Ruth a star",
+   "sourceUrl": "https://digital-release.nwahomepage.com/news/the-home-run-in-hot-springs-that-made-babe-ruth-a-star/amp/",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0188",
+   "category": "Sports",
+   "difficulty": "easy",
+   "era": "gilded-spa",
+   "question": "In what year did the Chicago White Stockings first hold spring training in Hot Springs?",
+   "answer": "1886",
+   "wrong": [
+    "1876",
+    "1903",
+    "1918"
+   ],
+   "explanation": "Wikipedia says Hot Springs first welcomed Major League Baseball in 1886 with the Chicago White Stockings.",
+   "source": "Wikipedia: Hot Springs, Arkansas",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Hot_Springs,_Arkansas",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0196",
+   "category": "Sports",
+   "difficulty": "medium",
+   "era": "gilded-spa",
+   "question": "In what year did Hot Springs' Whittington Park ballfield open?",
+   "answer": "1894",
+   "wrong": [
+    "1886",
+    "1912",
+    "1935"
+   ],
+   "explanation": "It replaced the Hot Springs Baseball Grounds.",
+   "source": "Wikipedia: Ban Johnson Park",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Ban_Johnson_Park",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0212",
+   "category": "Sports",
+   "difficulty": "hard",
+   "era": "gilded-spa",
+   "question": "What did Hot Springs declare for Oaklawn's first day of racing, per Wikipedia?",
+   "answer": "A city holiday",
+   "wrong": [
+    "A day of mourning",
+    "A bathhouse closure",
+    "A curfew"
+   ],
+   "explanation": "More than 3,000 people attended the first day.",
+   "source": "Wikipedia: Oaklawn Racing Casino Resort",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Oaklawn_Racing_Casino_Resort",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0216",
+   "category": "Sports",
+   "difficulty": "easy",
+   "era": "roaring",
+   "question": "In what year was the first Arkansas Derby run at Oaklawn?",
+   "answer": "1936",
+   "wrong": [
+    "1905",
+    "1921",
+    "1967"
+   ],
+   "explanation": "The first Arkansas Derby was run in 1936 for a purse of $5,000.",
+   "source": "Wikipedia: Oaklawn Racing Casino Resort",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Oaklawn_Racing_Casino_Resort",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0217",
+   "category": "Sports",
+   "difficulty": "easy",
+   "era": "roaring",
+   "question": "Hot Springs' Whittington Park was renamed in 1935 for which American League founder?",
+   "answer": "Ban Johnson",
+   "wrong": [
+    "Cap Anson",
+    "Hiram Whittington",
+    "Babe Ruth"
+   ],
+   "explanation": "Wikipedia says the park was renamed for Hall of Fame baseball pioneer Ban Johnson in 1935; it had been Whittington Park.",
+   "source": "Wikipedia: Ban Johnson Park",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Ban_Johnson_Park",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0223",
+   "category": "Sports",
+   "difficulty": "easy",
+   "era": "roaring",
+   "question": "Hot Springs' George Barr school (1935–47) is recognized as the first school for whom?",
+   "answer": "Umpires",
+   "wrong": [
+    "Jockeys",
+    "Sportswriters",
+    "Groundskeepers"
+   ],
+   "explanation": "It was the first umpire school in baseball.",
+   "source": "Wikipedia: Ban Johnson Park",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Ban_Johnson_Park",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0379",
+   "category": "Food & Culture",
+   "difficulty": "medium",
+   "era": "modern",
+   "question": "In what year did Hot Springs' Running of the Tubs bathtub race begin?",
+   "answer": "2006",
+   "wrong": [
+    "1978",
+    "1995",
+    "2018"
+   ],
+   "explanation": "Visit Hot Springs billed the 2026 races as the 20th running since the races began in 2006. Racers push their tubs the length of Bathhouse Row.",
+   "source": "Visit Hot Springs: Running of the Tubs 2026 press release",
+   "sourceUrl": "https://hotsprings.org/media-room/press-releases/first-ever-running-of-the-tubs-website-provides-registration-fun-and-background-information-for-2026-world-championship-bathtub/",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0384",
+   "category": "Food & Culture",
+   "difficulty": "medium",
+   "era": "modern",
+   "question": "Roughly how many lights make up Garvan Woodland Gardens' Holiday Lights near Hot Springs?",
+   "answer": "Nearly 5 million",
+   "wrong": [
+    "About 5,000",
+    "About 50,000",
+    "About 500 million"
+   ],
+   "explanation": "Visit Hot Springs describes a multi-week display featuring nearly 5 million lights.",
+   "source": "Visit Hot Springs: A reason to visit every season",
+   "sourceUrl": "https://hotsprings.org/blog/dont-miss-a-reason-to-visit-for-every-season/",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0385",
+   "category": "Food & Culture",
+   "difficulty": "medium",
+   "era": "modern",
+   "question": "About how many tulips bloom at Garvan Woodland Gardens' Tulip Extravaganza?",
+   "answer": "About 150,000",
+   "wrong": [
+    "About 1,500",
+    "About 15,000",
+    "About 15 million"
+   ],
+   "explanation": "The Tulip Extravaganza runs mid-March through mid-April in the Sensory Garden, per Visit Hot Springs.",
+   "source": "Visit Hot Springs: A reason to visit every season",
+   "sourceUrl": "https://hotsprings.org/blog/dont-miss-a-reason-to-visit-for-every-season/",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0398",
+   "category": "Entertainment",
+   "difficulty": "medium",
+   "era": "gilded-spa",
+   "question": "Sources disagree on when Oaklawn racetrack opened. Which pair of years do they give?",
+   "answer": "1904 or 1905",
+   "wrong": [
+    "1832 or 1851",
+    "1934 or 1935",
+    "1886 or 1887"
+   ],
+   "explanation": "Wikipedia says Oaklawn opened February 24, 1904; the Encyclopedia of Arkansas says it opened February 15, 1905 (the Jockey Club formed in 1904).",
+   "source": "Encyclopedia of Arkansas: Oaklawn Park; Wikipedia: Oaklawn Racing Casino Resort",
+   "sourceUrl": "https://encyclopediaofarkansas.net/entries/oaklawn-park-racetrack-3636/",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0401",
+   "category": "Entertainment",
+   "difficulty": "easy",
+   "era": "roaring",
+   "question": "Which radio comedy team got its start on Hot Springs station KTHS?",
+   "answer": "Lum and Abner",
+   "wrong": [
+    "Amos 'n' Andy",
+    "Abbott and Costello",
+    "Burns and Allen"
+   ],
+   "explanation": "The duo first performed on KTHS in April 1931 at a flood relief benefit, which launched their careers.",
+   "source": "Encyclopedia of Arkansas: KTHS Radio Station",
+   "sourceUrl": "https://encyclopediaofarkansas.net/entries/kths-radio-station-6423/",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0402",
+   "category": "Entertainment",
+   "difficulty": "easy",
+   "era": "roaring",
+   "question": "Which Hot Springs radio station's call letters stood for \"Kome (Come) To Hot Springs\"?",
+   "answer": "KTHS",
+   "wrong": [
+    "KAAY",
+    "KARK",
+    "KHOT"
+   ],
+   "explanation": "The Encyclopedia of Arkansas says the letters stood for 'Kome (come) To Hot Springs.'",
+   "source": "Encyclopedia of Arkansas: KTHS Radio Station",
+   "sourceUrl": "https://encyclopediaofarkansas.net/entries/kths-radio-station-6423/",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0404",
+   "category": "Entertainment",
+   "difficulty": "easy",
+   "era": "roaring",
+   "question": "From which Hot Springs hotel did radio station KTHS first broadcast?",
+   "answer": "The Arlington Hotel",
+   "wrong": [
+    "The Majestic Hotel",
+    "The Eastman Hotel",
+    "The Park Hotel"
+   ],
+   "explanation": "It was built on the new Arlington's upper floor.",
+   "source": "Encyclopedia of Arkansas: KTHS Radio Station",
+   "sourceUrl": "https://encyclopediaofarkansas.net/entries/kths-radio-station-6423/",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0470",
+   "category": "Entertainment",
+   "difficulty": "easy",
+   "era": "any",
+   "question": "Which Hot Springs racetrack's winter-spring meet is sometimes called the \"Fifth Season\"?",
+   "answer": "Oaklawn",
+   "wrong": [
+    "Essex Park",
+    "Sportsman's Park",
+    "Magic Springs"
+   ],
+   "explanation": "Wikipedia says the Oaklawn meet, held December through May, is sometimes called the \"Fifth Season\".",
+   "source": "Wikipedia: Hot Springs, Arkansas",
+   "sourceUrl": "https://en.wikipedia.org/wiki/Hot_Springs,_Arkansas",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0488",
+   "category": "Legends & Oddities",
+   "difficulty": "easy",
+   "era": "roaring",
+   "question": "What were the names of the horses that pulled Mayor Leo McLaughlin's sulky down Central Avenue?",
+   "answer": "Scotch and Soda",
+   "wrong": [
+    "Salt and Pepper",
+    "Rum and Coke",
+    "Bourbon and Branch"
+   ],
+   "explanation": "He rode daily in riding clothes with a red carnation.",
+   "source": "Encyclopedia of Arkansas: Leo P. McLaughlin",
+   "sourceUrl": "https://encyclopediaofarkansas.net/entries/leo-patrick-mclaughlin-1712/",
+   "confidence": "confirmed"
+  },
+  {
+   "id": "hs-0490",
+   "category": "Legends & Oddities",
+   "difficulty": "easy",
+   "era": "roaring",
+   "question": "Which organization designated Hot Springs' Bridge Street \"the shortest street in the world\" in the 1940s?",
+   "answer": "Ripley's Believe It or Not",
+   "wrong": [
+    "Guinness World Records",
+    "National Geographic",
+    "Life magazine"
+   ],
+   "explanation": "Per the ACHP page, Bridge Street became famous in the 1940s when Ripley's Believe It or Not gave it that designation.",
+   "source": "ACHP: The Hot Springs National Park Visitors Center",
+   "sourceUrl": "https://www.achp.gov/node/8710",
+   "confidence": "confirmed"
+  }
+ ]
+}

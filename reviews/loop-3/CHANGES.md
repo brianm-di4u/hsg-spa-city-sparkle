@@ -1,0 +1,12 @@
+Changes since loop 2 (facts only):
+- Fixed: callouts vanished after a board was rebuilt (the reused text object had been detached); "Spring Crystal!", "Bubbly!" (chain wave 2), "Cascade!", "Hot Stone!" and combo callouts now show, placed over the top edge of the board instead of over the rows being cleared.
+- Fixed: the star bar had a width transition, so frozen frames caught a stale fill; it now matches the shown score in every frame. Capture boards inherit the level's star thresholds.
+- The HUD score counts up through each scoring beat.
+- Clears burst into shards tinted with the piece's colour (10 per piece).
+- Cascade specials re-rendered: a cyan glass band through the piece with two gold arrow fins reaching the cell edge.
+- Tufa layer studs moved to the stone's lower rim; tufa is tinted drab grey; the fan render is glossier; crust is a beige-white crystalline rim.
+- Board: a darkened radial halo in the backdrop behind the board; a warm rim highlight on the frame.
+- Map: wider crossfades (140 px) between world panels; the header names the world of the level whose intro is open; the header title wraps rather than truncates.
+- HUD: the world label is the short world name only; level names wrap to two lines instead of truncating.
+- Lose dialog: goal icon pills with what is left; "So close!" only when at least half the goals are done.
+- Paintings: World 2 backdrops (portrait and landscape) recomposed around the wooded mountain slope, the brick Grand Promenade, the tower and a single narrow cascade, with low grey tufa; the stepped terraces were removed from both title paintings and the World 2 map panel.

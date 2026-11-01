@@ -1,0 +1,151 @@
+{
+ "loop": 4,
+ "total": 52,
+ "scores": {
+  "art": 6.5,
+  "rendering": 6,
+  "animation": 6.5,
+  "ui": 6,
+  "typography": 6.5,
+  "readability": 6.5,
+  "mobile": 7,
+  "authenticity": 7
+ },
+ "pass": false,
+ "verdict": "continue",
+ "backlog": [
+  {
+   "id": "G-desktop-left-column",
+   "category": "ui",
+   "expectedGain": 0.6,
+   "severity": 4,
+   "effort": "S",
+   "evidence": [
+    "desktop/r03-world1",
+    "desktop/r13-win",
+    "desktop/r11-crystal-rays",
+    "desktop/r17-tip"
+   ],
+   "fix": "Move the running score inside the HUD panel padding, right-aligned above the star bar; clamp callout peak scale/tilt so its bounding box stays inside the viewport (x >= 8 px); anchor the tip card above the booster tray. Test: score box inside panel box, callout box inside viewport, tip and tray boxes do not intersect.",
+   "priority": 0.9
+  },
+  {
+   "id": "G-backdrop-grid-artifact",
+   "category": "rendering",
+   "expectedGain": 0.4,
+   "severity": 3,
+   "effort": "S",
+   "evidence": [
+    "desktop/r04-world2",
+    "desktop/r06-world4"
+   ],
+   "fix": "Remove the tiled overlay or serve backdrops at >= 1280 px width with linear filtering. Test: a 4x crop of the desktop sky shows no periodic grid pattern.",
+   "priority": 0.6
+  },
+  {
+   "id": "G-cascade-special-visibility",
+   "category": "readability",
+   "expectedGain": 0.75,
+   "severity": 4,
+   "effort": "M",
+   "evidence": [
+    "desktop/r03-world1",
+    "mobile/s1-10"
+   ],
+   "fix": "Draw two bold opaque cream/cyan bands across the piece in its sweep direction with chevron arrowheads at both ends, scale to 1.1x and add a constant 1.2 s soft pulse. Test: every Cascade is identifiable in a 50% downscale of desktop/r03-world1.",
+   "priority": 0.56
+  },
+  {
+   "id": "G-hot-stone-burst",
+   "category": "rendering",
+   "expectedGain": 0.3,
+   "severity": 3,
+   "effort": "S",
+   "evidence": [
+    "desktop/r10-stone-fire",
+    "mobile/r10-stone-fire"
+   ],
+   "fix": "Replace the muddy translucent ring with an additive orange-to-white shockwave ring (6 px, fading as it expands) and keep blast pieces at full opacity until they pop. Test: no piece alpha below 1 in the fire frame.",
+   "priority": 0.45
+  },
+  {
+   "id": "G-goal-icon-match",
+   "category": "readability",
+   "expectedGain": 0.3,
+   "severity": 3,
+   "effort": "S",
+   "evidence": [
+    "desktop/r05-world3",
+    "mobile/r08-world6",
+    "mobile/r15-intro"
+   ],
+   "fix": "Render every goal-chip icon from the same sprite and per-world tint as its board blocker (night tufa dark, crust with the cream frame). Test: mean colour of chip icon vs board blocker differs by deltaE < 10.",
+   "priority": 0.45
+  },
+  {
+   "id": "G-world-cell-tint",
+   "category": "rendering",
+   "expectedGain": 0.3,
+   "severity": 2,
+   "effort": "S",
+   "evidence": [
+    "desktop/r06-world4",
+    "desktop/r04-world2"
+   ],
+   "fix": "Tint W4 cells to warm umber (~#3a3128) and W2 cells to a warmer teal, and add a 24 px 35% black blurred drop shadow from the board frame onto the backdrop.",
+   "priority": 0.45
+  },
+  {
+   "id": "G-landing-squash",
+   "category": "animation",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "M",
+   "evidence": [
+    "strips/mobile-s1",
+    "strips/mobile-s2",
+    "mobile/s1-8"
+   ],
+   "fix": "Stretch falling pieces to scaleY 1.08, squash on landing to scaleX 1.12 / scaleY 0.86 for ~70 ms, rebound with an elastic ease, stagger columns by 25 ms; tint the Crystal target flash toward the piece colour instead of pure white. Test: a strip frame mid-landing shows squashed pieces.",
+   "priority": 0.38
+  },
+  {
+   "id": "G-pine-piece-style",
+   "category": "art",
+   "expectedGain": 0.4,
+   "severity": 3,
+   "effort": "M",
+   "evidence": [
+    "mobile/s1-10",
+    "strips/mobile-s2"
+   ],
+   "fix": "Re-render the pine piece with the set's material and lighting rig: saturated emerald, clearcoat specular, rim light and the same shadow offset as the other pieces.",
+   "priority": 0.3
+  },
+  {
+   "id": "G-win-celebration",
+   "category": "ui",
+   "expectedGain": 0.4,
+   "severity": 3,
+   "effort": "M",
+   "evidence": [
+    "desktop/r13-win",
+    "mobile/r13-win"
+   ],
+   "fix": "Add a ribbon banner header, stars that slam in one by one with particle bursts, a score count-up and steam sparkles behind the card. Test: the win capture shows the banner and particles.",
+   "priority": 0.3
+  },
+  {
+   "id": "G-map-header",
+   "category": "mobile",
+   "expectedGain": 0.25,
+   "severity": 2,
+   "effort": "S",
+   "evidence": [
+    "mobile/r02-map"
+   ],
+   "fix": "Set the phone map header on one line with a single-line postcard chip, and snap level nodes to the path spline with >= 1.3x diameter spacing.",
+   "priority": 0.25
+  }
+ ]
+}

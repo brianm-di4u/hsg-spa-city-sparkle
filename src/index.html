@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Spa City Sparkle: an original swap-and-match puzzle journey through Hot Springs, Arkansas.">
+<meta name="theme-color" content="#1F5F6B">
+<title>Spa City Sparkle</title>
+<link rel="stylesheet" href="styles/fonts.css">
+<link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+<div id="app">
+  <div id="stage" aria-hidden="true"></div>
+  <div id="vignette" aria-hidden="true"></div>
+
+  <!-- in-game HUD -->
+  <header id="hud" class="hidden" aria-label="Level status">
+    <div class="hud-level"><span class="hud-world" id="hud-world"></span><span class="hud-name" id="hud-name"></span></div>
+    <div class="hud-moves" id="hud-moves-wrap"><span class="hud-moves-n" id="hud-moves">0</span><span class="hud-moves-l">moves</span></div>
+    <ul class="hud-goals" id="hud-goals" aria-label="Goals"></ul>
+    <div class="hud-score">
+      <div class="thermo" aria-hidden="true"><div class="thermo-fill" id="thermo-fill"></div><i class="star s1"></i><i class="star s2"></i><i class="star s3"></i></div>
+      <span class="hud-score-n" id="hud-score">0</span>
+    </div>
+  </header>
+  <nav id="tray" class="hidden" aria-label="Boosters">
+    <button class="booster" data-booster="hammer" aria-label="Hammer booster"><span class="b-icon"></span><span class="b-name">Hammer</span><span class="b-count">0</span></button>
+    <button class="booster" data-booster="line" aria-label="Line booster"><span class="b-icon"></span><span class="b-name">Line</span><span class="b-count">0</span></button>
+    <button class="booster" data-booster="shuffle" aria-label="Shuffle booster"><span class="b-icon"></span><span class="b-name">Shuffle</span><span class="b-count">0</span></button>
+    <button class="booster" data-booster="plus5" aria-label="Plus five moves booster"><span class="b-icon"></span><span class="b-name">Moves</span><span class="b-count">0</span></button>
+    <button class="round" id="btn-pause" aria-label="Pause">II</button>
+  </nav>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="live" class="sr-only" aria-live="polite"></div>
+
+  <!-- screens (rendered by ui/screens.js) -->
+  <main id="screen" class="screen"></main>
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true"></div>
+</div>
+<!-- @inline ../data/levels.json as LEVELS -->
+<!-- @inline ../data/lore.json as LORE -->
+<!-- @inline ../data/route.json as ROUTE -->
+<script src="../vendor/pixi.min.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

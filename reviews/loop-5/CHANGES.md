@@ -1,0 +1,13 @@
+Changes since loop 4 (facts only):
+- Desktop HUD: the running score sits on its own row inside the HUD panel, right-aligned under the star bar.
+- Callouts: scaled to fit their lane at peak size (left column on desktop, screen width on phones).
+- Tutorial tip on desktop: Della's portrait shrinks or hides so the card never overlaps the booster tray.
+- Cascade specials carry two bold cream chevrons along their sweep direction, breathing slightly at rest.
+- Falls: pieces stretch slightly in flight, squash hard on landing, rebound tall and settle (damped); the fall beat holds longer so the last pieces settle on screen.
+- Clears: shards and the clear puff take the piece's colour and leave from its rim, so a clearing piece stays recognisable; popped pieces stay opaque while they swell and fade only as they shrink.
+- Hot Stone: a white-hot core flash, an inner cream ring and a bright orange shockwave (the ring texture is now neutral so tints read true).
+- Backdrop: the soft darkening and the board's cast shadow are drawn with canvas gradients instead of large GPU blur filters (which left a fine grid over the skies).
+- Pine piece re-rendered in deep emerald with a full clearcoat; padlock chains have fewer, thicker links.
+- Board colours: World 4 cells are warm umber, World 2 a warmer teal, and the Garvan Gardens frame is warm sandstone instead of grey.
+- Win screen: a "Level cleared!" ribbon banner, a slowly turning sunburst behind the stars, drifting steam sparkles and a score count-up.
+- Phone map header: one line ("The Mountain") with a one-line subtitle ("World 2 · 4/10 restored").

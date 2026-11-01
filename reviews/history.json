@@ -1,0 +1,122 @@
+[
+ {
+  "loop": 0,
+  "total": 45.5,
+  "scores": {
+   "art": 6,
+   "rendering": 5,
+   "animation": 5,
+   "ui": 5.5,
+   "typography": 6,
+   "readability": 6,
+   "mobile": 6,
+   "authenticity": 6
+  },
+  "critics": {
+   "critic-claude": 44,
+   "critic-codex": 47.5
+  },
+  "pass": false,
+  "newBest": true
+ },
+ {
+  "loop": 1,
+  "total": 48,
+  "scores": {
+   "art": 6,
+   "rendering": 6,
+   "animation": 6,
+   "ui": 5.5,
+   "typography": 6,
+   "readability": 6,
+   "mobile": 6,
+   "authenticity": 6.5
+  },
+  "critics": {
+   "critic-claude": 47.5,
+   "critic-codex": 51
+  },
+  "pass": false,
+  "newBest": true
+ },
+ {
+  "loop": 2,
+  "total": 51.5,
+  "scores": {
+   "art": 6.5,
+   "rendering": 6.5,
+   "animation": 6,
+   "ui": 6,
+   "typography": 6.5,
+   "readability": 6.5,
+   "mobile": 7,
+   "authenticity": 6.5
+  },
+  "critics": {
+   "critic-claude": 52,
+   "critic-codex": 50.5
+  },
+  "pass": false,
+  "newBest": true
+ },
+ {
+  "loop": 3,
+  "total": 52,
+  "scores": {
+   "art": 6.5,
+   "rendering": 6.5,
+   "animation": 6.5,
+   "ui": 6,
+   "typography": 6,
+   "readability": 6.5,
+   "mobile": 7,
+   "authenticity": 7
+  },
+  "critics": {
+   "critic-claude": 52.5,
+   "critic-codex": 52.5
+  },
+  "pass": false,
+  "newBest": true
+ },
+ {
+  "loop": 4,
+  "total": 52,
+  "scores": {
+   "art": 6.5,
+   "rendering": 6,
+   "animation": 6.5,
+   "ui": 6,
+   "typography": 6.5,
+   "readability": 6.5,
+   "mobile": 7,
+   "authenticity": 7
+  },
+  "critics": {
+   "critic-claude": 52,
+   "critic-codex": 52
+  },
+  "pass": false,
+  "newBest": false
+ },
+ {
+  "loop": 5,
+  "total": 52,
+  "scores": {
+   "art": 6.5,
+   "rendering": 6.5,
+   "animation": 6.5,
+   "ui": 6,
+   "typography": 6.5,
+   "readability": 6.5,
+   "mobile": 6.5,
+   "authenticity": 7
+  },
+  "critics": {
+   "critic-claude": 51.5,
+   "critic-codex": 53.5
+  },
+  "pass": false,
+  "newBest": false
+ }
+]

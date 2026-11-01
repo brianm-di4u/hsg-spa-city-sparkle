@@ -1,0 +1,10 @@
+{
+  "name": "spa-city-sparkle-dev-tools",
+  "private": true,
+  "description": "Build-time only: vendors PixiJS and the OFL fonts. Nothing here ships except the copied files.",
+  "devDependencies": {
+    "pixi.js": "8.22.0",
+    "@fontsource/righteous": "5.3.0",
+    "@fontsource/nunito": "5.3.0"
+  }
+}

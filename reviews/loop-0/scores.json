@@ -1,0 +1,165 @@
+{
+ "loop": 0,
+ "total": 45.5,
+ "scores": {
+  "art": 6,
+  "rendering": 5,
+  "animation": 5,
+  "ui": 5.5,
+  "typography": 6,
+  "readability": 6,
+  "mobile": 6,
+  "authenticity": 6
+ },
+ "pass": false,
+ "verdict": "continue",
+ "backlog": [
+  {
+   "id": "G-board-seating",
+   "category": "rendering",
+   "expectedGain": 0.8,
+   "severity": 4,
+   "effort": "S",
+   "evidence": [
+    "desktop/r03-world1",
+    "mobile/r12-callout",
+    "desktop/r17-tip"
+   ],
+   "fix": "Delete the hard-edged translucent rectangle behind the board; add a feathered radial vignette (edge alpha 0.35), a 24px+ blur cast shadow with 8px y-offset under the frame, and a soft 6px contact-shadow ellipse under every piece; keep at least 16px between the desktop board and viewport edges. Test: no straight seam visible in desktop/r03 or mobile/r03.",
+   "priority": 1.2
+  },
+  {
+   "id": "G-motion-feel",
+   "category": "animation",
+   "expectedGain": 1.5,
+   "severity": 5,
+   "effort": "M",
+   "evidence": [
+    "strips/mobile-s1",
+    "strips/mobile-s2",
+    "strips/desktop-s1",
+    "mobile/r12-callout"
+   ],
+   "fix": "Back-out eased swap with 1.08 scale lift; 1.15 scale pop before each clear; falls with a 0.9x1.1 landing squash and settle; HUD moves decrement and score counts up with a pulse on every move; callout word plus 4-6px board shake on specials; replace the white cotton Cascade beam with an additive streak with bright core and tapered ends. Recapture strips with at least 2 frames of falling pieces.",
+   "priority": 1.13
+  },
+  {
+   "id": "G-header-text-fit",
+   "category": "ui",
+   "expectedGain": 0.5,
+   "severity": 4,
+   "effort": "S",
+   "evidence": [
+    "mobile/r02-map",
+    "desktop/r02-map",
+    "mobile/r16-help",
+    "mobile/r05-world3",
+    "desktop/r01-title"
+   ],
+   "fix": "Move the star total into its own pill outside the world-title block; shrink-to-fit world labels to one line; keep 'How to play' on one line. Test: no text bounding boxes intersect or orphan-wrap in r01, r02, r05, r15, r16 at both viewports.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-star-bar",
+   "category": "ui",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "S",
+   "evidence": [
+    "mobile/r12-callout",
+    "mobile/r08-world6",
+    "mobile/r05-world3"
+   ],
+   "fix": "Place the three star markers at their threshold fractions along a visible gold fill, drawn below the score numerals. Test: in mobile/r12 markers are spread and none overlaps the digits.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-goal-icons-match",
+   "category": "readability",
+   "expectedGain": 0.5,
+   "severity": 4,
+   "effort": "S",
+   "evidence": [
+    "mobile/r04-world2",
+    "mobile/r08-world6",
+    "mobile/r06-world4",
+    "mobile/r15-intro"
+   ],
+   "fix": "Render HUD and intro goal icons from the same sprites as the board (tufa, flower, lock, crust); spawn at least one visible bath token whenever a token goal exists. Test: each goal-to-board pair matches in r04, r06, r08.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-mobile-hud-layout",
+   "category": "mobile",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "S",
+   "evidence": [
+    "mobile/r12-callout",
+    "mobile/r08-world6",
+    "mobile/r17-tip",
+    "desktop/r17-tip"
+   ],
+   "fix": "Move the board down or enlarge cells to use the ~270px dead band above the tray; keep up to 5 goals on one row of 64px pills so the moves badge stays fixed; dock the tip card and portrait off the board on both viewports. Test: every cell visible in r17; goals on one row in r08.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-specials-identity",
+   "category": "art",
+   "expectedGain": 1,
+   "severity": 5,
+   "effort": "M",
+   "evidence": [
+    "mobile/r12-callout",
+    "mobile/r10-stone-fire",
+    "strips/mobile-s2",
+    "mobile/r05-world3"
+   ],
+   "fix": "Render each special as its own Blender piece: Cascade with a glowing band and arrow fins at least 30% of the cell wide; Hot Stone set in ember-orange stone with a pulsing halo; Spring Crystal as a large rainbow-faceted crystal with its own silhouette. Test: each nameable without a label at 390px in frame 1 of r09-r11.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-tufa-accuracy",
+   "category": "authenticity",
+   "expectedGain": 1,
+   "severity": 4,
+   "effort": "M",
+   "evidence": [
+    "desktop/r01-title",
+    "mobile/r02-map",
+    "desktop/r02-map",
+    "mobile/r04-world2"
+   ],
+   "fix": "Repaint the white/turquoise stepped terraces on the title, map and World 2 backdrop as drab grey-brown tufa with a small steaming outflow like the Hot Water Cascade. Test: no white or turquoise stepped pools in r01, r02, r04, r14.",
+   "priority": 0.5
+  },
+  {
+   "id": "G-result-labels",
+   "category": "ui",
+   "expectedGain": 0.3,
+   "severity": 3,
+   "effort": "S",
+   "evidence": [
+    "mobile/r13-win",
+    "desktop/r13-win"
+   ],
+   "fix": "Map booster ids to display names ('+5 Moves', not 'plus5'); drive the r13 win capture through real play or seed a score above the 3-star threshold so the card's stars and score agree.",
+   "priority": 0.45
+  },
+  {
+   "id": "G-blocker-legibility",
+   "category": "readability",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "M",
+   "evidence": [
+    "mobile/r05-world3",
+    "mobile/r07-world5",
+    "desktop/r17-tip",
+    "mobile/r17-tip"
+   ],
+   "fix": "Lock as a brass chain in an X across the whole piece; crust as a textured grey mineral border around the cell edges leaving the piece at full contrast; steam as a translucent swirling vapour sprite instead of opaque white blobs. Test: each blocker type identifiable at 390px in r05, r07, r17.",
+   "priority": 0.38
+  }
+ ]
+}

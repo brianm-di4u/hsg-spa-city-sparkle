@@ -1,0 +1,157 @@
+{
+ "loop": 3,
+ "total": 52,
+ "scores": {
+  "art": 6.5,
+  "rendering": 6.5,
+  "animation": 6.5,
+  "ui": 6,
+  "typography": 6,
+  "readability": 6.5,
+  "mobile": 7,
+  "authenticity": 7
+ },
+ "pass": false,
+ "verdict": "continue",
+ "backlog": [
+  {
+   "id": "G-header-contrast",
+   "category": "typography",
+   "expectedGain": 1,
+   "severity": 4,
+   "effort": "S",
+   "evidence": [
+    "mobile/r02-map",
+    "mobile/r15-intro",
+    "desktop/r02-map",
+    "desktop/r01-title"
+   ],
+   "fix": "Map/intro/help header world title in cream #FFF3D6 with a 2px dark-brown outline, contrast >= 4.5:1, font-size clamp() so it fits on <= 2 lines at 390px. Title screen: logo gets a 3px dark outline and drop shadow; subtitle and tagline sit on a 40%-opacity dark scrim at >= 4.5:1. Also lifts UI.",
+   "priority": 1.5
+  },
+  {
+   "id": "G-callout-lane",
+   "category": "readability",
+   "expectedGain": 0.5,
+   "severity": 4,
+   "effort": "S",
+   "evidence": [
+    "mobile/r11-crystal-rays",
+    "mobile/r10-stone-fire",
+    "strips/mobile-s2"
+   ],
+   "fix": "On mobile, place callouts with their full bounds (stroke, shadow and peak scale included) in the painting band above the frame; on desktop, in the side column under the HUD box. Test: no callout pixel intersects a cell rectangle in any frame.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-special-identity",
+   "category": "art",
+   "expectedGain": 1,
+   "severity": 4,
+   "effort": "M",
+   "evidence": [
+    "mobile/r05-world3",
+    "mobile/r10-stone-fire",
+    "mobile/r12-callout"
+   ],
+   "fix": "Cascade: a full-width glowing stripe band with arrow fins >= 30% of the cell and a 1.2s additive pulse. Hot Stone: an emissive orange-hot core with an ember rim and shimmer, replacing the dark disc and gold scribble. Test: every special is identifiable in a frame downscaled to 50%.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-fire-anticipation-shake",
+   "category": "animation",
+   "expectedGain": 1,
+   "severity": 4,
+   "effort": "M",
+   "evidence": [
+    "strips/mobile-s1",
+    "strips/desktop-s1"
+   ],
+   "fix": "Over 150ms before a special fires, scale it to 1.2x with an additive glow build-up (fills the dead s1 frames 2-4). On fire, an 8px board shake decaying over 250ms, and the frame rim flashes in the special's colour. Test: the dwell frames differ, and the board offset is non-zero in the fire frame.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-blocker-materials",
+   "category": "art",
+   "expectedGain": 1,
+   "severity": 3,
+   "effort": "M",
+   "evidence": [
+    "mobile/r04-world2",
+    "mobile/r07-world5",
+    "mobile/r17-tip",
+    "mobile/r05-world3",
+    "mobile/r14-lose"
+   ],
+   "fix": "Crust: a white crystalline overlay with facets and sparkle, with the HUD and goal icon textured the same (not a blank square). Moss: a leafy carpet overlapping the cell edges, not grapes. Steam: an opaque swirling cloud covering >= 70% of the piece. Tufa: one drab-grey tint on every board colour, with light-cream layer pips >= 6px. Also lifts readability.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-effect-glow",
+   "category": "rendering",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "S",
+   "evidence": [
+    "mobile/r09-cascade-fire",
+    "mobile/r10-stone-fire",
+    "strips/mobile-s1"
+   ],
+   "fix": "Cascade beam: additive, >= 0.6 of a cell thick, with a soft falloff. Hot Stone: replace the opaque brown ring with an additive orange shockwave (alpha <= 0.6, expanding 0 to 1.5 cells). Shards >= 12px with gravity and spin.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-landing-squash",
+   "category": "animation",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "S",
+   "evidence": [
+    "strips/mobile-s1",
+    "strips/mobile-s2"
+   ],
+   "fix": "On landing, each piece squashes to scale 1.1x0.85 for 60ms, rebounds to 0.97x1.04, then settles, staggered per column. Test: a strip frame catches a squashed piece.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-hud-star-meter",
+   "category": "ui",
+   "expectedGain": 0.5,
+   "severity": 2,
+   "effort": "S",
+   "evidence": [
+    "mobile/r11-crystal-rays",
+    "mobile/r05-world3",
+    "mobile/r15-intro"
+   ],
+   "fix": "Label the score-goal pill (\"Goal 11,340\"). Make the star bar >= 14px tall with each star at its real threshold, and pop each star to gold when it is reached.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-frame-temperature",
+   "category": "rendering",
+   "expectedGain": 0.5,
+   "severity": 2,
+   "effort": "S",
+   "evidence": [
+    "desktop/r04-world2",
+    "mobile/r04-world2"
+   ],
+   "fix": "Replace the cold grey frame on Worlds 2, 4 and 5 with a warm bronze gradient. Tint each world's cell fill from the painting's mid-tone darkened 60%, and feather the World 2 mobile fog band into the board halo.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-desktop-hud",
+   "category": "ui",
+   "expectedGain": 0.5,
+   "severity": 2,
+   "effort": "M",
+   "evidence": [
+    "desktop/r04-world2",
+    "desktop/r03-world1"
+   ],
+   "fix": "Replace the 250px corner HUD box with a full-height left rail: a larger moves badge, goals and a star meter, with the boosters as a single vertical column, leaving no dead area beside it.",
+   "priority": 0.38
+  }
+ ]
+}

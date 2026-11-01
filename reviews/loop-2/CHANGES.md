@@ -1,0 +1,11 @@
+Changes since loop 1 (facts only):
+- Star bar: the fill tracks score ÷ 3-star threshold (it no longer keeps a stale width); star markers sit at their thresholds and at least 20% apart.
+- HUD state: forced win/lose captures set goals and moves consistently; motion-strip replays start from the pre-move score and moves and count up as effects land.
+- Map: the world name, its postcard thumbnail (desaturated by progress) and the restoration count live in the header bar and follow the scroll; the in-map world cards were removed; on desktop the map is wider (820 px) and the side gutters show a blurred, darkened copy of the current world's map; level nodes follow the painted path.
+- Specials: the Hot Stone is the piece seated on a glowing ember-cracked basalt stone (the dashed ring is gone); the Cascade keeps its larger fins; every special still has a glow halo.
+- Pine piece re-rendered about 18% larger in a lighter green with a small gold star on top.
+- Board: thicker bevelled frame with a top highlight and drop shadow; stronger, wider cast shadow; the cell texture lost its bright top strip; the portrait board sits lower, near the tray; desktop board margins are larger.
+- Blockers: steam fog is soft translucent grey vapour; the crust rim is grey-white; HUD goal icons are alpha-only.
+- Motion: a stronger swap overshoot (longer swap beat) and a deeper landing squash; callouts now appear for every special ("Cascade!", "Hot Stone!", "Spring Crystal!"), for combos ("Steam Cross!", "Hot Rocks!" …) and for chains from 2 waves ("Bubbly!"); a light shake on Cascades.
+- Type and UI: HUD world labels read "W1 · Bathhouse Row"; long level names shrink before truncating; "+5 Moves" never breaks; Help shows the three rendered specials; results buttons fit one row; the focus ring is a gold glow; the portrait tutorial tip docks under the HUD, above the board.
+- Paintings: the landscape title's terraces were repainted lower and drab grey-tan.

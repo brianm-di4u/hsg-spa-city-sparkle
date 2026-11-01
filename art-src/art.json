@@ -1,0 +1,521 @@
+{
+ "quality": 0.8,
+ "items": [
+  {
+   "name": "crystal",
+   "src": "sprites/crystal.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "drain",
+   "src": "sprites/drain.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "lock1",
+   "src": "sprites/lock1.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "lock2",
+   "src": "sprites/lock2.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "moss",
+   "src": "sprites/moss.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p0",
+   "src": "sprites/p0.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p0b",
+   "src": "sprites/p0b.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p0h",
+   "src": "sprites/p0h.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p0v",
+   "src": "sprites/p0v.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p1",
+   "src": "sprites/p1.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p1b",
+   "src": "sprites/p1b.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p1h",
+   "src": "sprites/p1h.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p1v",
+   "src": "sprites/p1v.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p2",
+   "src": "sprites/p2.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p2b",
+   "src": "sprites/p2b.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p2h",
+   "src": "sprites/p2h.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p2v",
+   "src": "sprites/p2v.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p3",
+   "src": "sprites/p3.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p3b",
+   "src": "sprites/p3b.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p3h",
+   "src": "sprites/p3h.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p3v",
+   "src": "sprites/p3v.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p4",
+   "src": "sprites/p4.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p4B",
+   "src": "sprites/p4B.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p4h",
+   "src": "sprites/p4h.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p4v",
+   "src": "sprites/p4v.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p5",
+   "src": "sprites/p5.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p5b",
+   "src": "sprites/p5b.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p5h",
+   "src": "sprites/p5h.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "p5v",
+   "src": "sprites/p5v.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "stone1",
+   "src": "sprites/stone1.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "stone2",
+   "src": "sprites/stone2.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "stone3",
+   "src": "sprites/stone3.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "token",
+   "src": "sprites/token.png",
+   "w": 192,
+   "h": 192,
+   "fit": "contain",
+   "quality": 0.86
+  },
+  {
+   "name": "bg1-l",
+   "src": "paint/bg1-l.png",
+   "w": 1280,
+   "h": 853,
+   "fit": "cover",
+   "quality": 0.66
+  },
+  {
+   "name": "bg1-p",
+   "src": "paint/bg1-p.png",
+   "w": 768,
+   "h": 1152,
+   "fit": "cover",
+   "quality": 0.66
+  },
+  {
+   "name": "bg2-l",
+   "src": "paint/bg2-l.png",
+   "w": 1280,
+   "h": 853,
+   "fit": "cover",
+   "quality": 0.66
+  },
+  {
+   "name": "bg2-p",
+   "src": "paint/bg2-p.png",
+   "w": 768,
+   "h": 1152,
+   "fit": "cover",
+   "quality": 0.66
+  },
+  {
+   "name": "bg3-l",
+   "src": "paint/bg3-l.png",
+   "w": 1280,
+   "h": 853,
+   "fit": "cover",
+   "quality": 0.66
+  },
+  {
+   "name": "bg3-p",
+   "src": "paint/bg3-p.png",
+   "w": 768,
+   "h": 1152,
+   "fit": "cover",
+   "quality": 0.66
+  },
+  {
+   "name": "bg4-l",
+   "src": "paint/bg4-l.png",
+   "w": 1280,
+   "h": 853,
+   "fit": "cover",
+   "quality": 0.66
+  },
+  {
+   "name": "bg4-p",
+   "src": "paint/bg4-p.png",
+   "w": 768,
+   "h": 1152,
+   "fit": "cover",
+   "quality": 0.66
+  },
+  {
+   "name": "bg5-l",
+   "src": "paint/bg5-l.png",
+   "w": 1280,
+   "h": 853,
+   "fit": "cover",
+   "quality": 0.66
+  },
+  {
+   "name": "bg5-p",
+   "src": "paint/bg5-p.png",
+   "w": 768,
+   "h": 1152,
+   "fit": "cover",
+   "quality": 0.66
+  },
+  {
+   "name": "bg6-l",
+   "src": "paint/bg6-l.png",
+   "w": 1280,
+   "h": 853,
+   "fit": "cover",
+   "quality": 0.66
+  },
+  {
+   "name": "bg6-p",
+   "src": "paint/bg6-p.png",
+   "w": 768,
+   "h": 1152,
+   "fit": "cover",
+   "quality": 0.66
+  },
+  {
+   "name": "card-frame",
+   "src": "paint/card-frame.png",
+   "w": 560,
+   "h": 560,
+   "fit": "cover",
+   "quality": 0.7
+  },
+  {
+   "name": "della-cheer",
+   "src": "paint/della-cheer.png",
+   "w": 360,
+   "h": 540,
+   "fit": "contain",
+   "quality": 0.8,
+   "keyWhite": 6
+  },
+  {
+   "name": "della-point",
+   "src": "paint/della-point.png",
+   "w": 360,
+   "h": 540,
+   "fit": "contain",
+   "quality": 0.8,
+   "keyWhite": 6
+  },
+  {
+   "name": "della-think",
+   "src": "paint/della-think.png",
+   "w": 360,
+   "h": 540,
+   "fit": "contain",
+   "quality": 0.8,
+   "keyWhite": 6
+  },
+  {
+   "name": "della-wave",
+   "src": "paint/della-wave.png",
+   "w": 360,
+   "h": 540,
+   "fit": "contain",
+   "quality": 0.8,
+   "keyWhite": 6
+  },
+  {
+   "name": "map1",
+   "src": "paint/map1.png",
+   "w": 640,
+   "h": 960,
+   "fit": "cover",
+   "quality": 0.62
+  },
+  {
+   "name": "map2",
+   "src": "paint/map2.png",
+   "w": 640,
+   "h": 960,
+   "fit": "cover",
+   "quality": 0.62
+  },
+  {
+   "name": "map3",
+   "src": "paint/map3.png",
+   "w": 640,
+   "h": 960,
+   "fit": "cover",
+   "quality": 0.62
+  },
+  {
+   "name": "map4",
+   "src": "paint/map4.png",
+   "w": 640,
+   "h": 960,
+   "fit": "cover",
+   "quality": 0.62
+  },
+  {
+   "name": "map5",
+   "src": "paint/map5.png",
+   "w": 640,
+   "h": 960,
+   "fit": "cover",
+   "quality": 0.62
+  },
+  {
+   "name": "map6",
+   "src": "paint/map6.png",
+   "w": 640,
+   "h": 960,
+   "fit": "cover",
+   "quality": 0.62
+  },
+  {
+   "name": "postcard1",
+   "src": "paint/postcard1.png",
+   "w": 720,
+   "h": 480,
+   "fit": "cover",
+   "quality": 0.66
+  },
+  {
+   "name": "postcard2",
+   "src": "paint/postcard2.png",
+   "w": 720,
+   "h": 480,
+   "fit": "cover",
+   "quality": 0.66
+  },
+  {
+   "name": "postcard3",
+   "src": "paint/postcard3.png",
+   "w": 720,
+   "h": 480,
+   "fit": "cover",
+   "quality": 0.66
+  },
+  {
+   "name": "postcard4",
+   "src": "paint/postcard4.png",
+   "w": 720,
+   "h": 480,
+   "fit": "cover",
+   "quality": 0.66
+  },
+  {
+   "name": "postcard5",
+   "src": "paint/postcard5.png",
+   "w": 720,
+   "h": 480,
+   "fit": "cover",
+   "quality": 0.66
+  },
+  {
+   "name": "postcard6",
+   "src": "paint/postcard6.png",
+   "w": 720,
+   "h": 480,
+   "fit": "cover",
+   "quality": 0.66
+  },
+  {
+   "name": "title-l",
+   "src": "paint/title-l.png",
+   "w": 1280,
+   "h": 853,
+   "fit": "cover",
+   "quality": 0.66
+  },
+  {
+   "name": "title-p",
+   "src": "paint/title-p.png",
+   "w": 768,
+   "h": 1152,
+   "fit": "cover",
+   "quality": 0.66
+  }
+ ]
+}

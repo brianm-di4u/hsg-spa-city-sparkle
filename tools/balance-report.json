@@ -1,0 +1,1388 @@
+{
+ "generated": "2026-11-01T17:35:49.327Z",
+ "seeds": 200,
+ "randomSeeds": 50,
+ "levelsHash": "3ff16c8ec083",
+ "levels": {
+  "w1-01": {
+   "band": [
+    0.9,
+    1
+   ],
+   "win": 0.975,
+   "randomWin": 0.54,
+   "star3": 0.195,
+   "star2": 0.495,
+   "scoreP25": 10020,
+   "scoreP50": 10980,
+   "scoreP90": 17360,
+   "leftP50": 7,
+   "winQ": [
+    9720,
+    11060,
+    15200
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w1-02": {
+   "band": [
+    0.9,
+    1
+   ],
+   "win": 0.925,
+   "randomWin": 0.28,
+   "star3": 0.225,
+   "star2": 0.45,
+   "scoreP25": 14800,
+   "scoreP50": 19120,
+   "scoreP90": 32400,
+   "leftP50": 6,
+   "winQ": [
+    12060,
+    19880,
+    30540
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w1-03": {
+   "band": [
+    0.9,
+    1
+   ],
+   "win": 0.935,
+   "randomWin": 0.46,
+   "star3": 0.08,
+   "star2": 0.335,
+   "scoreP25": 15780,
+   "scoreP50": 19380,
+   "scoreP90": 32480,
+   "leftP50": 7,
+   "winQ": [
+    12420,
+    19760,
+    29520
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w1-04": {
+   "band": [
+    0.9,
+    1
+   ],
+   "win": 0.98,
+   "randomWin": 0.62,
+   "star3": 0.215,
+   "star2": 0.61,
+   "scoreP25": 13480,
+   "scoreP50": 17260,
+   "scoreP90": 31280,
+   "leftP50": 8,
+   "winQ": [
+    9960,
+    17260,
+    26760
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w1-05": {
+   "band": [
+    0.7,
+    0.8
+   ],
+   "win": 0.655,
+   "randomWin": 0.14,
+   "star3": 0.08,
+   "star2": 0.38,
+   "scoreP25": 22480,
+   "scoreP50": 22440,
+   "scoreP90": 29540,
+   "leftP50": 5,
+   "winQ": [
+    21840,
+    24180,
+    29540
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w1-06": {
+   "band": [
+    0.9,
+    1
+   ],
+   "win": 0.97,
+   "randomWin": 0.4,
+   "star3": 0.12,
+   "star2": 0.455,
+   "scoreP25": 19780,
+   "scoreP50": 24240,
+   "scoreP90": 38940,
+   "leftP50": 7,
+   "winQ": [
+    16980,
+    24320,
+    33380
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w1-07": {
+   "band": [
+    0.9,
+    1
+   ],
+   "win": 0.995,
+   "randomWin": 0.64,
+   "star3": 0.23,
+   "star2": 0.655,
+   "scoreP25": 12880,
+   "scoreP50": 14680,
+   "scoreP90": 26100,
+   "leftP50": 9,
+   "winQ": [
+    12320,
+    14680,
+    23160
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w1-08": {
+   "band": [
+    0.9,
+    1
+   ],
+   "win": 0.94,
+   "randomWin": 0.4,
+   "star3": 0.055,
+   "star2": 0.435,
+   "scoreP25": 19520,
+   "scoreP50": 23340,
+   "scoreP90": 33300,
+   "leftP50": 7,
+   "winQ": [
+    16620,
+    24040,
+    31240
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w1-09": {
+   "band": [
+    0.9,
+    1
+   ],
+   "win": 0.995,
+   "randomWin": 0.26,
+   "star3": 0.21,
+   "star2": 0.43,
+   "scoreP25": 23340,
+   "scoreP50": 29000,
+   "scoreP90": 47560,
+   "leftP50": 9,
+   "winQ": [
+    19980,
+    29000,
+    42200
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w1-10": {
+   "band": [
+    0.7,
+    0.8
+   ],
+   "win": 0.73,
+   "randomWin": 0.26,
+   "star3": 0.23,
+   "star2": 0.485,
+   "scoreP25": 11280,
+   "scoreP50": 12780,
+   "scoreP90": 17920,
+   "leftP50": 7,
+   "winQ": [
+    9780,
+    13440,
+    17580
+   ],
+   "reshuffles": 0.055,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w2-01": {
+   "band": [
+    0.75,
+    0.95
+   ],
+   "win": 0.83,
+   "randomWin": 0.18,
+   "star3": 0.105,
+   "star2": 0.345,
+   "scoreP25": 21460,
+   "scoreP50": 24640,
+   "scoreP90": 39200,
+   "leftP50": 5,
+   "winQ": [
+    18760,
+    25700,
+    36100
+   ],
+   "reshuffles": 0.02,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w2-02": {
+   "band": [
+    0.75,
+    0.95
+   ],
+   "win": 0.825,
+   "randomWin": 0.1,
+   "star3": 0.13,
+   "star2": 0.305,
+   "scoreP25": 38920,
+   "scoreP50": 49320,
+   "scoreP90": 90700,
+   "leftP50": 12,
+   "winQ": [
+    31460,
+    49300,
+    82020
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w2-03": {
+   "band": [
+    0.75,
+    0.95
+   ],
+   "win": 0.885,
+   "randomWin": 0.22,
+   "star3": 0.09,
+   "star2": 0.335,
+   "scoreP25": 28660,
+   "scoreP50": 33500,
+   "scoreP90": 50860,
+   "leftP50": 6,
+   "winQ": [
+    24700,
+    35060,
+    47740
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w2-04": {
+   "band": [
+    0.75,
+    0.95
+   ],
+   "win": 0.86,
+   "randomWin": 0.16,
+   "star3": 0.07,
+   "star2": 0.36,
+   "scoreP25": 42540,
+   "scoreP50": 55340,
+   "scoreP90": 88160,
+   "leftP50": 10,
+   "winQ": [
+    35540,
+    54860,
+    79160
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w2-05": {
+   "band": [
+    0.55,
+    0.75
+   ],
+   "win": 0.725,
+   "randomWin": 0.02,
+   "star3": 0.135,
+   "star2": 0.31,
+   "scoreP25": 34420,
+   "scoreP50": 41660,
+   "scoreP90": 72780,
+   "leftP50": 6,
+   "winQ": [
+    27400,
+    41960,
+    69000
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w2-06": {
+   "band": [
+    0.75,
+    0.95
+   ],
+   "win": 0.925,
+   "randomWin": 0.24,
+   "star3": 0.145,
+   "star2": 0.43,
+   "scoreP25": 53060,
+   "scoreP50": 69280,
+   "scoreP90": 109580,
+   "leftP50": 13,
+   "winQ": [
+    43380,
+    67060,
+    101000
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w2-07": {
+   "band": [
+    0.75,
+    0.95
+   ],
+   "win": 0.805,
+   "randomWin": 0.18,
+   "star3": 0.115,
+   "star2": 0.37,
+   "scoreP25": 19860,
+   "scoreP50": 23500,
+   "scoreP90": 38120,
+   "leftP50": 5,
+   "winQ": [
+    16780,
+    26180,
+    36400
+   ],
+   "reshuffles": 0.01,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w2-08": {
+   "band": [
+    0.75,
+    0.95
+   ],
+   "win": 0.76,
+   "randomWin": 0.14,
+   "star3": 0.1,
+   "star2": 0.305,
+   "scoreP25": 29980,
+   "scoreP50": 46900,
+   "scoreP90": 75240,
+   "leftP50": 13,
+   "winQ": [
+    20680,
+    42680,
+    63840
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w2-09": {
+   "band": [
+    0.75,
+    0.95
+   ],
+   "win": 0.705,
+   "randomWin": 0.08,
+   "star3": 0.065,
+   "star2": 0.3,
+   "scoreP25": 39240,
+   "scoreP50": 49300,
+   "scoreP90": 74500,
+   "leftP50": 13,
+   "winQ": [
+    34540,
+    46740,
+    65420
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w2-10": {
+   "band": [
+    0.55,
+    0.75
+   ],
+   "win": 0.74,
+   "randomWin": 0.08,
+   "star3": 0.1,
+   "star2": 0.43,
+   "scoreP25": 45580,
+   "scoreP50": 53220,
+   "scoreP90": 78300,
+   "leftP50": 6,
+   "winQ": [
+    36340,
+    54740,
+    69900
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w3-01": {
+   "band": [
+    0.6,
+    0.85
+   ],
+   "win": 0.895,
+   "randomWin": 0.24,
+   "star3": 0.125,
+   "star2": 0.4,
+   "scoreP25": 25120,
+   "scoreP50": 34300,
+   "scoreP90": 57320,
+   "leftP50": 11,
+   "winQ": [
+    20180,
+    34300,
+    53880
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w3-02": {
+   "band": [
+    0.6,
+    0.85
+   ],
+   "win": 0.705,
+   "randomWin": 0.14,
+   "star3": 0.1,
+   "star2": 0.345,
+   "scoreP25": 19920,
+   "scoreP50": 27100,
+   "scoreP90": 41960,
+   "leftP50": 7,
+   "winQ": [
+    16280,
+    25900,
+    38280
+   ],
+   "reshuffles": 0.005,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w3-03": {
+   "band": [
+    0.6,
+    0.85
+   ],
+   "win": 0.805,
+   "randomWin": 0.16,
+   "star3": 0.165,
+   "star2": 0.45,
+   "scoreP25": 26940,
+   "scoreP50": 34880,
+   "scoreP90": 58540,
+   "leftP50": 7,
+   "winQ": [
+    20320,
+    35680,
+    53820
+   ],
+   "reshuffles": 0.01,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w3-04": {
+   "band": [
+    0.6,
+    0.85
+   ],
+   "win": 0.82,
+   "randomWin": 0.18,
+   "star3": 0.22,
+   "star2": 0.445,
+   "scoreP25": 34740,
+   "scoreP50": 35460,
+   "scoreP90": 48100,
+   "leftP50": 7,
+   "winQ": [
+    33920,
+    37340,
+    45640
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w3-05": {
+   "band": [
+    0.4,
+    0.65
+   ],
+   "win": 0.61,
+   "randomWin": 0.14,
+   "star3": 0.095,
+   "star2": 0.31,
+   "scoreP25": 37640,
+   "scoreP50": 43840,
+   "scoreP90": 71480,
+   "leftP50": 6,
+   "winQ": [
+    29820,
+    45880,
+    65820
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w3-06": {
+   "band": [
+    0.6,
+    0.85
+   ],
+   "win": 0.765,
+   "randomWin": 0.1,
+   "star3": 0.115,
+   "star2": 0.27,
+   "scoreP25": 29500,
+   "scoreP50": 34520,
+   "scoreP90": 55040,
+   "leftP50": 5,
+   "winQ": [
+    24500,
+    36540,
+    53860
+   ],
+   "reshuffles": 0.015,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w3-07": {
+   "band": [
+    0.6,
+    0.85
+   ],
+   "win": 0.85,
+   "randomWin": 0.14,
+   "star3": 0.205,
+   "star2": 0.38,
+   "scoreP25": 33020,
+   "scoreP50": 35960,
+   "scoreP90": 55200,
+   "leftP50": 6,
+   "winQ": [
+    27420,
+    37560,
+    53320
+   ],
+   "reshuffles": 0.005,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w3-08": {
+   "band": [
+    0.6,
+    0.85
+   ],
+   "win": 0.695,
+   "randomWin": 0.08,
+   "star3": 0.125,
+   "star2": 0.235,
+   "scoreP25": 44920,
+   "scoreP50": 55500,
+   "scoreP90": 93760,
+   "leftP50": 8,
+   "winQ": [
+    36240,
+    61220,
+    87120
+   ],
+   "reshuffles": 0.65,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w3-09": {
+   "band": [
+    0.6,
+    0.85
+   ],
+   "win": 0.775,
+   "randomWin": 0.18,
+   "star3": 0.115,
+   "star2": 0.335,
+   "scoreP25": 38360,
+   "scoreP50": 51120,
+   "scoreP90": 82260,
+   "leftP50": 12,
+   "winQ": [
+    28540,
+    48280,
+    70060
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w3-10": {
+   "band": [
+    0.4,
+    0.65
+   ],
+   "win": 0.535,
+   "randomWin": 0,
+   "star3": 0.085,
+   "star2": 0.365,
+   "scoreP25": 45100,
+   "scoreP50": 46200,
+   "scoreP90": 65400,
+   "leftP50": 5,
+   "winQ": [
+    40360,
+    52400,
+    65480
+   ],
+   "reshuffles": 0.09,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w4-01": {
+   "band": [
+    0.5,
+    0.75
+   ],
+   "win": 0.69,
+   "randomWin": 0.08,
+   "star3": 0.215,
+   "star2": 0.47,
+   "scoreP25": 22920,
+   "scoreP50": 27580,
+   "scoreP90": 43820,
+   "leftP50": 6,
+   "winQ": [
+    16380,
+    29180,
+    41580
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w4-02": {
+   "band": [
+    0.5,
+    0.75
+   ],
+   "win": 0.605,
+   "randomWin": 0.06,
+   "star3": 0.095,
+   "star2": 0.305,
+   "scoreP25": 34680,
+   "scoreP50": 42520,
+   "scoreP90": 71580,
+   "leftP50": 8,
+   "winQ": [
+    27760,
+    48040,
+    70740
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w4-03": {
+   "band": [
+    0.5,
+    0.75
+   ],
+   "win": 0.545,
+   "randomWin": 0.02,
+   "star3": 0.08,
+   "star2": 0.295,
+   "scoreP25": 38880,
+   "scoreP50": 47620,
+   "scoreP90": 73560,
+   "leftP50": 4,
+   "winQ": [
+    26260,
+    48640,
+    66440
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w4-04": {
+   "band": [
+    0.5,
+    0.75
+   ],
+   "win": 0.565,
+   "randomWin": 0.02,
+   "star3": 0.06,
+   "star2": 0.335,
+   "scoreP25": 40880,
+   "scoreP50": 48200,
+   "scoreP90": 71060,
+   "leftP50": 10,
+   "winQ": [
+    33360,
+    51240,
+    65700
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w4-05": {
+   "band": [
+    0.3,
+    0.55
+   ],
+   "win": 0.54,
+   "randomWin": 0.04,
+   "star3": 0.05,
+   "star2": 0.26,
+   "scoreP25": 45300,
+   "scoreP50": 47960,
+   "scoreP90": 76300,
+   "leftP50": 6,
+   "winQ": [
+    36540,
+    54000,
+    76300
+   ],
+   "reshuffles": 0.06,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w4-06": {
+   "band": [
+    0.5,
+    0.75
+   ],
+   "win": 0.685,
+   "randomWin": 0.02,
+   "star3": 0.115,
+   "star2": 0.415,
+   "scoreP25": 42080,
+   "scoreP50": 45900,
+   "scoreP90": 69980,
+   "leftP50": 5,
+   "winQ": [
+    39640,
+    49440,
+    66600
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w4-07": {
+   "band": [
+    0.5,
+    0.75
+   ],
+   "win": 0.715,
+   "randomWin": 0.1,
+   "star3": 0.12,
+   "star2": 0.32,
+   "scoreP25": 49240,
+   "scoreP50": 58340,
+   "scoreP90": 86420,
+   "leftP50": 10,
+   "winQ": [
+    36820,
+    59240,
+    82460
+   ],
+   "reshuffles": 0.005,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w4-08": {
+   "band": [
+    0.5,
+    0.75
+   ],
+   "win": 0.535,
+   "randomWin": 0.1,
+   "star3": 0.065,
+   "star2": 0.265,
+   "scoreP25": 38960,
+   "scoreP50": 49680,
+   "scoreP90": 71340,
+   "leftP50": 6,
+   "winQ": [
+    32180,
+    49800,
+    69740
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w4-09": {
+   "band": [
+    0.5,
+    0.75
+   ],
+   "win": 0.55,
+   "randomWin": 0.04,
+   "star3": 0.115,
+   "star2": 0.27,
+   "scoreP25": 42940,
+   "scoreP50": 49120,
+   "scoreP90": 82320,
+   "leftP50": 9,
+   "winQ": [
+    36280,
+    51500,
+    80960
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w4-10": {
+   "band": [
+    0.3,
+    0.55
+   ],
+   "win": 0.405,
+   "randomWin": 0,
+   "star3": 0.1,
+   "star2": 0.22,
+   "scoreP25": 31280,
+   "scoreP50": 36860,
+   "scoreP90": 55560,
+   "leftP50": 8,
+   "winQ": [
+    26460,
+    36240,
+    54640
+   ],
+   "reshuffles": 0.02,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w5-01": {
+   "band": [
+    0.4,
+    0.65
+   ],
+   "win": 0.53,
+   "randomWin": 0.06,
+   "star3": 0.075,
+   "star2": 0.265,
+   "scoreP25": 44960,
+   "scoreP50": 44960,
+   "scoreP90": 73360,
+   "leftP50": 4,
+   "winQ": [
+    41540,
+    55200,
+    73380
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w5-02": {
+   "band": [
+    0.4,
+    0.65
+   ],
+   "win": 0.47,
+   "randomWin": 0.04,
+   "star3": 0.075,
+   "star2": 0.23,
+   "scoreP25": 13440,
+   "scoreP50": 27220,
+   "scoreP90": 49420,
+   "leftP50": 13,
+   "winQ": [
+    10240,
+    19260,
+    32740
+   ],
+   "reshuffles": 0.01,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w5-03": {
+   "band": [
+    0.4,
+    0.65
+   ],
+   "win": 0.58,
+   "randomWin": 0.04,
+   "star3": 0.165,
+   "star2": 0.285,
+   "scoreP25": 67520,
+   "scoreP50": 65560,
+   "scoreP90": 101880,
+   "leftP50": 5,
+   "winQ": [
+    60060,
+    77560,
+    103060
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w5-04": {
+   "band": [
+    0.4,
+    0.65
+   ],
+   "win": 0.66,
+   "randomWin": 0.1,
+   "star3": 0.065,
+   "star2": 0.26,
+   "scoreP25": 38080,
+   "scoreP50": 40880,
+   "scoreP90": 62760,
+   "leftP50": 4,
+   "winQ": [
+    33320,
+    45700,
+    62760
+   ],
+   "reshuffles": 0.045,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w5-05": {
+   "band": [
+    0.2,
+    0.45
+   ],
+   "win": 0.27,
+   "randomWin": 0.02,
+   "star3": 0.045,
+   "star2": 0.135,
+   "scoreP25": 29940,
+   "scoreP50": 28600,
+   "scoreP90": 47700,
+   "leftP50": 3,
+   "winQ": [
+    26360,
+    34220,
+    44740
+   ],
+   "reshuffles": 0.005,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w5-06": {
+   "band": [
+    0.4,
+    0.65
+   ],
+   "win": 0.54,
+   "randomWin": 0.02,
+   "star3": 0.085,
+   "star2": 0.275,
+   "scoreP25": 40320,
+   "scoreP50": 47860,
+   "scoreP90": 76920,
+   "leftP50": 7,
+   "winQ": [
+    31680,
+    55440,
+    75780
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w5-07": {
+   "band": [
+    0.4,
+    0.65
+   ],
+   "win": 0.595,
+   "randomWin": 0.06,
+   "star3": 0.21,
+   "star2": 0.365,
+   "scoreP25": 55180,
+   "scoreP50": 57260,
+   "scoreP90": 78760,
+   "leftP50": 4,
+   "winQ": [
+    49080,
+    64840,
+    80600
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w5-08": {
+   "band": [
+    0.4,
+    0.65
+   ],
+   "win": 0.565,
+   "randomWin": 0.02,
+   "star3": 0.085,
+   "star2": 0.31,
+   "scoreP25": 47460,
+   "scoreP50": 49340,
+   "scoreP90": 74260,
+   "leftP50": 5,
+   "winQ": [
+    43660,
+    56820,
+    75220
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w5-09": {
+   "band": [
+    0.4,
+    0.65
+   ],
+   "win": 0.605,
+   "randomWin": 0.06,
+   "star3": 0.11,
+   "star2": 0.335,
+   "scoreP25": 30280,
+   "scoreP50": 37900,
+   "scoreP90": 62820,
+   "leftP50": 8,
+   "winQ": [
+    23280,
+    41980,
+    59940
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w5-10": {
+   "band": [
+    0.2,
+    0.45
+   ],
+   "win": 0.41,
+   "randomWin": 0,
+   "star3": 0.06,
+   "star2": 0.2,
+   "scoreP25": 27840,
+   "scoreP50": 34860,
+   "scoreP90": 51000,
+   "leftP50": 9,
+   "winQ": [
+    23140,
+    35840,
+    45960
+   ],
+   "reshuffles": 0.03,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w6-01": {
+   "band": [
+    0.3,
+    0.55
+   ],
+   "win": 0.33,
+   "randomWin": 0,
+   "star3": 0.045,
+   "star2": 0.165,
+   "scoreP25": 82120,
+   "scoreP50": 96680,
+   "scoreP90": 136400,
+   "leftP50": 8,
+   "winQ": [
+    67560,
+    96680,
+    139940
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w6-02": {
+   "band": [
+    0.3,
+    0.55
+   ],
+   "win": 0.375,
+   "randomWin": 0.02,
+   "star3": 0.065,
+   "star2": 0.175,
+   "scoreP25": 47560,
+   "scoreP50": 50920,
+   "scoreP90": 71920,
+   "leftP50": 5,
+   "winQ": [
+    42020,
+    54280,
+    71920
+   ],
+   "reshuffles": 0.005,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w6-03": {
+   "band": [
+    0.3,
+    0.55
+   ],
+   "win": 0.485,
+   "randomWin": 0.06,
+   "star3": 0.03,
+   "star2": 0.25,
+   "scoreP25": 35740,
+   "scoreP50": 39700,
+   "scoreP90": 65560,
+   "leftP50": 6,
+   "winQ": [
+    28500,
+    45120,
+    64540
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w6-04": {
+   "band": [
+    0.3,
+    0.55
+   ],
+   "win": 0.52,
+   "randomWin": 0.04,
+   "star3": 0.065,
+   "star2": 0.21,
+   "scoreP25": 31120,
+   "scoreP50": 34400,
+   "scoreP90": 55560,
+   "leftP50": 5,
+   "winQ": [
+    25580,
+    38040,
+    52020
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w6-05": {
+   "band": [
+    0.15,
+    0.35
+   ],
+   "win": 0.3,
+   "randomWin": 0,
+   "star3": 0.145,
+   "star2": 0.2,
+   "scoreP25": 45260,
+   "scoreP50": 38520,
+   "scoreP90": 67120,
+   "leftP50": 3,
+   "winQ": [
+    39540,
+    52220,
+    73640
+   ],
+   "reshuffles": 0.63,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w6-06": {
+   "band": [
+    0.3,
+    0.55
+   ],
+   "win": 0.555,
+   "randomWin": 0.04,
+   "star3": 0.085,
+   "star2": 0.275,
+   "scoreP25": 57860,
+   "scoreP50": 69840,
+   "scoreP90": 100820,
+   "leftP50": 5,
+   "winQ": [
+    46460,
+    72480,
+    97620
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w6-07": {
+   "band": [
+    0.3,
+    0.55
+   ],
+   "win": 0.415,
+   "randomWin": 0.02,
+   "star3": 0.095,
+   "star2": 0.22,
+   "scoreP25": 42800,
+   "scoreP50": 39100,
+   "scoreP90": 59240,
+   "leftP50": 3,
+   "winQ": [
+    37040,
+    50500,
+    64800
+   ],
+   "reshuffles": 0.025,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w6-08": {
+   "band": [
+    0.3,
+    0.55
+   ],
+   "win": 0.435,
+   "randomWin": 0.02,
+   "star3": 0.04,
+   "star2": 0.23,
+   "scoreP25": 40720,
+   "scoreP50": 43260,
+   "scoreP90": 64320,
+   "leftP50": 5,
+   "winQ": [
+    33180,
+    50040,
+    64320
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w6-09": {
+   "band": [
+    0.3,
+    0.55
+   ],
+   "win": 0.56,
+   "randomWin": 0.06,
+   "star3": 0.05,
+   "star2": 0.21,
+   "scoreP25": 23120,
+   "scoreP50": 30640,
+   "scoreP90": 42760,
+   "leftP50": 10,
+   "winQ": [
+    18380,
+    28520,
+    39320
+   ],
+   "reshuffles": 0.015,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  },
+  "w6-10": {
+   "band": [
+    0.15,
+    0.35
+   ],
+   "win": 0.2,
+   "randomWin": 0,
+   "star3": 0.1,
+   "star2": 0.14,
+   "scoreP25": 82680,
+   "scoreP50": 65040,
+   "scoreP90": 101460,
+   "leftP50": 2,
+   "winQ": [
+    73380,
+    98580,
+    113680
+   ],
+   "reshuffles": 0,
+   "recolorRate": 0,
+   "capped": 0,
+   "verdict": "ok"
+  }
+ }
+}

@@ -1,0 +1,53 @@
+﻿Spa City Sparkle earns 53.5/80 (6.69/10): continue. The painted settings, glossy horseshoes and broad colour separation establish a credible themed game, but the finish is uneven against genre-leading phone games. Dense blocker decoration, small nine-column phone cells, a scenery-heavy portrait layout and effects that bleach their targets keep it below a premium release bar. The supplied strips show real swaps, clears and falls, but do not establish exceptional timing or tactile weight. Several required category gates remain unmet.
+
+1. Art — 6.5/10. The horseshoes and droplets have convincing highlights, and the garden painting is appealing. However, the purple gems have broad, relatively plain facets, the coral fans read much flatter than the metal pieces, and repeated gold lock flourishes overwhelm their underlying pieces. The board assets do not consistently match the paintings' richness. Evidence: `mobile/r05-world3.png`, `mobile/r08-world6.png`.
+
+2. Rendering and lighting — 7/10. Recessed cells, substantial frames and cast shadows give the board a clear layered construction. Warm umber at Oaklawn and dark violet on Central Avenue support distinct settings. The pieces nevertheless retain much the same studio highlights across worlds, while the uniformly bevelled grid has a mechanical regularity against the painterly scenery. This meets the depth gate, with little of the responsive lighting expected above it. Evidence: `mobile/r06-world4.png`, `mobile/r05-world3.png`, `desktop/r03-world1.png`.
+
+3. Animation and game feel — 6.5/10. The Cascade strip communicates a swap, a directional sweep, an emptied row and subsequent refill; the Crystal strip visibly connects an origin to distributed targets. Those are meaningful strengths. At peak, however, the Crystal targets become white blobs, while the subsequent refill is a large collective rearrangement with limited visible stagger. The strips show displacement and some deformation, but their sampling cannot prove smooth easing, a convincing landing rebound or satisfying real-time pacing. The evidence supports competent effects, not yet a thoroughly authored premium cascade. Evidence: `strips/mobile-s1.png`, `strips/mobile-s2.png`, `strips/desktop-s1.png`, `strips/desktop-s2.png`.
+
+4. UI / HUD and menus — 6.5/10. Moves dominate correctly and the desktop score has its own readable position. The tutorial card also clears the booster tray. But the desktop HUD, tiny booster captions and large open interval between panels feel assembled rather than composed. On phone, the map's plain numbered metallic discs and the win screen's flat yellow stars lack the material finish of the pieces. The history postcard provides personality, but competes with the reward for most of the result card. Evidence: `desktop/r03-world1.png`, `desktop/r17-tip.png`, `mobile/r02-map.png`, `mobile/r13-win.png`.
+
+5. Typography — 7/10. The rounded display face and quieter body face form a workable system, with strong moves and score numerals. Help text remains legible in the phone capture. Long level titles wrap into the goal area's vertical territory, and the uppercase location labels and tiny desktop booster captions have substantially less presence than the display text. This clears the functional gate without the disciplined scale and spacing of the leaders. Evidence: `mobile/r16-help.png`, `mobile/r06-world4.png`, `desktop/r03-world1.png`.
+
+6. Readability — 6.5/10. Ordinary pieces separate well by colour and silhouette. The gold locks, however, cover the centres of pieces and spread nearly corner to corner, producing a busy gold lattice in the hotel board. The five-goal garden HUD packs icons and counts into one tight line; its crust goal looks like a generic green square. Cascade chevrons help in the desktop board, but the special still relies on a small overlay around an ordinary gem. Evidence: `mobile/r05-world3.png`, `mobile/r08-world6.png`, `desktop/r03-world1.png`.
+
+7. Mobile — 6.5/10. The tray is reachable, dialogs fit and the map header is contained. Nevertheless, the nine-column boards offer only roughly 40–43 logical pixels per cell, while a large uninterrupted scenic band occupies the space between HUD and board. That allocation prioritises scenery over comfortable manipulation. The five-goal HUD is especially dense at 390 px, and long titles require extra lines. It works in portrait, but does not yet feel designed around phone play. Actual hitboxes cannot be established from captures. Evidence: `mobile/r08-world6.png`, `mobile/r05-world3.png`, `mobile/r06-world4.png`, `mobile/r02-map.png`.
+
+8. Authenticity — 7/10. Bathhouse architecture, the tiled dome, racing grandstand and woodland glass chapel give the worlds more specificity than a generic spa resort. The history postcard adds a concrete local subject; Della's visible presentation does not show an obvious caricature. The settings still tend toward embellished destination fantasy: abundant flowers, steam and monumental architecture soften geographic specificity. This is a visual identity judgment, not verification of the postcard's historical claims or architectural accuracy. Evidence: `desktop/r03-world1.png`, `mobile/r06-world4.png`, `mobile/r08-world6.png`, `mobile/r13-win.png`, `desktop/r17-tip.png`.
+
+IP check: clean. No visible commercial match-3 names, logos, distinctive copied piece designs or recognisably copied branded UI in the inspected captures. Generic gems, stars and a winding level map alone do not establish copying.
+
+Ranked gaps (expected gains are category points out of 10, estimated independently):
+
+1. G-phone-layout — Mobile; severity 4; effort M; expected gain +1.0. Reduce the scenic gap and compact the moves badge to give the board and goals more room. Put five goals on two deliberate rows and keep long level titles clear of them. Test every world at 390 × 844: no collisions, board cells at least 44 logical pixels where feasible, and no board/tray overlap. Evidence: `mobile/r08-world6.png`, `mobile/r06-world4.png`.
+2. G-lock-clarity — Readability; severity 4; effort M; expected gain +1.0. Replace corner-spanning decorative loops with a compact padlock and two restrained chain bands. Preserve most of each piece's silhouette and colour. Test the dense hotel layout at native phone scale: each locked kind should be identifiable without zooming. Evidence: `mobile/r05-world3.png`, `mobile/r08-world6.png`.
+3. G-effect-sequencing — Animation; severity 3; effort M; expected gain +0.5. Reduce Crystal target bloom, preserve coloured rims through the impact, and stagger refill landings enough to show individual compression and recovery. Recapture the same sequences with more samples around impact and landing; targets must remain identifiable and the rebound must be visible before settling. Evidence: `strips/mobile-s2.png`, `strips/mobile-s1.png`.
+4. G-piece-finish — Art; severity 3; effort M; expected gain +0.5. Give the fans stronger thickness and material shading, and give gems more nuanced internal facets while preserving silhouettes. Compare all kinds at final phone size: none should read as a flat illustration beside the horseshoe. Evidence: `mobile/r05-world3.png`, `mobile/r08-world6.png`.
+5. G-interface-finish — UI; severity 3; effort M; expected gain +0.5. Give reward stars and map nodes the same dimensional material treatment as the board assets; simplify the win card hierarchy so the earned reward leads and the postcard reads second. Verify at phone scale that the reward, progression action and historical content have distinct visual ranks. Evidence: `mobile/r13-win.png`, `mobile/r02-map.png`.
+
+```json
+{
+  "loop": 5,
+  "role": "critic-codex",
+  "scores": {
+    "art": {"score": 6.5, "evidence": ["mobile/r05-world3.png", "mobile/r08-world6.png"]},
+    "rendering": {"score": 7, "evidence": ["mobile/r06-world4.png", "mobile/r05-world3.png", "desktop/r03-world1.png"]},
+    "animation": {"score": 6.5, "evidence": ["strips/mobile-s1.png", "strips/mobile-s2.png", "strips/desktop-s1.png", "strips/desktop-s2.png"]},
+    "ui": {"score": 6.5, "evidence": ["desktop/r03-world1.png", "desktop/r17-tip.png", "mobile/r02-map.png", "mobile/r13-win.png"]},
+    "typography": {"score": 7, "evidence": ["mobile/r16-help.png", "mobile/r06-world4.png", "desktop/r03-world1.png"]},
+    "readability": {"score": 6.5, "evidence": ["mobile/r05-world3.png", "mobile/r08-world6.png", "desktop/r03-world1.png"]},
+    "mobile": {"score": 6.5, "evidence": ["mobile/r08-world6.png", "mobile/r05-world3.png", "mobile/r06-world4.png", "mobile/r02-map.png"]},
+    "authenticity": {"score": 7, "evidence": ["desktop/r03-world1.png", "mobile/r06-world4.png", "mobile/r08-world6.png", "mobile/r13-win.png", "desktop/r17-tip.png"]}
+  },
+  "ip": {"clean": true, "notes": "No visible copied commercial match-3 names, logos, distinctive pieces or branded UI in the inspected captures."},
+  "gaps": [
+    {"id": "G-phone-layout", "category": "mobile", "expectedGain": 1, "severity": 4, "effort": "M", "evidence": ["mobile/r08-world6.png", "mobile/r06-world4.png"], "fix": "Reduce scenic gap and moves badge; arrange five goals on two rows. At 390x844, keep titles and goals clear, aim for cells at least 44 logical pixels where feasible, and prevent board/tray overlap."},
+    {"id": "G-lock-clarity", "category": "readability", "expectedGain": 1, "severity": 4, "effort": "M", "evidence": ["mobile/r05-world3.png", "mobile/r08-world6.png"], "fix": "Use a compact lock and two restrained chain bands; preserve piece silhouette and colour. Every locked kind must be identifiable at native phone scale."},
+    {"id": "G-effect-sequencing", "category": "animation", "expectedGain": 0.5, "severity": 3, "effort": "M", "evidence": ["strips/mobile-s2.png", "strips/mobile-s1.png"], "fix": "Reduce Crystal bloom, preserve coloured target rims, and stagger refill landings. Denser strips must show identifiable targets and compression, rebound and settlement."},
+    {"id": "G-piece-finish", "category": "art", "expectedGain": 0.5, "severity": 3, "effort": "M", "evidence": ["mobile/r05-world3.png", "mobile/r08-world6.png"], "fix": "Add fan thickness and material shading and richer gem facets. Compare at final phone size against the horseshoe's dimensional finish."},
+    {"id": "G-interface-finish", "category": "ui", "expectedGain": 0.5, "severity": 3, "effort": "M", "evidence": ["mobile/r13-win.png", "mobile/r02-map.png"], "fix": "Give map nodes and reward stars consistent dimensional materials; make reward, progression action and postcard clearly ranked on the phone win card."}
+  ],
+  "verdict": "continue"
+}
+```

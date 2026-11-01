@@ -1,0 +1,156 @@
+{
+ "loop": 5,
+ "total": 52,
+ "scores": {
+  "art": 6.5,
+  "rendering": 6.5,
+  "animation": 6.5,
+  "ui": 6,
+  "typography": 6.5,
+  "readability": 6.5,
+  "mobile": 6.5,
+  "authenticity": 7
+ },
+ "pass": false,
+ "verdict": "stop-stagnation",
+ "backlog": [
+  {
+   "id": "G-score-clip",
+   "category": "ui",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "S",
+   "evidence": [
+    "desktop/r10-stone-fire",
+    "desktop/s1-6",
+    "desktop/s1-10"
+   ],
+   "fix": "The score pop-scale is right-anchored with no padding (glyph flush at x=282 vs panel edge x=283 mid-pop; 20px inside at rest). Give the desktop score a 16px right inset and tabular numerals, and scale the pop from the right edge; at peak pop with 99,999 the glyph box must end >=12px inside the panel.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-target-label",
+   "category": "ui",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "S",
+   "evidence": [
+    "desktop/r03-world1",
+    "mobile/r03-world1",
+    "mobile/r17-tip"
+   ],
+   "fix": "Relabel the target pill 'Target 9,840' in a smaller muted style (or show it as a tick on the star bar) and make the live score the largest number in the HUD block.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-crystal-puff",
+   "category": "rendering",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "S",
+   "evidence": [
+    "desktop/s2-2",
+    "strips/desktop-s2",
+    "strips/mobile-s2"
+   ],
+   "fix": "Replace the opaque white Crystal puffs with an additive flash tinted to the target colour (peak alpha <=0.6, <=2 frames) that keeps each target's coloured rim, fire one ray from the crystal to each target before it pops, and drop the board wash; every target must stay identifiable in every s2 frame.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-mobile-hud-wrap",
+   "category": "typography",
+   "expectedGain": 0.5,
+   "severity": 2,
+   "effort": "S",
+   "evidence": [
+    "mobile/r06-world4",
+    "mobile/r12-callout",
+    "mobile/r08-world6"
+   ],
+   "fix": "Auto-shrink phone level names to one line (min 16px), lay out 5+ goals as two deliberate chip rows, and widen the phone star bar to >=140 CSS px with a visible fill; no title glyph may overlap the goal row's band in any phone r03-r08 frame.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-lose-layout",
+   "category": "ui",
+   "expectedGain": 0.25,
+   "severity": 1,
+   "effort": "S",
+   "evidence": [
+    "desktop/r14-lose",
+    "mobile/r14-lose"
+   ],
+   "fix": "Put '+5 moves', Retry and Map on one row in the desktop lose dialog (Map as a compact secondary button), matching the phone layout.",
+   "priority": 0.38
+  },
+  {
+   "id": "G-impact-timing",
+   "category": "animation",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "M",
+   "evidence": [
+    "strips/desktop-s1",
+    "strips/mobile-s1",
+    "desktop/s2-2"
+   ],
+   "fix": "The existing shake peaks at only 2-6px: raise it to a decaying 8px (desktop) / 6 CSS px (phone) shake over 220ms on Hot Stone and Crystal plus a 1.03 board punch on Cascade; add a 0.85 anticipation squash for 60ms on the special before it fires; stagger refill landings 30ms per row with a scaleY 0.8 landing squash; trim the settle so at most one strip frame is static.",
+   "priority": 0.38
+  },
+  {
+   "id": "G-mobile-layout",
+   "category": "mobile",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "M",
+   "evidence": [
+    "mobile/s1-8",
+    "mobile/r12-callout",
+    "mobile/r03-world1"
+   ],
+   "fix": "On phones, centre the board vertically between the HUD bottom and the tray top (the gaps above and below differ by <=24 CSS px), scale 7-column and cross boards to the full width (cells up to ~54 CSS px), and put a ~55% dark rounded backing panel behind the HUD.",
+   "priority": 0.38
+  },
+  {
+   "id": "G-lock-clarity",
+   "category": "readability",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "M",
+   "evidence": [
+    "mobile/r05-world3",
+    "desktop/r05-world3"
+   ],
+   "fix": "Replace the corner-to-corner gold lock loops with a compact padlock in the bottom-right quadrant and two thin chain bands covering <=35% of the piece's area; every locked kind on the Park Hotel board must be identifiable at native phone scale.",
+   "priority": 0.38
+  },
+  {
+   "id": "G-crust-steam",
+   "category": "art",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "M",
+   "evidence": [
+    "mobile/r07-world5",
+    "mobile/r08-world6",
+    "desktop/r17-tip"
+   ],
+   "fix": "Render the crust as a cracked grey-tan mineral slab with two damage states and regenerate its HUD goal chip from the same render (the chip is currently a teal square); make steam a soft-edged, drifting, swirled vapour with a faint warm tint, distinct from any clear effect.",
+   "priority": 0.38
+  },
+  {
+   "id": "G-interface-finish",
+   "category": "ui",
+   "expectedGain": 0.5,
+   "severity": 2,
+   "effort": "M",
+   "evidence": [
+    "desktop/r02-map",
+    "mobile/r02-map",
+    "mobile/r13-win"
+   ],
+   "fix": "Themed map nodes (tile medallions or bathhouse plaques), a glowing path up to the current node and a player marker; fill the desktop map's blurred side bands with a widened painting or a framed border; glossy bevelled win stars that stamp in with a bounce.",
+   "priority": 0.38
+  }
+ ]
+}

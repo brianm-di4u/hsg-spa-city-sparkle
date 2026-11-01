@@ -1,0 +1,40 @@
+{
+  "$comment": "Every critic and judge review ends with one fenced json block in this shape. The judge's scores are final.",
+  "type": "object",
+  "required": ["loop", "role", "scores", "gaps"],
+  "properties": {
+    "loop": { "type": "integer" },
+    "role": { "enum": ["critic-claude", "critic-codex", "judge"] },
+    "scores": {
+      "type": "object",
+      "required": ["art", "rendering", "animation", "ui", "typography", "readability", "mobile", "authenticity"],
+      "additionalProperties": {
+        "type": "object",
+        "required": ["score", "evidence"],
+        "properties": {
+          "score": { "type": "number", "minimum": 1, "maximum": 10, "multipleOf": 0.5 },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "evidence": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "ip": { "type": "object", "properties": { "clean": { "type": "boolean" }, "notes": { "type": "string" } } },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "category", "expectedGain", "severity", "effort", "fix"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^G-[a-z0-9-]+$" },
+          "category": { "enum": ["art", "rendering", "animation", "ui", "typography", "readability", "mobile", "authenticity"] },
+          "expectedGain": { "type": "number" },
+          "severity": { "type": "integer", "minimum": 1, "maximum": 5 },
+          "effort": { "enum": ["S", "M", "L"] },
+          "evidence": { "type": "array", "items": { "type": "string" } },
+          "fix": { "type": "string" }
+        }
+      }
+    },
+    "verdict": { "enum": ["continue", "stop-pass"] }
+  }
+}

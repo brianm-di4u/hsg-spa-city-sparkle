@@ -1,0 +1,386 @@
+{
+ "crystal": {
+  "file": "crystal.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 9356
+ },
+ "drain": {
+  "file": "drain.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 10348
+ },
+ "lock1": {
+  "file": "lock1.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 14248
+ },
+ "lock2": {
+  "file": "lock2.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 16536
+ },
+ "moss": {
+  "file": "moss.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 13548
+ },
+ "p0": {
+  "file": "p0.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 8794
+ },
+ "p0b": {
+  "file": "p0b.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 10596
+ },
+ "p0h": {
+  "file": "p0h.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 9714
+ },
+ "p0v": {
+  "file": "p0v.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 9170
+ },
+ "p1": {
+  "file": "p1.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 10584
+ },
+ "p1b": {
+  "file": "p1b.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 11226
+ },
+ "p1h": {
+  "file": "p1h.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 10680
+ },
+ "p1v": {
+  "file": "p1v.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 10308
+ },
+ "p2": {
+  "file": "p2.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 12948
+ },
+ "p2b": {
+  "file": "p2b.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 11220
+ },
+ "p2h": {
+  "file": "p2h.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 12588
+ },
+ "p2v": {
+  "file": "p2v.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 13080
+ },
+ "p3": {
+  "file": "p3.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 9474
+ },
+ "p3b": {
+  "file": "p3b.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 11428
+ },
+ "p3h": {
+  "file": "p3h.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 9910
+ },
+ "p3v": {
+  "file": "p3v.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 9204
+ },
+ "p4": {
+  "file": "p4.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 11406
+ },
+ "p4B": {
+  "file": "p4B.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 11954
+ },
+ "p4h": {
+  "file": "p4h.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 10964
+ },
+ "p4v": {
+  "file": "p4v.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 10994
+ },
+ "p5": {
+  "file": "p5.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 11202
+ },
+ "p5b": {
+  "file": "p5b.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 11800
+ },
+ "p5h": {
+  "file": "p5h.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 11774
+ },
+ "p5v": {
+  "file": "p5v.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 10712
+ },
+ "stone1": {
+  "file": "stone1.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 9230
+ },
+ "stone2": {
+  "file": "stone2.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 9602
+ },
+ "stone3": {
+  "file": "stone3.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 9908
+ },
+ "token": {
+  "file": "token.webp",
+  "w": 192,
+  "h": 192,
+  "bytes": 9946
+ },
+ "bg1-l": {
+  "file": "bg1-l.webp",
+  "w": 1280,
+  "h": 853,
+  "bytes": 215374
+ },
+ "bg1-p": {
+  "file": "bg1-p.webp",
+  "w": 768,
+  "h": 1152,
+  "bytes": 147060
+ },
+ "bg2-l": {
+  "file": "bg2-l.webp",
+  "w": 1280,
+  "h": 853,
+  "bytes": 193616
+ },
+ "bg2-p": {
+  "file": "bg2-p.webp",
+  "w": 768,
+  "h": 1152,
+  "bytes": 116294
+ },
+ "bg3-l": {
+  "file": "bg3-l.webp",
+  "w": 1280,
+  "h": 853,
+  "bytes": 198302
+ },
+ "bg3-p": {
+  "file": "bg3-p.webp",
+  "w": 768,
+  "h": 1152,
+  "bytes": 179040
+ },
+ "bg4-l": {
+  "file": "bg4-l.webp",
+  "w": 1280,
+  "h": 853,
+  "bytes": 191480
+ },
+ "bg4-p": {
+  "file": "bg4-p.webp",
+  "w": 768,
+  "h": 1152,
+  "bytes": 158000
+ },
+ "bg5-l": {
+  "file": "bg5-l.webp",
+  "w": 1280,
+  "h": 853,
+  "bytes": 203282
+ },
+ "bg5-p": {
+  "file": "bg5-p.webp",
+  "w": 768,
+  "h": 1152,
+  "bytes": 127154
+ },
+ "bg6-l": {
+  "file": "bg6-l.webp",
+  "w": 1280,
+  "h": 853,
+  "bytes": 247732
+ },
+ "bg6-p": {
+  "file": "bg6-p.webp",
+  "w": 768,
+  "h": 1152,
+  "bytes": 189384
+ },
+ "card-frame": {
+  "file": "card-frame.webp",
+  "w": 560,
+  "h": 560,
+  "bytes": 24112
+ },
+ "della-cheer": {
+  "file": "della-cheer.webp",
+  "w": 360,
+  "h": 540,
+  "bytes": 26988
+ },
+ "della-point": {
+  "file": "della-point.webp",
+  "w": 360,
+  "h": 540,
+  "bytes": 23158
+ },
+ "della-think": {
+  "file": "della-think.webp",
+  "w": 360,
+  "h": 540,
+  "bytes": 21082
+ },
+ "della-wave": {
+  "file": "della-wave.webp",
+  "w": 360,
+  "h": 540,
+  "bytes": 23264
+ },
+ "map1": {
+  "file": "map1.webp",
+  "w": 640,
+  "h": 960,
+  "bytes": 171648
+ },
+ "map2": {
+  "file": "map2.webp",
+  "w": 640,
+  "h": 960,
+  "bytes": 183742
+ },
+ "map3": {
+  "file": "map3.webp",
+  "w": 640,
+  "h": 960,
+  "bytes": 170508
+ },
+ "map4": {
+  "file": "map4.webp",
+  "w": 640,
+  "h": 960,
+  "bytes": 194784
+ },
+ "map5": {
+  "file": "map5.webp",
+  "w": 640,
+  "h": 960,
+  "bytes": 185520
+ },
+ "map6": {
+  "file": "map6.webp",
+  "w": 640,
+  "h": 960,
+  "bytes": 195450
+ },
+ "postcard1": {
+  "file": "postcard1.webp",
+  "w": 720,
+  "h": 480,
+  "bytes": 88720
+ },
+ "postcard2": {
+  "file": "postcard2.webp",
+  "w": 720,
+  "h": 480,
+  "bytes": 89952
+ },
+ "postcard3": {
+  "file": "postcard3.webp",
+  "w": 720,
+  "h": 480,
+  "bytes": 82548
+ },
+ "postcard4": {
+  "file": "postcard4.webp",
+  "w": 720,
+  "h": 480,
+  "bytes": 90734
+ },
+ "postcard5": {
+  "file": "postcard5.webp",
+  "w": 720,
+  "h": 480,
+  "bytes": 82790
+ },
+ "postcard6": {
+  "file": "postcard6.webp",
+  "w": 720,
+  "h": 480,
+  "bytes": 93484
+ },
+ "title-l": {
+  "file": "title-l.webp",
+  "w": 1280,
+  "h": 853,
+  "bytes": 156366
+ },
+ "title-p": {
+  "file": "title-p.webp",
+  "w": 768,
+  "h": 1152,
+  "bytes": 140014
+ }
+}

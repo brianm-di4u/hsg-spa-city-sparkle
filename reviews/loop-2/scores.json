@@ -1,0 +1,155 @@
+{
+ "loop": 2,
+ "total": 51.5,
+ "scores": {
+  "art": 6.5,
+  "rendering": 6.5,
+  "animation": 6,
+  "ui": 6,
+  "typography": 6.5,
+  "readability": 6.5,
+  "mobile": 7,
+  "authenticity": 6.5
+ },
+ "pass": false,
+ "verdict": "continue",
+ "backlog": [
+  {
+   "id": "G-starbar-fill",
+   "category": "ui",
+   "expectedGain": 1,
+   "severity": 5,
+   "effort": "S",
+   "evidence": [
+    "mobile/s1-1",
+    "mobile/s1-10",
+    "desktop/r09-cascade-fire",
+    "sheets/mobile-1",
+    "mobile/r04-world2"
+   ],
+   "fix": "Fill = clamp(displayedScore / star3Threshold, 0, 1), recomputed on every score change, with no width transition on level load. Each marker sits at threshold_i / star3Threshold and lights only when score >= threshold_i. Test: 0% at score 0 (s1-1, s2-1); <=5% with no lit star at 540/12,000 (r09); about 22% at 2,160/9,840 (r03).",
+   "priority": 1.5
+  },
+  {
+   "id": "G-hud-truncation",
+   "category": "typography",
+   "expectedGain": 0.5,
+   "severity": 4,
+   "effort": "S",
+   "evidence": [
+    "mobile/r08-world6",
+    "mobile/r07-world5",
+    "mobile/r02-map",
+    "strips/mobile-s1"
+   ],
+   "fix": "Portrait: fit-shrink the world label to 11 px and the level name to 16 px, then wrap the level name to 2 lines before eliding. Abbreviate map headers ('W2 · Hot Springs Mtn') and widen the header title into the free space. Test: no ellipsis in any mobile capture r02-r17 or in the strips.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-event-callouts-and-count",
+   "category": "animation",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "S",
+   "evidence": [
+    "strips/mobile-s2",
+    "desktop/r12-callout",
+    "desktop/r09-cascade-fire"
+   ],
+   "fix": "Show 'Spring Crystal!' on the Crystal fire and 'Bubbly!' on chain wave 2 (capture r12 at its peak). Tween the HUD score from old to new over ~400 ms during the clear. Anchor callouts at least 1 cell above the affected row. Test: s2 shows the callout and a mid-count score; r12 shows 'Bubbly!'; the r09 swept row is uncovered.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-map-seam",
+   "category": "ui",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "S",
+   "evidence": [
+    "mobile/r02-map"
+   ],
+   "fix": "Crossfade adjacent world map paintings with an alpha gradient of at least 120 px at every join and keep the dotted route continuous across it. Test: no straight horizontal edge near y 240 in mobile/r02-map or anywhere in the full scroll.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-special-silhouettes",
+   "category": "readability",
+   "expectedGain": 1,
+   "severity": 4,
+   "effort": "M",
+   "evidence": [
+    "mobile/s1-10",
+    "mobile/r05-world3"
+   ],
+   "fix": "Cascade: two gold arrow fins extending at least 15% past the cell edge, a banded rim and a shimmer loop. Hot Stone: a basalt slab covering at least 90% of the cell, with pulsing emissive orange ember cracks. Test: every special is found within 1 s in s1-10 and r05-style frames at 390 px.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-clear-and-land-juice",
+   "category": "animation",
+   "expectedGain": 1,
+   "severity": 4,
+   "effort": "M",
+   "evidence": [
+    "strips/mobile-s1",
+    "strips/mobile-s2"
+   ],
+   "fix": "Cleared pieces scale to 1.15 over ~60 ms, then burst into 6-10 shards in the piece's colour. Landing pieces squash for 2 frames to 0.85 y and 1.1 x. Add a strip sample inside the fall window. Test: an s1 frame shows shards, another shows squashed pieces, and s1 frames 9 and 10 differ.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-dialog-consistency",
+   "category": "ui",
+   "expectedGain": 0.25,
+   "severity": 2,
+   "effort": "S",
+   "evidence": [
+    "desktop/r15-intro",
+    "sheets/mobile-2"
+   ],
+   "fix": "The map header follows the intro level's world. The lose dialog shows goal icon pills with remaining counts and says 'So close!' only when goals are at least 50% done. Help special icons use transparent alpha, with no grey rectangles. Test: the r15 header reads W2, r14 shows pills, r16 has no grey boxes.",
+   "priority": 0.38
+  },
+  {
+   "id": "G-blocker-materials",
+   "category": "art",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "M",
+   "evidence": [
+    "mobile/r04-world2",
+    "mobile/r07-world5",
+    "mobile/r08-world6"
+   ],
+   "fix": "Tufa: porous grey-tan limestone texture, with no dot-eye face. Crust: a beige-white crystalline mineral with a faceted edge, distinct from steam and the gold base rings. Raise the fan's specular to match the drop. Test: viewers name the r04 and r07 blockers 'stone' and 'mineral crust', not 'cookie' and 'ice'.",
+   "priority": 0.38
+  },
+  {
+   "id": "G-board-seating",
+   "category": "rendering",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "M",
+   "evidence": [
+    "desktop/r09-cascade-fire",
+    "desktop/r04-world2"
+   ],
+   "fix": "Darken the backdrop ~25% in a radial falloff behind the board, add a rim light on the frame's sun side in each world's key-light colour, and tint the cells ~10% toward the backdrop's average colour. Test: in r09 the board edge sits in a darkened halo and the frame shows a warm edge toward the sun.",
+   "priority": 0.38
+  },
+  {
+   "id": "G-terraces",
+   "category": "authenticity",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "M",
+   "evidence": [
+    "desktop/r01-title",
+    "mobile/r02-map",
+    "mobile/r04-world2"
+   ],
+   "fix": "Repaint the title's right side, the map's W2 region and the W2 backdrop: low drab grey tufa outcrops on a wooded slope, a single narrow Hot Water Cascade channel and steam, and no stacked pool terraces. Test: no stepped terraces in r01, r02 or r04.",
+   "priority": 0.25
+  }
+ ]
+}

@@ -1,0 +1,542 @@
+[
+  {
+    "world": 1,
+    "worldId": "bathhouse-row",
+    "id": "hs-0109",
+    "title": "Eight Historic Bathhouses",
+    "text": "Eight historic bathhouses stand on Bathhouse Row: Superior, Hale, Maurice, Fordyce, Quapaw, Ozark, Buckstaff and Lamar, lining Central Avenue.",
+    "source": "Wikipedia: Bathhouse Row",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Bathhouse_Row"
+  },
+  {
+    "world": 1,
+    "worldId": "bathhouse-row",
+    "id": "hs-0061",
+    "title": "The Oldest on the Row",
+    "text": "The Hale, built in 1892–93, is the oldest surviving bathhouse on the Row. The Buckstaff (1912), Fordyce (1914–15) and Lamar (1923) came later.",
+    "source": "Encyclopedia of Arkansas: Bathhouse Row",
+    "sourceUrl": "https://encyclopediaofarkansas.net/entries/bathhouse-row-437/"
+  },
+  {
+    "world": 1,
+    "worldId": "bathhouse-row",
+    "id": "hs-0062",
+    "title": "Baths Since 1912",
+    "text": "The Buckstaff opened on February 1, 1912, and NPS says it has offered baths in continuous operation ever since.",
+    "source": "NPS: Buckstaff Bathhouse",
+    "sourceUrl": "https://www.nps.gov/hosp/learn/historyculture/buckstaff-bathhouse.htm"
+  },
+  {
+    "world": 1,
+    "worldId": "bathhouse-row",
+    "id": "hs-0064",
+    "title": "The Priciest Bathhouse",
+    "text": "The Fordyce, the most elaborate and most expensive bathhouse, cost $212,749.55 to build in 1914–15, including fixtures and furniture.",
+    "source": "Wikipedia: Bathhouse Row",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Bathhouse_Row"
+  },
+  {
+    "world": 1,
+    "worldId": "bathhouse-row",
+    "id": "hs-0065",
+    "title": "Under the Skylight",
+    "text": "The Fordyce's massive stained-glass skylight is in the men's area, with the DeSoto Fountain centered on the floor directly below it.",
+    "source": "Wikipedia: Bathhouse Row",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Bathhouse_Row"
+  },
+  {
+    "world": 1,
+    "worldId": "bathhouse-row",
+    "id": "hs-0068",
+    "title": "Horseshoe and Magnesia",
+    "text": "The 1922 Quapaw Bathhouse was built on the sites of two earlier bathhouses, the Horseshoe and the Magnesia.",
+    "source": "Wikipedia: Bathhouse Row",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Bathhouse_Row"
+  },
+  {
+    "world": 1,
+    "worldId": "bathhouse-row",
+    "id": "hs-0084",
+    "title": "Shells and Sculpin",
+    "text": "Sculpin fish decorate the Quapaw's parapets, framed by scalloped shells. The fish were originally gold and are now white.",
+    "source": "Wikipedia: Bathhouse Row",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Bathhouse_Row"
+  },
+  {
+    "world": 1,
+    "worldId": "bathhouse-row",
+    "id": "hs-0070",
+    "title": "Two Bronze Eagles",
+    "text": "Two bronze federal eagles guard Bathhouse Row's 1890s main entrance. Army engineer Lt. Robert Stevens designed the reservation's entrances.",
+    "source": "Wikipedia: Bathhouse Row",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Bathhouse_Row"
+  },
+  {
+    "world": 1,
+    "worldId": "bathhouse-row",
+    "id": "hs-0022",
+    "title": "A Course of 21 Baths",
+    "text": "In 1920 a standard prescribed \"course\" at Hot Springs was 21 baths, and a course cost $9 to $15.",
+    "source": "NPS 1920 brochure",
+    "sourceUrl": "https://npshistory.com/publications/hosp/brochures/1920/sec1.htm"
+  },
+  {
+    "world": 1,
+    "worldId": "bathhouse-row",
+    "id": "hs-0077",
+    "title": "The Row Completed",
+    "text": "The final change to Bathhouse Row was completed when the Lamar opened in 1923, NPS says. The Lamar closed in 1985.",
+    "source": "NPS: History & Culture",
+    "sourceUrl": "https://www.nps.gov/hosp/learn/historyculture/index.htm"
+  },
+  {
+    "world": 2,
+    "worldId": "hot-springs-mountain",
+    "id": "hs-0148",
+    "title": "Forty-Seven Springs",
+    "text": "USGS says the park is best known for its 47 hot springs, which emerge from Hot Springs Mountain at an average temperature of 143°F.",
+    "source": "USGS: Hot Springs National Park",
+    "sourceUrl": "https://www.usgs.gov/geology-and-ecology-of-national-parks/hot-springs-national-park"
+  },
+  {
+    "world": 2,
+    "worldId": "hot-springs-mountain",
+    "id": "hs-0154",
+    "title": "Hottest East of the Rockies",
+    "text": "NPS calls the Hot Springs thermal springs the hottest east of the Rocky Mountains. They average about 143°F.",
+    "source": "NPS: Maurice Historic Display Spring",
+    "sourceUrl": "https://www.nps.gov/places/maurice-historic-display-spring.htm"
+  },
+  {
+    "world": 2,
+    "worldId": "hot-springs-mountain",
+    "id": "hs-0145",
+    "title": "Rain from Long Ago",
+    "text": "USGS tritium and carbon-14 dating show most of the thermal water is about 4,400 years old, mixed with a very small amount under 20 years old.",
+    "source": "USGS Professional Paper 1044-C: Abstract (npshistory.com mirror)",
+    "sourceUrl": "https://npshistory.com/publications/geology/pp/1044-C/abstract.htm"
+  },
+  {
+    "world": 2,
+    "worldId": "hot-springs-mountain",
+    "id": "hs-0153",
+    "title": "Heated a Mile Down",
+    "text": "Rainwater heats to about 160°F through the geothermal gradient, roughly a mile underground, before it rises again as spring water.",
+    "source": "NPS: Maurice Historic Display Spring",
+    "sourceUrl": "https://www.nps.gov/places/maurice-historic-display-spring.htm"
+  },
+  {
+    "world": 2,
+    "worldId": "hot-springs-mountain",
+    "id": "hs-0151",
+    "title": "The Alpha and Beta Faults",
+    "text": "NPS says two faults, named alpha and beta, help direct the heated water back up to the surface.",
+    "source": "NPS: Maurice Historic Display Spring",
+    "sourceUrl": "https://www.nps.gov/places/maurice-historic-display-spring.htm"
+  },
+  {
+    "world": 2,
+    "worldId": "hot-springs-mountain",
+    "id": "hs-0146",
+    "title": "700,000 Gallons a Day",
+    "text": "The National Park Service says the thermal springs produce over 700,000 gallons of water a day.",
+    "source": "NPS: Maurice Historic Display Spring",
+    "sourceUrl": "https://www.nps.gov/places/maurice-historic-display-spring.htm"
+  },
+  {
+    "world": 2,
+    "worldId": "hot-springs-mountain",
+    "id": "hs-0156",
+    "title": "Tufa Rock",
+    "text": "Minerals dissolved in the spring water precipitate near the spring openings as white-to-tan travertine, or tufa rock.",
+    "source": "Wikipedia: Hot Springs National Park",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Hot_Springs_National_Park"
+  },
+  {
+    "world": 2,
+    "worldId": "hot-springs-mountain",
+    "id": "hs-0120",
+    "title": "The Display Spring",
+    "text": "The Display Spring was covered by a grate for decades. In the 1930s it was uncovered so visitors could see thermal water in its natural state.",
+    "source": "NPS: Maurice Historic Display Spring",
+    "sourceUrl": "https://www.nps.gov/places/maurice-historic-display-spring.htm"
+  },
+  {
+    "world": 2,
+    "worldId": "hot-springs-mountain",
+    "id": "hs-0163",
+    "title": "The Grand Promenade",
+    "text": "The Grand Promenade, a National Recreation Trail and the entry point to the park from downtown, is about half a mile long.",
+    "source": "NPS: Hot Springs & North Mountain Trails",
+    "sourceUrl": "https://www.nps.gov/hosp/planyourvisit/hot-springs-and-north-mountain-trails.htm"
+  },
+  {
+    "world": 2,
+    "worldId": "hot-springs-mountain",
+    "id": "hs-0094",
+    "title": "A 216-Foot Tower",
+    "text": "The Hot Springs Mountain Tower is 216 feet tall. The lattice steel observation tower officially opened to the public on June 3, 1983.",
+    "source": "Wikipedia: Hot Springs Mountain Tower",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Hot_Springs_Mountain_Tower"
+  },
+  {
+    "world": 3,
+    "worldId": "central-avenue-night",
+    "id": "hs-0060",
+    "title": "Valley Street",
+    "text": "Central Avenue was originally Valley Street. By the late 1870s it was named Central Avenue to reflect its status as the commercial center.",
+    "source": "Encyclopedia of Arkansas: Central Avenue Historic District",
+    "sourceUrl": "https://encyclopediaofarkansas.net/entries/hot-springs-central-avenue-historic-district-7954/"
+  },
+  {
+    "world": 3,
+    "worldId": "central-avenue-night",
+    "id": "hs-0076",
+    "title": "The Third Arlington",
+    "text": "After the 1923 fire, work on the third Arlington Hotel began Oct. 25, 1923, and the new hotel was completed Nov. 28, 1924.",
+    "source": "Arlington Hotel: History",
+    "sourceUrl": "https://www.arlingtonhotel.com/history/"
+  },
+  {
+    "world": 3,
+    "worldId": "central-avenue-night",
+    "id": "hs-0402",
+    "title": "Kome To Hot Springs",
+    "text": "The call letters of Hot Springs radio station KTHS stood for \"Kome (Come) To Hot Springs.\"",
+    "source": "Encyclopedia of Arkansas: KTHS Radio Station",
+    "sourceUrl": "https://encyclopediaofarkansas.net/entries/kths-radio-station-6423/"
+  },
+  {
+    "world": 3,
+    "worldId": "central-avenue-night",
+    "id": "hs-0404",
+    "title": "Radio at the Arlington",
+    "text": "KTHS first broadcast from the Arlington Hotel. The station was built on the new Arlington's upper floor.",
+    "source": "Encyclopedia of Arkansas: KTHS Radio Station",
+    "sourceUrl": "https://encyclopediaofarkansas.net/entries/kths-radio-station-6423/"
+  },
+  {
+    "world": 3,
+    "worldId": "central-avenue-night",
+    "id": "hs-0401",
+    "title": "Lum and Abner",
+    "text": "The radio comedy team Lum and Abner first performed on KTHS in April 1931, at a flood relief benefit that launched their careers.",
+    "source": "Encyclopedia of Arkansas: KTHS Radio Station",
+    "sourceUrl": "https://encyclopediaofarkansas.net/entries/kths-radio-station-6423/"
+  },
+  {
+    "world": 3,
+    "worldId": "central-avenue-night",
+    "id": "hs-0074",
+    "title": "The Southern Club, 1893",
+    "text": "The Southern Club on Central Avenue was built in 1893 as a private club by Charles Dugan and Dan Stuart.",
+    "source": "Encyclopedia of Arkansas: Southern Club",
+    "sourceUrl": "https://encyclopediaofarkansas.net/entries/southern-club-1208/"
+  },
+  {
+    "world": 3,
+    "worldId": "central-avenue-night",
+    "id": "hs-0088",
+    "title": "Dark Pittsburgh Glass",
+    "text": "After William Jacobs bought the Southern Club building in 1927, he encased its front in dark Pittsburgh glass, which helped hide the gambling.",
+    "source": "Encyclopedia of Arkansas: Southern Club",
+    "sourceUrl": "https://encyclopediaofarkansas.net/entries/southern-club-1208/"
+  },
+  {
+    "world": 3,
+    "worldId": "central-avenue-night",
+    "id": "hs-0073",
+    "title": "The Ohio Club, 1905",
+    "text": "The Ohio Club on Central Avenue was founded in 1905. During Prohibition it officially became the Ohio Cigar Store, a front with a fake wall.",
+    "source": "Encyclopedia of Arkansas: Ohio Club",
+    "sourceUrl": "https://encyclopediaofarkansas.net/entries/ohio-club-9408/"
+  },
+  {
+    "world": 3,
+    "worldId": "central-avenue-night",
+    "id": "hs-0490",
+    "title": "The Shortest Street",
+    "text": "In the 1940s, Ripley's Believe It or Not designated Hot Springs' Bridge Street \"the shortest street in the world.\"",
+    "source": "ACHP: The Hot Springs National Park Visitors Center",
+    "sourceUrl": "https://www.achp.gov/node/8710"
+  },
+  {
+    "world": 3,
+    "worldId": "central-avenue-night",
+    "id": "hs-0488",
+    "title": "Scotch and Soda",
+    "text": "Mayor Leo McLaughlin's sulky was pulled down Central Avenue by horses named Scotch and Soda. He rode daily, wearing a red carnation.",
+    "source": "Encyclopedia of Arkansas: Leo P. McLaughlin",
+    "sourceUrl": "https://encyclopediaofarkansas.net/entries/leo-patrick-mclaughlin-1712/"
+  },
+  {
+    "world": 4,
+    "worldId": "oaklawn-and-ballfields",
+    "id": "hs-0188",
+    "title": "Spring Training, 1886",
+    "text": "Hot Springs first welcomed Major League Baseball in 1886, when the Chicago White Stockings came to town for spring training.",
+    "source": "Wikipedia: Hot Springs, Arkansas",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Hot_Springs,_Arkansas"
+  },
+  {
+    "world": 4,
+    "worldId": "oaklawn-and-ballfields",
+    "id": "hs-0196",
+    "title": "Whittington Park, 1894",
+    "text": "Hot Springs' Whittington Park ballfield opened in 1894. It replaced the Hot Springs Baseball Grounds.",
+    "source": "Wikipedia: Ban Johnson Park",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Ban_Johnson_Park"
+  },
+  {
+    "world": 4,
+    "worldId": "oaklawn-and-ballfields",
+    "id": "hs-0183",
+    "title": "Into the Alligator Farm",
+    "text": "Babe Ruth's famous long home run of March 17, 1918, at Whittington Park landed in the Arkansas Alligator Farm, Wikipedia says.",
+    "source": "Wikipedia: Hot Springs, Arkansas",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Hot_Springs,_Arkansas"
+  },
+  {
+    "world": 4,
+    "worldId": "oaklawn-and-ballfields",
+    "id": "hs-0184",
+    "title": "About 573 Feet",
+    "text": "A 2011 engineering measurement put Ruth's 1918 Whittington Park homer at about 573 feet. A Boston paper had thought it went more than 500.",
+    "source": "KNWA/KFTA: The home run that made Babe Ruth a star",
+    "sourceUrl": "https://digital-release.nwahomepage.com/news/the-home-run-in-hot-springs-that-made-babe-ruth-a-star/amp/"
+  },
+  {
+    "world": 4,
+    "worldId": "oaklawn-and-ballfields",
+    "id": "hs-0217",
+    "title": "Ban Johnson Park",
+    "text": "In 1935 Whittington Park was renamed for Hall of Fame baseball pioneer Ban Johnson, founder of the American League.",
+    "source": "Wikipedia: Ban Johnson Park",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Ban_Johnson_Park"
+  },
+  {
+    "world": 4,
+    "worldId": "oaklawn-and-ballfields",
+    "id": "hs-0223",
+    "title": "The First Umpire School",
+    "text": "Hot Springs' George Barr school (1935–47) is recognized as the first school for umpires in baseball.",
+    "source": "Wikipedia: Ban Johnson Park",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Ban_Johnson_Park"
+  },
+  {
+    "world": 4,
+    "worldId": "oaklawn-and-ballfields",
+    "id": "hs-0398",
+    "title": "1904 or 1905?",
+    "text": "Sources disagree on when Oaklawn opened: Wikipedia says Feb. 24, 1904; the Encyclopedia of Arkansas says Feb. 15, 1905.",
+    "source": "Encyclopedia of Arkansas: Oaklawn Park; Wikipedia: Oaklawn Racing Casino Resort",
+    "sourceUrl": "https://encyclopediaofarkansas.net/entries/oaklawn-park-racetrack-3636/"
+  },
+  {
+    "world": 4,
+    "worldId": "oaklawn-and-ballfields",
+    "id": "hs-0212",
+    "title": "A City Holiday",
+    "text": "Hot Springs declared a city holiday for Oaklawn's first day of racing, and more than 3,000 people attended, per Wikipedia.",
+    "source": "Wikipedia: Oaklawn Racing Casino Resort",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Oaklawn_Racing_Casino_Resort"
+  },
+  {
+    "world": 4,
+    "worldId": "oaklawn-and-ballfields",
+    "id": "hs-0216",
+    "title": "The First Arkansas Derby",
+    "text": "The first Arkansas Derby was run at Oaklawn in 1936, for a purse of $5,000.",
+    "source": "Wikipedia: Oaklawn Racing Casino Resort",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Oaklawn_Racing_Casino_Resort"
+  },
+  {
+    "world": 4,
+    "worldId": "oaklawn-and-ballfields",
+    "id": "hs-0470",
+    "title": "The Fifth Season",
+    "text": "Wikipedia says the Oaklawn race meet, held December through May, is sometimes called the \"Fifth Season.\"",
+    "source": "Wikipedia: Hot Springs, Arkansas",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Hot_Springs,_Arkansas"
+  },
+  {
+    "world": 5,
+    "worldId": "lakes",
+    "id": "hs-0121",
+    "title": "Carpenter Dam, 1931",
+    "text": "Arkansas Power & Light developed Lake Hamilton. Its Carpenter Dam, a concrete gravity dam, was completed in 1931, and the lake was created in 1932.",
+    "source": "Wikipedia: Lake Hamilton",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Lake_Hamilton_(Arkansas)"
+  },
+  {
+    "world": 5,
+    "worldId": "lakes",
+    "id": "hs-0122",
+    "title": "About 7,200 Acres",
+    "text": "Lake Hamilton covers about 7,200 acres. Lake Catherine, the smaller of the two lakes, is about 1,940 acres.",
+    "source": "Wikipedia: Lake Hamilton",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Lake_Hamilton_(Arkansas)"
+  },
+  {
+    "world": 5,
+    "worldId": "lakes",
+    "id": "hs-0159",
+    "title": "Creek to Lake",
+    "text": "Hot Springs Creek flows from Whittington Avenue through the southern city and, after passing under Bathhouse Row, empties into Lake Hamilton.",
+    "source": "Wikipedia: Hot Springs, Arkansas",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Hot_Springs,_Arkansas"
+  },
+  {
+    "world": 5,
+    "worldId": "lakes",
+    "id": "hs-0123",
+    "title": "Remmel Dam, 1924",
+    "text": "Remmel Dam, built in 1924, forms Lake Catherine. Remmel and Carpenter dams were both listed on the National Register in 1992.",
+    "source": "Wikipedia: Lake Catherine",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Lake_Catherine_(Arkansas)"
+  },
+  {
+    "world": 5,
+    "worldId": "lakes",
+    "id": "hs-0126",
+    "title": "Blakely Mountain Dam",
+    "text": "The Army Corps of Engineers built the 231-foot Blakely Mountain Dam from 1948 to 1953. It creates Lake Ouachita.",
+    "source": "Wikipedia: Lake Ouachita",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Lake_Ouachita"
+  },
+  {
+    "world": 5,
+    "worldId": "lakes",
+    "id": "hs-0127",
+    "title": "Two Hundred Islands",
+    "text": "Lake Ouachita has about 200 islands, according to Wikipedia's infobox for the lake.",
+    "source": "Wikipedia: Lake Ouachita",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Lake_Ouachita"
+  },
+  {
+    "world": 5,
+    "worldId": "lakes",
+    "id": "hs-0128",
+    "title": "Three Sisters Springs",
+    "text": "Lake Ouachita State Park, a 360-acre park that opened in 1955, preserves the historic healing springs called Three Sisters Springs.",
+    "source": "Wikipedia: Lake Ouachita State Park",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Lake_Ouachita_State_Park"
+  },
+  {
+    "world": 5,
+    "worldId": "lakes",
+    "id": "hs-0175",
+    "title": "Winter Eagles",
+    "text": "In January and February, eagle-watch cruises at Lake Ouachita State Park look for bald eagles.",
+    "source": "Arkansas Democrat-Gazette: Eagle-watching excursions take off at state parks (2019)",
+    "sourceUrl": "https://www.arkansasonline.com/news/2019/jan/10/eagle-watching-excursions-take-off-at-s/"
+  },
+  {
+    "world": 5,
+    "worldId": "lakes",
+    "id": "hs-0173",
+    "title": "Trout Below the Dam",
+    "text": "From November through April, the AGFC stocks catchable rainbow trout in the Ouachita River tailwaters below Carpenter Dam.",
+    "source": "AGFC: Trout stocking (Ouachita River tailwaters)",
+    "sourceUrl": "https://agfc.com/?p=466"
+  },
+  {
+    "world": 5,
+    "worldId": "lakes",
+    "id": "hs-0129",
+    "title": "The State Mineral",
+    "text": "Quartz crystal became Arkansas's state mineral in 1967, when Gov. Winthrop Rockefeller signed Act 128 on Feb. 22, 1967.",
+    "source": "Encyclopedia of Arkansas: Official State Mineral",
+    "sourceUrl": "https://encyclopediaofarkansas.net/entries/official-state-mineral-3138/"
+  },
+  {
+    "world": 6,
+    "worldId": "garvan-and-revival",
+    "id": "hs-0096",
+    "title": "Visitor Center, 1989",
+    "text": "The Fordyce closed on June 29, 1962. Since 1989 it has served as the visitor center of Hot Springs National Park.",
+    "source": "Wikipedia: Bathhouse Row",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Bathhouse_Row"
+  },
+  {
+    "world": 6,
+    "worldId": "garvan-and-revival",
+    "id": "hs-0103",
+    "title": "Quapaw Baths Reopen",
+    "text": "NPS restored the Quapaw Bathhouse in 2004, and Quapaw Baths & Spa opened in the building in July 2008.",
+    "source": "Wikipedia: Bathhouse Row",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Bathhouse_Row"
+  },
+  {
+    "world": 6,
+    "worldId": "garvan-and-revival",
+    "id": "hs-0104",
+    "title": "The Ozark's New Life",
+    "text": "The Ozark Bathhouse reopened in 2014 as the Hot Springs National Park Cultural Center, showing artist-in-residence work.",
+    "source": "Wikipedia: Bathhouse Row",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Bathhouse_Row"
+  },
+  {
+    "world": 6,
+    "worldId": "garvan-and-revival",
+    "id": "hs-0101",
+    "title": "Hotel Hale",
+    "text": "NPS says the Hale Bathhouse is now Hotel Hale, with nine suites whose soaking tubs get hot springs mineral water.",
+    "source": "NPS: Hale Bathhouse",
+    "sourceUrl": "https://www.nps.gov/places/hale-bathhouse.htm"
+  },
+  {
+    "world": 6,
+    "worldId": "garvan-and-revival",
+    "id": "hs-0052",
+    "title": "Restoring the Maurice",
+    "text": "Work on the Maurice Bathhouse, about $31.6 million, broke ground Aug. 19, 2025. It is the last building on the Row to be rehabilitated.",
+    "source": "NPS: Groundbreaking celebrated for Maurice Bathhouse rehabilitation",
+    "sourceUrl": "https://www.nps.gov/hosp/learn/news/maurice-gaoa-groundbreaking.htm"
+  },
+  {
+    "world": 6,
+    "worldId": "garvan-and-revival",
+    "id": "hs-0379",
+    "title": "Running of the Tubs",
+    "text": "Racers push bathtubs the length of Bathhouse Row. Visit Hot Springs billed the 2026 races as the 20th running since they began in 2006.",
+    "source": "Visit Hot Springs: Running of the Tubs 2026 press release",
+    "sourceUrl": "https://hotsprings.org/media-room/press-releases/first-ever-running-of-the-tubs-website-provides-registration-fun-and-background-information-for-2026-world-championship-bathtub/"
+  },
+  {
+    "world": 6,
+    "worldId": "garvan-and-revival",
+    "id": "hs-0141",
+    "title": "210 Acres of Garden",
+    "text": "Garvan Woodland Gardens on Lake Hamilton covers 210 acres. The University of Arkansas owns the garden.",
+    "source": "Wikipedia: Garvan Woodland Gardens",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Garvan_Woodland_Gardens"
+  },
+  {
+    "world": 6,
+    "worldId": "garvan-and-revival",
+    "id": "hs-0108",
+    "title": "Anthony Chapel",
+    "text": "Anthony Chapel, a wood-and-glass chapel in Garvan Woodland Gardens by Maurice Jennings and David McKee, officially opened in September 2006.",
+    "source": "Encyclopedia of Arkansas: Garvan Woodland Gardens",
+    "sourceUrl": "https://encyclopediaofarkansas.net/entries/garvan-woodland-gardens-4197"
+  },
+  {
+    "world": 6,
+    "worldId": "garvan-and-revival",
+    "id": "hs-0385",
+    "title": "150,000 Tulips",
+    "text": "About 150,000 tulips bloom in Garvan Woodland Gardens' Tulip Extravaganza, mid-March to mid-April in the Sensory Garden, per Visit Hot Springs.",
+    "source": "Visit Hot Springs: A reason to visit every season",
+    "sourceUrl": "https://hotsprings.org/blog/dont-miss-a-reason-to-visit-for-every-season/"
+  },
+  {
+    "world": 6,
+    "worldId": "garvan-and-revival",
+    "id": "hs-0384",
+    "title": "Nearly 5 Million Lights",
+    "text": "Garvan Woodland Gardens' multi-week Holiday Lights display features nearly 5 million lights, Visit Hot Springs says.",
+    "source": "Visit Hot Springs: A reason to visit every season",
+    "sourceUrl": "https://hotsprings.org/blog/dont-miss-a-reason-to-visit-for-every-season/"
+  }
+]

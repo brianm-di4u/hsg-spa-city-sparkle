@@ -1,0 +1,159 @@
+{
+ "loop": 1,
+ "total": 48,
+ "scores": {
+  "art": 6,
+  "rendering": 6,
+  "animation": 6,
+  "ui": 5.5,
+  "typography": 6,
+  "readability": 6,
+  "mobile": 6,
+  "authenticity": 6.5
+ },
+ "pass": false,
+ "verdict": "continue",
+ "backlog": [
+  {
+   "id": "G-hud-state",
+   "category": "ui",
+   "expectedGain": 0.5,
+   "severity": 4,
+   "effort": "S",
+   "evidence": [
+    "mobile/r03-world1",
+    "mobile/r09-cascade-fire",
+    "desktop/r10-stone-fire",
+    "mobile/r13-win",
+    "mobile/r14-lose"
+   ],
+   "fix": "Star-bar fill = score / 3-star threshold (clamped 0-1), each star marker at its threshold ratio and at least 1 star-width apart; seeded win/lose states and strip replays reset the HUD to the shown state (moves 0 on loss, goals 0/ticked on win, pre-move score in strip frame 1). Test: mobile/r03 2,160/9,840 bar filled 20-25%.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-map-header",
+   "category": "ui",
+   "expectedGain": 0.5,
+   "severity": 4,
+   "effort": "S",
+   "evidence": [
+    "mobile/r02-map",
+    "desktop/r02-map",
+    "mobile/r16-help"
+   ],
+   "fix": "Offset the map scroll content and world card by the 64 px CSS header height so the card title is fully visible in r02/r15/r16; fill desktop side gutters with a blurred, darkened extension of the map art.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-tip-dock",
+   "category": "mobile",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "S",
+   "evidence": [
+    "mobile/r17-tip",
+    "mobile/r03-world1",
+    "mobile/r04-world2"
+   ],
+   "fix": "Dock the portrait tutorial tip in the board-tray gap (max height = gap) without overlapping booster buttons; with no tip, enlarge the board about 8% so the board-to-tray gap is 40 CSS px or less. Test: all four tray buttons fully visible in mobile/r17.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-specials-identity",
+   "category": "art",
+   "expectedGain": 1,
+   "severity": 4,
+   "effort": "M",
+   "evidence": [
+    "desktop/r10-stone-fire",
+    "desktop/r12-callout",
+    "mobile/s1-7"
+   ],
+   "fix": "Re-render Cascade with contrasting fins or stripes covering at least 35% of the cell; replace the Hot Stone dashed ring with a glowing ember-red basalt stone sprite. Test: each special identifiable in mobile/r03 and desktop/r10 with its glow halo disabled.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-callout-shake-squash",
+   "category": "animation",
+   "expectedGain": 1,
+   "severity": 4,
+   "effort": "M",
+   "evidence": [
+    "desktop/r12-callout",
+    "strips/mobile-s1",
+    "strips/mobile-s2",
+    "mobile/s1-7"
+   ],
+   "fix": "Display-face banner scaling 0 to 1.15 to 1 over 250 ms on a chain of 2+ or a special firing, plus a 4-8 px screen shake for 150 ms; landing squash scaleY 0.8 / scaleX 1.15 for 80 ms; swap overshoot of at least 12% of a cell; capture strips at 50 ms or less around swap and landing. Test: r12 shows a banner, a strip frame shows squash.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-label-fit",
+   "category": "typography",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "S",
+   "evidence": [
+    "mobile/r03-world1",
+    "mobile/r04-world2",
+    "mobile/r14-lose",
+    "mobile/r13-win"
+   ],
+   "fix": "Drop the 'WORLD n' prefix from the mobile HUD or fit-shrink to a minimum of 18 px CSS before ellipsis; join '+5 Moves' with a non-breaking space. Test: no ellipsis in mobile/r03-r08 or r14.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-pine-piece",
+   "category": "readability",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "S",
+   "evidence": [
+    "mobile/s1-7",
+    "strips/mobile-s1"
+   ],
+   "fix": "Scale the pine sprite so its width is within 10% of the flower's, and lighten it to a warm yellow-green or add a gold star ornament so it separates from green W1/W6 cells.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-cell-strip-seating",
+   "category": "rendering",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "S",
+   "evidence": [
+    "desktop/r05-world3",
+    "mobile/r03-world1"
+   ],
+   "fix": "Remove the light-grey top bar from the cell texture; about 10 px beveled frame with a warm rim light; raise cast-shadow opacity until visible in mobile/r03; at least 48 px top and bottom margin for the desktop board.",
+   "priority": 0.75
+  },
+  {
+   "id": "G-help-results",
+   "category": "ui",
+   "expectedGain": 0.3,
+   "severity": 2,
+   "effort": "S",
+   "evidence": [
+    "mobile/r16-help",
+    "mobile/r13-win"
+   ],
+   "fix": "Show each special's sprite beside its Help bullet; put Next level, Replay and Map on one row; replace the browser-blue focus ring with a 3 px gold glow shown only on :focus-visible.",
+   "priority": 0.45
+  },
+  {
+   "id": "G-blocker-language",
+   "category": "readability",
+   "expectedGain": 0.5,
+   "severity": 3,
+   "effort": "M",
+   "evidence": [
+    "mobile/r08-world6",
+    "mobile/r04-world2",
+    "mobile/r17-tip"
+   ],
+   "fix": "Crust as faceted grey-white mineral shards on the cell rim instead of a pale tile; steam as soft translucent grey vapour at 60% opacity or less with no bright core or spiral; goal icons alpha-only with no square backing. Test: crust HUD icon matches the board crust in mobile/r08 and r15.",
+   "priority": 0.38
+  }
+ ]
+}

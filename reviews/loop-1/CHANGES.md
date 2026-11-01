@@ -1,0 +1,11 @@
+Changes since loop 0 (facts only):
+- Board seating: the hard-edged translucent rectangle behind the board was removed; a blurred cast shadow now sits under the board frame, and the screen vignette is stronger. Desktop board margins are larger.
+- Pieces are drawn larger (sprite 1.1 × cell, up from 0.92).
+- Specials: Cascade arrow fins re-rendered about 50% larger; every special has an additive glow halo underneath (cyan Cascade, orange Hot Stone, white Crystal); the Spring Crystal was re-rendered larger, in pink, blue and violet shards.
+- Blockers: the padlock was re-modelled as a chain crossing the cell in an X with a large padlock (brass for one lock, steel for two); mineral crust is now a crystalline rim around the cell edge with the piece unobscured; steam fog is a translucent swirl.
+- HUD goal and intro icons are drawn from the board's own rendered sprites. Levels with a token goal start with a bath token on the board.
+- Motion: the swap uses a back-out ease (overshoot); falling pieces squash on landing; the moves badge and score pulse when they change; the Cascade beam texture now has a bright core and tapered ends, with fewer, fainter steam puffs and sparks at the beam tips.
+- UI and type: the map header is a solid bar with the star total in its own pill; "How to play" on the title is now "Help"; HUD world labels use short names on one line; star markers sit along the bar at their thresholds; booster rewards use display names ("+5 Moves").
+- Mobile: the board sits lower, nearer the booster tray; goal pills are compact on one row; the tutorial tip docks below the board in portrait (when there is room) and in the left column on desktop.
+- Paintings: the World 2 backdrops, the World 2 postcard, the portrait title and the World 2 map panel were repainted so the tufa terraces are drab grey-tan with green algae; a landscape title painting was added for desktop.
+- The win capture (r13) now comes from a seeded state with a score above the 3-star threshold.

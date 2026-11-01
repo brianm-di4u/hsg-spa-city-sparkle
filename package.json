@@ -1,0 +1,14 @@
+{
+  "name": "hsg-spa-city-sparkle",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Spa City Sparkle: an original swap-and-match puzzle game set in Hot Springs, Arkansas (Hot Springs Games).",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "setup": "npm --prefix tools/dev ci && cd shared/test-harness && npm install && npx playwright install chromium",
+    "build": "node tools/build.mjs",
+    "check": "node tools/check-levels.mjs",
+    "test": "node shared/test-harness/run.mjs ."
+  }
+}
