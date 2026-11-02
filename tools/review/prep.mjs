@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const game = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const N = +process.argv[2];
 const dir = path.join(game, 'reviews', `loop-${N}`);
-const GAME = 'games/match-3 puzzle';
+const GAME = 'repos/hsg-spa-city-sparkle';
 const read = (f) => (fs.existsSync(f) ? fs.readFileSync(f, 'utf8').trim() : '');
 const fill = (t, extra) => t.replace(/\{\{(\w+)\}\}/g, (m, k) => (extra[k] !== undefined ? extra[k] : m));
 const vars = { LOOP: N, GAME, SHOTS: `review-loop-${N}`, ROLE: 'critic-claude or critic-codex, as your prompt says', CHANGES: read(path.join(dir, 'CHANGES.md')) || '(first loop: no changes yet)', GATES: read(path.join(dir, 'gates.json')) || '{}' };

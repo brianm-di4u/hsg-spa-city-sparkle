@@ -2,7 +2,7 @@
 // (games/trivia/data/questions.json). Card text is a hand-written restatement of each bank
 // item's answer + explanation (no new claims); this script checks every card against the bank:
 // id exists, confidence "confirmed", passes the sensitive-topic filter, title <= 40, text <= 160.
-// Run from the repo root:  node "games/match-3 puzzle/tools/build-lore.mjs"
+// Run from the repo root:  node tools/build-lore.mjs
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

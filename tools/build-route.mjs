@@ -1,7 +1,7 @@
 // Builds research/match3-route.json (shared corpus file, added 2026-11-01 at the user's request)
 // from research/places.json plus the hand-picked stop list below. Coordinates are copied from
 // places.json; a stop without its own point borrows its parent place's point and says so.
-// Run from the repo root:  node "games/match-3 puzzle/tools/build-route.mjs"
+// Run from the repo root:  node tools/build-route.mjs
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
