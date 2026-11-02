@@ -35,6 +35,11 @@ Docs: `PRD.md` (requirements and acceptance criteria), `MECHANICS.md` (engine ru
 test matrix, defect log), `VISUAL-PLAN.md`, `TEST-CAMPAIGN.md`, `REPORT.md`, `VISUAL-REPORT.md`, `SAMPLES.md`, `art-src/PROMPTS.md`
 (art provenance), and `research/town-content.md` (every Hot Springs fact the game uses, with sources).
 
+## Changes
+- **v1.0.1**: from player feedback on a phone. A Cascade or Hot Stone now fires when you swipe it, even if
+  the swipe makes no match. Specials glow brighter and pulse, Cascade chevrons are bigger, and a callout names
+  each new special as it appears.
+
 ## Credits
 - Renderer: [PixiJS](https://pixijs.com) (MIT).
 - Fonts: Righteous and Nunito (SIL Open Font License).

@@ -3,8 +3,8 @@
 == w2-01 | Display Spring
 moves 17
 goal stone all
-goal collect d 30
-stars 20500 27500 37500
+goal collect d 32
+stars 19000 25500 35500
 weights abcde
 band 0.75 0.95
 tags intro:tufa
@@ -29,10 +29,10 @@ block
 ........
 
 == w2-02 | Hot Water Cascade
-moves 33
+moves 30
 goal stone all
 goal collect d 25
-stars 34500 55500 81500
+stars 29500 48000 80000
 weights abcde
 band 0.75 0.95
 cells
@@ -57,10 +57,10 @@ block
 .........
 
 == w2-03 | Tufa Terrace Trail
-moves 17
+moves 16
 goal crust all
-goal collect a 35
-stars 26500 38500 51000
+goal collect a 32
+stars 23500 34500 50000
 weights abcde
 band 0.75 0.95
 tags intro:crust
@@ -85,9 +85,9 @@ under
 .........
 
 == w2-04 | Grand Promenade
-moves 25
+moves 26
 goal crust all
-stars 38500 60000 91000
+stars 40000 58500 83500
 weights abcde
 band 0.75 0.95
 cells
@@ -112,10 +112,10 @@ under
 ...111...
 
 == w2-05 | Noble Fountain
-moves 21
+moves 18
 goal stone all
 goal crust all
-stars 26500 45000 63000
+stars 26000 43000 62500
 weights abcde
 band 0.55 0.75
 cells
@@ -150,9 +150,9 @@ under
 .........
 
 == w2-06 | Ral Spring
-moves 30
+moves 24
 goal crust all
-stars 46500 70500 100000
+stars 44500 62500 92000
 weights abcde
 band 0.75 0.95
 cells
@@ -177,10 +177,10 @@ under
 1.1.1.1.1
 
 == w2-07 | Peak Trail
-moves 18
+moves 17
 goal stone all
 goal collect b 30
-stars 16500 27000 37000
+stars 18500 25000 32500
 weights abcde
 band 0.75 0.95
 cells
@@ -205,10 +205,10 @@ block
 .........
 
 == w2-08 | Goat Rock
-moves 28
+moves 25
 goal crust all
 goal stone all
-stars 22000 46000 65000
+stars 20500 35000 65000
 weights abcde
 band 0.75 0.95
 cells
@@ -243,9 +243,9 @@ under
 111111111
 
 == w2-09 | Gulpha Gorge
-moves 32
+moves 34
 goal crust all
-stars 24500 50000 71500
+stars 34000 51000 68000
 weights abcde
 band 0.75 0.95
 cells
@@ -270,10 +270,10 @@ under
 111111111
 
 == w2-10 | Mountain Tower
-moves 26
+moves 24
 goal stone all
 goal crust all
-stars 36000 51500 74500
+stars 32000 49500 72500
 weights abcde
 band 0.55 0.75
 cells

@@ -6,12 +6,11 @@ import { findGroups, runLengthsAt, matchable } from './match.js';
 import { isSpecialTile } from './specials.js';
 import { weighted, int } from './rng.js';
 
-// True if swapping cells a and b is a legal move (would match, or is a special pair / crystal swap).
+// True if swapping cells a and b is a legal move (would match, or moves a special: any special fires when swiped).
 export function isLegalSwap(s, a, b) {
   if (!swappableAt(s, a) || !swappableAt(s, b)) return false;
   const ta = s.tile[a], tb = s.tile[b];
-  if (ta.k === CRYSTAL || tb.k === CRYSTAL) return true;
-  if (isSpecialTile(ta) && isSpecialTile(tb)) return true;
+  if (isSpecialTile(ta) || isSpecialTile(tb)) return true;
   if (ta.k === tb.k) return false;
   s.tile[a] = tb; s.tile[b] = ta;
   const ok = makesRun(s, a) || makesRun(s, b);

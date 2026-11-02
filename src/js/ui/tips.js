@@ -2,8 +2,8 @@
 // drawn as a dignified expert). Each tip shows once, on the first level that uses its mechanic.
 export const TIPS = {
   basics: { title: 'Swap to match', pose: 'wave', html: 'Welcome to the Row! Swap two neighbouring pieces to line up <b>three of a kind</b>. Drag a piece, or tap it and then its neighbour.' },
-  cascade: { title: 'Cascade', pose: 'point', html: 'Line up <b>four</b> and you make a <b>Cascade</b>, named for the Hot Water Cascade on the mountain. Match it again and it sweeps the whole row or column.' },
-  stone: { title: 'Hot Stone', pose: 'point', html: 'An <b>L, T or + shape</b> makes a <b>Hot Stone</b>. It bursts the pieces around it, then rumbles once more.' },
+  cascade: { title: 'Cascade', pose: 'point', html: 'Line up <b>four</b> and you make a <b>Cascade</b>, named for the Hot Water Cascade on the mountain. <b>Swipe it</b> or match it to sweep the whole row or column.' },
+  stone: { title: 'Hot Stone', pose: 'point', html: 'An <b>L, T or + shape</b> makes a <b>Hot Stone</b>. <b>Swipe it</b> or match it: it bursts the pieces around it, then rumbles once more.' },
   crystal: { title: 'Spring Crystal', pose: 'cheer', html: 'Five in a row makes a <b>Spring Crystal</b>, clear as Ouachita quartz. Swap it with any piece to clear every piece of that kind.' },
   combo: { title: 'Combos', pose: 'think', html: 'Swap two specials into each other for a <b>combo</b>. Try a Cascade with a Hot Stone!' },
   tufa: { title: 'Tufa', pose: 'point', html: 'Spring water leaves <b>tufa</b>, a porous stone. Make matches beside it, or hit it with specials, to wear it down layer by layer.' },

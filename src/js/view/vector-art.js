@@ -319,7 +319,7 @@ function ring(g, S) {
 }
 
 function arrows(g, S) {
-  const c = S / 2, h = S * 0.17, w = S * 0.13;
+  const c = S / 2, h = S * 0.22, w = S * 0.16;
   g.lineJoin = 'round'; g.shadowColor = 'rgba(80,220,255,.9)'; g.shadowBlur = S * 0.05;
   for (const d of [-1, 1]) {
     const tip = c + d * S * 0.47, base = tip - d * w;

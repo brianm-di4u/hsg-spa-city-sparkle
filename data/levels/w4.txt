@@ -3,7 +3,8 @@
 == w4-01 | Baseball Grounds
 moves 18
 goal tokens all
-stars 16000 25000 34500
+goal collect a 41
+stars 26500 34500 46000
 weights abcde
 tokens 2 max 1 every 3
 band 0.50 0.75
@@ -29,10 +30,10 @@ vvvxxxvv
 eeeeeeee
 
 == w4-02 | Whittington Park
-moves 24
+moves 21
 goal tokens all
 goal collect b 25
-stars 28000 48000 70000
+stars 21500 40000 66000
 weights abcde
 tokens 3 max 1 every 3
 band 0.50 0.75
@@ -56,9 +57,10 @@ vvvxxxvvv
 eeeeeeeee
 
 == w4-03 | Alligator Farm Fence
-moves 22
+moves 20
 goal tokens all
-stars 25500 46500 68000
+goal collect c 12
+stars 20500 36000 63500
 weights abcde
 tokens 3 max 1 every 2
 band 0.50 0.75
@@ -94,10 +96,10 @@ e.......e
 ..eeeee..
 
 == w4-04 | Majestic Park
-moves 29
+moves 21
 goal tokens all
 goal crust all
-stars 30500 47000 71000
+stars 30500 41500 61000
 weights abcde
 tokens 3 max 2 every 3
 band 0.50 0.75
@@ -133,10 +135,10 @@ vvvx.xvvv
 eeeeeeeee
 
 == w4-05 | Fogel Field
-moves 27
+moves 20
 goal tokens all
 goal lock all
-stars 32000 54500 80500
+stars 28500 47500 63000
 weights abcde
 tokens 4 max 2 every 3
 band 0.30 0.55
@@ -172,10 +174,10 @@ e.......e
 ..eeeee..
 
 == w4-06 | Sam Guinn Field
-moves 20
-goal score 38500
+moves 19
+goal score 55500
 goal stone all
-stars 39000 47000 63500
+stars 56500 65500 79500
 weights abcde
 band 0.50 0.75
 cells
@@ -200,9 +202,9 @@ block
 .........
 
 == w4-07 | Jaycee Field
-moves 34
+moves 22
 goal tokens all
-stars 37000 63000 81500
+stars 33000 46500 67500
 weights abcde
 tokens 4 max 1 every 2
 band 0.50 0.75
@@ -241,7 +243,7 @@ eeeeeeeee
 moves 18
 goal crust all
 goal stone all
-stars 37000 51000 71500
+stars 30500 50000 69000
 weights abcde
 band 0.50 0.75
 cells
@@ -273,10 +275,10 @@ under
 111111111
 
 == w4-09 | Backstretch Chute
-moves 26
+moves 21
 goal tokens all
 goal collect d 30
-stars 36500 52500 73000
+stars 24500 50500 65500
 weights abcde
 tokens 4 max 2 every 3
 band 0.50 0.75
@@ -302,11 +304,11 @@ e.......e
 ..eeeee..
 
 == w4-10 | Derby Day
-moves 36
+moves 26
 goal tokens all
 goal lock all
 goal crust all
-stars 24500 35000 45500
+stars 15000 34500 39500
 weights abcdef
 tokens 2 max 1 every 3
 band 0.30 0.55

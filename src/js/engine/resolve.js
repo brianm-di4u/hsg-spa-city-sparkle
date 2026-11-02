@@ -200,12 +200,18 @@ export function resolveSwap(s, a, b, opts = {}) {
   s.movesUsed++;
   runWaves(s, ctx, tl);
   endTurn(s, tl, true);
-  return { valid: true, combo: kind, waves: ctx.waves, timeline: tl.out({ move: { a, b } }) };
+  return { valid: true, combo: kind === 'Sx' ? null : kind, waves: ctx.waves, timeline: tl.out({ move: { a, b } }) };
 }
 
 function setupCombo(s, ctx, tl, kind, a, b, ta, tb) {
   // ta now sits at b, tb at a.
   const cellOf = (t) => (s.tile[b] === t ? b : a);
+  if (kind === 'Sx') {
+    // a Cascade or Hot Stone swiped onto a plain piece fires where it lands (no combo burst)
+    const sp = isSpecialTile(ta) ? ta : tb;
+    ctx.queue.push({ cell: cellOf(sp), id: sp.id });
+    return;
+  }
   tl.push('combo', { kind, a, b, ids: [ta.id, tb.id] });
   if (kind === 'Cx') {
     const crystal = ta.k === CRYSTAL ? ta : tb, other = crystal === ta ? tb : ta;

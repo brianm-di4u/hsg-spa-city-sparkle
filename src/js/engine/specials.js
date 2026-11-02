@@ -51,6 +51,7 @@ export function comboKind(ta, tb) {
   if (g(ta) && g(tb)) return 'GG';
   if ((g(ta) && b(tb)) || (b(ta) && g(tb))) return 'GB';
   if (b(ta) && b(tb)) return 'BB';
+  if ((g(ta) || b(ta) || g(tb) || b(tb)) && isColour(ta) && isColour(tb)) return 'Sx'; // special + plain piece
   return null;
 }
 

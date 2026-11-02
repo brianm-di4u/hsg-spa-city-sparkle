@@ -31,12 +31,13 @@ Springs history. Sessions of 2–5 minutes per level.
 ## 4. Rules (complete; formal rules in MECHANICS.md)
 - **Board:** up to 9×9 cells; levels may have holes.
 - **Swaps:** swap two orthogonally adjacent pieces. A swap must create a match of 3 or more in a row or
-  column (or involve a special pair or a Spring Crystal), or it bounces back for free.
+  column (or move a special: Cascade, Hot Stone or Spring Crystal), or it bounces back for free.
 - **Clearing and gravity:** matched pieces clear, pieces above fall, new pieces drop in from the spawners,
   and new matches cascade at a rising multiplier (×1…×8).
 - **Specials:**
-  - **Cascade** (a match of 4): clears a row or column.
-  - **Hot Stone** (an L, T or + match): bursts a diamond of radius 2, then gives one aftershock.
+  - **Cascade** (a match of 4): clears a row or column. Swipe it or match it to fire it.
+  - **Hot Stone** (an L, T or + match): bursts a diamond of radius 2, then gives one aftershock. Swipe it
+    or match it to fire it.
   - **Spring Crystal** (a match of 5): swap it with a piece to clear that colour.
 - **Combos:** swapping two specials combines them (the 6 pairs, MECHANICS §4.3).
 - **Blockers:**

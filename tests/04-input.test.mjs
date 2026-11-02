@@ -59,6 +59,22 @@ export const tests = [
     },
   },
   {
+    name: 'touch swipe of a Cascade with no match fires it (player feedback, v1.0.1)',
+    viewports: ['mobile'],
+    async run(t) {
+      const rows = WIN_BOARD.slice(); rows[3] = 'e d c bH e';
+      await t.game('newGame', { level: 'w1-01', seed: 3, tips: false });
+      await t.game('act', 'board', rows, { moves: 6, goals: [{ type: 'score', need: 1e9 }] });
+      await t.waitIdle();
+      const id = (await t.game('engineState')).tile[3 * 5 + 3].id;
+      await t.touchDrag(await cellPx(t, 3, 3), await cellPx(t, 4, 3), { steps: 6 });
+      await t.waitIdle(8000);
+      t.equal((await t.state()).movesUsed, 1, 'the swipe was a move');
+      const s = await t.game('engineState');
+      t.expect(!s.tile.some((x) => x && x.id === id), 'the Cascade fired and is gone');
+    },
+  },
+  {
     name: 'keyboard: cursor, select and arrow-swap win a level',
     async run(t) {
       await freshBoard(t, { goals: [{ type: 'collect', kind: 0, need: 3 }], stars: [100, 200, 1e9] });

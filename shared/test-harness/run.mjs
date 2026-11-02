@@ -396,7 +396,7 @@ export async function runSuite({ gameDir, testDir, milestone = 'latest', viewpor
       if (process.env.HS_QUERY) { const h = rel.indexOf('#'), base = h < 0 ? rel : rel.slice(0, h); rel = base + (base.includes('?') ? '&' : '?') + process.env.HS_QUERY + (h < 0 ? '' : rel.slice(h)); }
       const q = rel.search(/[?#]/);
       const url = asFile ? pathToFileURL(path.join(gameDir, q < 0 ? rel : rel.slice(0, q))).href + (q < 0 ? '' : rel.slice(q))
-        : `${origin}/${relGame}/${rel}`;
+        : `${origin}/${relGame ? relGame + '/' : ''}${rel}`; // a game at the repo root has relGame '' ("//assets" would parse as a host)
       const started = Date.now();
       try {
         await page.goto(url, { waitUntil: 'load' });
