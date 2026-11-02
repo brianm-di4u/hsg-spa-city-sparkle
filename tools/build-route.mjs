@@ -126,7 +126,7 @@ const out = {
   _meta: {
     title: 'Spa City Sparkle (match-3) world route',
     date: '2026-11-01',
-    builtBy: 'games/match-3 puzzle/tools/build-route.mjs (Spa City Sparkle Phase A)',
+    builtBy: 'tools/build-route.mjs (Spa City Sparkle Phase A)',
     schema: {
       worlds: 'array of 6 worlds in play order',
       'world fields': 'world (1-6), id, name, era (era id; "any" = cross-era), palette (tokens slug), postcard (subject of the world\'s restored postcard), stops[]',
