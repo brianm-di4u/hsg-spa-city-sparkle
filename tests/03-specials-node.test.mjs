@@ -1,5 +1,5 @@
 // Specials: creation shapes, placement, orientation, activation patterns and the combo matrix.
-import { B, at, swapXY, events, findGroups, resolveBooster, toAscii, invariants } from './lib/engine.mjs';
+import { B, at, swapXY, events, findGroups, resolveBooster, toAscii, invariants, legalMoves } from './lib/engine.mjs';
 import { specialCandidates } from '../src/js/engine/match.js';
 
 const BASE5 = ['a b c d e', 'c d e a b', 'e a b c d', 'b c d e a', 'd e a b c'];
@@ -202,6 +202,76 @@ export const tests = [
       t.expect(conv && conv.tiles.every((c) => c.s === 'b'), 'converted to Hot Stones');
       t.expect(!s.tile.some((x) => x && x.s === 'B'), 'no primed stone left');
       t.log(toAscii(s).join(' | '));
+    },
+  },
+  {
+    name: 'swipe-to-fire: a Cascade swiped onto a plain piece fires even with no match, keeping its orientation',
+    node: true,
+    run(t) {
+      const s = B(['aH b c d', 'e c d e', 'b d e b'], { spawners: false });
+      noMatches(t, s, 'board');
+      const r = swapXY(s, [0, 0], [1, 0]);
+      t.equal(r.valid, true, 'legal'); t.equal(r.combo, null, 'not a combo');
+      t.equal(events(r, 'combo').length, 0, 'no combo event');
+      const f = events(r, 'fire');
+      t.equal(f.length, 1, 'fires once'); t.equal(f[0] && f[0].s, 'h', 'row Cascade');
+      t.equal(f[0] && f[0].at, at(s, 1, 0), 'fires where it landed');
+      t.equal(f[0] && f[0].cells.length, 4, 'the whole row');
+      t.equal(s.movesUsed, 1, 'spends a move');
+      const v = B(['aV b c d', 'e c d e', 'b d e b'], { spawners: false });
+      const rv = swapXY(v, [0, 0], [1, 0]);
+      t.equal(events(rv, 'fire')[0] && events(rv, 'fire')[0].s, 'v', 'a column Cascade swiped sideways still sweeps its column');
+    },
+  },
+  {
+    name: 'swipe-to-fire: a Hot Stone swiped with no match bursts and gives its aftershock',
+    node: true,
+    run(t) {
+      const s = B(withCells(BASE5, [[2, 2, 'bB']]), { spawners: false });
+      noMatches(t, s, 'board');
+      const r = swapXY(s, [2, 2], [3, 2]);
+      t.equal(r.valid, true, 'legal');
+      const fires = events(r, 'fire').filter((e) => e.s === 'b' || e.s === 'B');
+      t.equal(fires.length, 2, 'burst + aftershock');
+      t.equal(fires[0] && fires[0].at, at(s, 3, 2), 'bursts where it landed');
+      t.equal(fires[0] && fires[0].cells.length, 12, 'radius-2 diamond, clipped by the right edge');
+      t.equal(fires[1] && fires[1].after, true, 'second is the aftershock');
+      t.expect(!s.tile.some((x) => x && x.s === 'B'), 'no primed stone left');
+    },
+  },
+  {
+    name: 'swipe-to-fire: a swipe that also makes a match resolves both, and the special fires once',
+    node: true,
+    run(t) {
+      const s = B(['aH c c d', 'c e f e', 'd f e f'], { spawners: false });
+      noMatches(t, s, 'board');
+      const id = s.tile[at(s, 0, 0)].id;
+      const r = swapXY(s, [0, 0], [0, 1]);
+      t.expect(events(r, 'match').some((e) => e.k === 2), 'the c pieces matched');
+      t.equal(events(r, 'fire').filter((e) => e.id === id).length, 1, 'the Cascade fired exactly once');
+      t.equal(events(r, 'fire')[0] && events(r, 'fire')[0].at, at(s, 0, 1), 'from its new row');
+    },
+  },
+  {
+    name: 'swipe-to-fire: a special still cannot swap with a token, a padlocked or a fogged piece',
+    node: true,
+    run(t) {
+      for (const [row, label] of [[['aH T', 'b c'], 'token'], [['aH bL1', 'b c'], 'padlock'], [['aH bF', 'b c'], 'fog']]) {
+        const s = B(row, { spawners: false });
+        const r = swapXY(s, [0, 0], [1, 0]);
+        t.equal(r.valid, false, `${label}: illegal`); t.equal(s.movesUsed, 0, `${label}: no move spent`);
+      }
+    },
+  },
+  {
+    name: 'swipe-to-fire: special swipes count as legal moves (hints, reshuffle checks)',
+    node: true,
+    run(t) {
+      const s = B(['aH b c', 'c d e', 'b e d'], { spawners: false });
+      noMatches(t, s, 'board');
+      const m = legalMoves(s).map(([a, b]) => `${a}-${b}`);
+      t.expect(m.includes(`${at(s, 0, 0)}-${at(s, 1, 0)}`), 'sideways swipe listed');
+      t.expect(m.includes(`${at(s, 0, 0)}-${at(s, 0, 1)}`), 'downward swipe listed');
     },
   },
 ];

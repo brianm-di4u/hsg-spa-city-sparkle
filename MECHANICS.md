@@ -61,7 +61,9 @@ tile can't match or move, and its kind is hidden.
 - `a` and `b` must be orthogonally adjacent. Both cells must hold a movable tile: present, unlocked,
   unfogged, not a token, and the cell has no stone or moss.
 - Tokens never swap, so a Spring Crystal swaps only with a colour tile or another special.
-- If the swap creates no match and isn't special+special or crystal+anything, the timeline is
+- Any swap that moves a special (Cascade, Hot Stone or Spring Crystal) is legal, match or not (v1.0.1:
+  phone players read a bounced special as broken).
+- If the swap creates no match and moves no special, the timeline is
   `swap, swapBack`. No move is spent and the state is unchanged.
 
 ### 4.2 Match detection
@@ -101,6 +103,10 @@ Combo matrix (swapping two specials; both are consumed):
 | **Cascade** | row + column through the target | 3 rows + 3 columns through the target | every tile of the Cascade's colour becomes a Cascade (orientation from `rng.misc`), then all fire in reading order |
 | **Hot Stone** | — | a diamond of radius 4 | every tile of the Stone's colour becomes a Hot Stone, then all fire |
 | **Spring Crystal** | — | — | every playable cell is hit once |
+
+A Cascade or Hot Stone swapped with a plain colour tile (`Sx`) fires at the cell it lands on, with its own
+pattern (a Cascade keeps its orientation). There is no `combo` event and `combo` is null in the result; any
+match the swap makes resolves in the same wave, and the special still fires only once.
 
 The **target** is the cell the player moved the piece into (`b`).
 

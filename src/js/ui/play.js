@@ -3,6 +3,7 @@ import { newGame, apply, cloneState } from '../engine/game.js';
 import { swappableAt } from '../engine/grid.js';
 import { goalDone, starsFor } from '../engine/goals.js';
 import { bestMove } from '../engine/ai.js';
+import { isSpecialTile } from '../engine/specials.js';
 import { VIEW, computeLayout, buildVectorTextures, requestRender, resizeStage, WORLD_LOOK } from '../view/stage.js';
 import { BOARD, buildBoard, drawStatic, startAnim, drawAnim } from '../view/board-view.js';
 import { frameAt } from '../view/player.js';
@@ -223,7 +224,8 @@ export function playFrame(now) {
     drawStatic(PLAY.state);
   }
   const amb = PLAY.active ? drawAmbient() : false;
-  VIEW.wantAmbient = amb || (PLAY.active && !!BOARD.hint) || (PLAY.active && PLAY.selected >= 0);
+  const specials = PLAY.active && !VIEW.reduced && PLAY.state && PLAY.state.tile.some(isSpecialTile); // halos pulse
+  VIEW.wantAmbient = amb || specials || (PLAY.active && !!BOARD.hint) || (PLAY.active && PLAY.selected >= 0);
   return busy;
 }
 
@@ -309,8 +311,10 @@ function announceText(r) {
   const s = PLAY.state;
   if (!r.valid) return 'No match. Swap returned.';
   const specials = r.timeline.events.filter((e) => e.t === 'special').length;
+  const fired = r.timeline.events.filter((e) => e.t === 'fire' && !e.after).length;
   const parts = [`Score ${s.score}.`];
   if (r.waves > 1) parts.push(`Chain of ${r.waves}.`);
+  if (fired) parts.push(`${fired} special piece${fired > 1 ? 's' : ''} fired.`);
   if (specials) parts.push(`${specials} special piece${specials > 1 ? 's' : ''} made.`);
   if (s.movesLeft != null) parts.push(`${s.movesLeft} moves left.`);
   return parts.join(' ');

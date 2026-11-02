@@ -271,13 +271,16 @@ function halo(x, y, t, alpha) {
   if (!h) { h = new PIXI.Sprite(VIEW.tex.puff); h.anchor.set(0.5); h.blendMode = 'add'; B.layer.halos.addChild(h); B.halos.push(h); }
   B.halosUsed++;
   const c = VIEW.layout.cell;
+  // a slow pulse so a special stands out on a small phone board (still under reduced motion and frozen clocks)
+  const pulse = VIEW.reduced || VIEW.frozenMs != null ? 1 : 0.9 + 0.1 * Math.sin(VIEW.ambientT / 260);
   h.visible = true; h.position.set(x, y); h.rotation = 0;
   if (t.s === 'h' || t.s === 'v') {
-    h.texture = VIEW.tex.beam; h.width = c * 1.25; h.height = c * 0.7; h.rotation = t.s === 'v' ? Math.PI / 2 : 0;
-    h.tint = 0x7fe9ff; h.alpha = 0.95 * alpha;
+    // a soft cyan ellipse stretched along the sweep (the thin beam texture barely showed on a phone)
+    h.texture = VIEW.tex.puff; h.width = c * 2.1 * pulse; h.height = c * 1.35; h.rotation = t.s === 'v' ? Math.PI / 2 : 0;
+    h.tint = 0x5fe4ff; h.alpha = alpha * pulse;
   } else {
-    h.texture = VIEW.tex.puff; h.width = h.height = c * (t.k === 'C' ? 1.6 : 1.45);
-    h.tint = t.k === 'C' ? 0xffffff : 0xff7a1a; h.alpha = (t.s === 'B' ? 1 : 0.85) * alpha;
+    h.texture = VIEW.tex.puff; h.width = h.height = c * (t.k === 'C' ? 1.95 : 1.75) * pulse;
+    h.tint = t.k === 'C' ? 0xffffff : 0xff7a1a; h.alpha = alpha * pulse;
   }
 }
 // Landing response for a falling piece: 1 = full squash at impact, negative = the tall rebound, then settled.
@@ -401,7 +404,9 @@ function drawFx(ev, p, beat) {
   // chain callout
   const w = ev.find((e) => e.t === 'wave'), combo = ev.find((e) => e.t === 'combo');
   const fire = ev.find((e) => e.t === 'fire' && !e.after);
-  const call = combo && COMBO_CALL[combo.kind] ? [0, COMBO_CALL[combo.kind]] : fire && FIRE_CALL[fire.s] ? [0, FIRE_CALL[fire.s]] : w && CALLOUTS.find(([n]) => w.n + 1 >= n);
+  const made = ev.find((e) => e.t === 'special'); // name a new special as it appears, so players notice it
+  const call = combo && COMBO_CALL[combo.kind] ? [0, COMBO_CALL[combo.kind]] : fire && FIRE_CALL[fire.s] ? [0, FIRE_CALL[fire.s]]
+    : made && FIRE_CALL[made.k === 'C' ? 'C' : made.s] ? [0, FIRE_CALL[made.k === 'C' ? 'C' : made.s]] : w && CALLOUTS.find(([n]) => w.n + 1 >= n);
   if (call) {
     if (!B.callout) {
       B.callout = new PIXI.Text({ text: '', style: { fontFamily: 'Righteous, Trebuchet MS, sans-serif', fontSize: 64, fill: '#FFF6DE', stroke: { color: '#7A4E12', width: 9 }, dropShadow: { color: '#000000', alpha: 0.5, blur: 6, distance: 5, angle: Math.PI / 2 } } });
