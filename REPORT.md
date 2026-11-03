@@ -73,3 +73,12 @@ The loop stopped after loop 5 for stagnation (no new best in two loops), which w
 ## Harness requests
 - `t.contrastReport` treats CSS gradients as transparent. Gradient buttons needed a declared mid-tone `background-color` to be measured. A gradient-aware sample would remove the workaround.
 - Real-GPU runs (`--gpu`) caught a crash that software GL hid (D10). Consider making `--gpu` part of the final milestone for WebGL games.
+
+## Update: repainted backgrounds (v1.1.0, 2026-11-02)
+
+The title painting and all six world backdrops (portrait and landscape) were repainted. They pack at WebP quality 0.6
+(was 0.66) to stay inside the 6 MB asset budget. The new source PNGs replace the `art-src/art.json` sources
+(git-ignored; the workspace keeps copies of the old and new paintings in `reference/backgrounds/`) and were packed
+with the usual tools. Older descriptions of these paintings in VISUAL-REPORT.md refer to the previous art.
+
+`npm test`: 99/99 passed.

@@ -201,73 +201,73 @@
   "file": "bg1-l.webp",
   "w": 1280,
   "h": 853,
-  "bytes": 215374
+  "bytes": 175434
  },
  "bg1-p": {
   "file": "bg1-p.webp",
   "w": 768,
   "h": 1152,
-  "bytes": 147060
+  "bytes": 155846
  },
  "bg2-l": {
   "file": "bg2-l.webp",
   "w": 1280,
   "h": 853,
-  "bytes": 193616
+  "bytes": 194304
  },
  "bg2-p": {
   "file": "bg2-p.webp",
   "w": 768,
   "h": 1152,
-  "bytes": 116294
+  "bytes": 166326
  },
  "bg3-l": {
   "file": "bg3-l.webp",
   "w": 1280,
   "h": 853,
-  "bytes": 198302
+  "bytes": 220350
  },
  "bg3-p": {
   "file": "bg3-p.webp",
   "w": 768,
   "h": 1152,
-  "bytes": 179040
+  "bytes": 187106
  },
  "bg4-l": {
   "file": "bg4-l.webp",
   "w": 1280,
   "h": 853,
-  "bytes": 191480
+  "bytes": 214278
  },
  "bg4-p": {
   "file": "bg4-p.webp",
   "w": 768,
   "h": 1152,
-  "bytes": 158000
+  "bytes": 207484
  },
  "bg5-l": {
   "file": "bg5-l.webp",
   "w": 1280,
   "h": 853,
-  "bytes": 203282
+  "bytes": 166050
  },
  "bg5-p": {
   "file": "bg5-p.webp",
   "w": 768,
   "h": 1152,
-  "bytes": 127154
+  "bytes": 129334
  },
  "bg6-l": {
   "file": "bg6-l.webp",
   "w": 1280,
   "h": 853,
-  "bytes": 247732
+  "bytes": 283486
  },
  "bg6-p": {
   "file": "bg6-p.webp",
   "w": 768,
   "h": 1152,
-  "bytes": 189384
+  "bytes": 217930
  },
  "card-frame": {
   "file": "card-frame.webp",
@@ -375,12 +375,12 @@
   "file": "title-l.webp",
   "w": 1280,
   "h": 853,
-  "bytes": 156366
+  "bytes": 149176
  },
  "title-p": {
   "file": "title-p.webp",
   "w": 768,
   "h": 1152,
-  "bytes": 140014
+  "bytes": 110972
  }
 }
