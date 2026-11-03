@@ -36,6 +36,8 @@ test matrix, defect log), `VISUAL-PLAN.md`, `TEST-CAMPAIGN.md`, `REPORT.md`, `VI
 (art provenance), and `research/town-content.md` (every Hot Springs fact the game uses, with sources).
 
 ## Changes
+- **v1.1.0**: new paintings for the title screen and all six world backdrops, in portrait and landscape. They
+  pack at WebP quality 0.6 (was 0.66) to stay inside the 6 MB asset budget.
 - **v1.0.1**: from player feedback on a phone. A Cascade or Hot Stone now fires when you swipe it, even if
   the swipe makes no match. Specials glow brighter and pulse, Cascade chevrons are bigger, and a callout names
   each new special as it appears.

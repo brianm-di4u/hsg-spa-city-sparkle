@@ -271,7 +271,7 @@
    "w": 1280,
    "h": 853,
    "fit": "cover",
-   "quality": 0.66
+   "quality": 0.6
   },
   {
    "name": "bg1-p",
@@ -279,7 +279,7 @@
    "w": 768,
    "h": 1152,
    "fit": "cover",
-   "quality": 0.66
+   "quality": 0.6
   },
   {
    "name": "bg2-l",
@@ -287,7 +287,7 @@
    "w": 1280,
    "h": 853,
    "fit": "cover",
-   "quality": 0.66
+   "quality": 0.6
   },
   {
    "name": "bg2-p",
@@ -295,7 +295,7 @@
    "w": 768,
    "h": 1152,
    "fit": "cover",
-   "quality": 0.66
+   "quality": 0.6
   },
   {
    "name": "bg3-l",
@@ -303,7 +303,7 @@
    "w": 1280,
    "h": 853,
    "fit": "cover",
-   "quality": 0.66
+   "quality": 0.6
   },
   {
    "name": "bg3-p",
@@ -311,7 +311,7 @@
    "w": 768,
    "h": 1152,
    "fit": "cover",
-   "quality": 0.66
+   "quality": 0.6
   },
   {
    "name": "bg4-l",
@@ -319,7 +319,7 @@
    "w": 1280,
    "h": 853,
    "fit": "cover",
-   "quality": 0.66
+   "quality": 0.6
   },
   {
    "name": "bg4-p",
@@ -327,7 +327,7 @@
    "w": 768,
    "h": 1152,
    "fit": "cover",
-   "quality": 0.66
+   "quality": 0.6
   },
   {
    "name": "bg5-l",
@@ -335,7 +335,7 @@
    "w": 1280,
    "h": 853,
    "fit": "cover",
-   "quality": 0.66
+   "quality": 0.6
   },
   {
    "name": "bg5-p",
@@ -343,7 +343,7 @@
    "w": 768,
    "h": 1152,
    "fit": "cover",
-   "quality": 0.66
+   "quality": 0.6
   },
   {
    "name": "bg6-l",
@@ -351,7 +351,7 @@
    "w": 1280,
    "h": 853,
    "fit": "cover",
-   "quality": 0.66
+   "quality": 0.6
   },
   {
    "name": "bg6-p",
@@ -359,7 +359,7 @@
    "w": 768,
    "h": 1152,
    "fit": "cover",
-   "quality": 0.66
+   "quality": 0.6
   },
   {
    "name": "card-frame",
@@ -507,7 +507,7 @@
    "w": 1280,
    "h": 853,
    "fit": "cover",
-   "quality": 0.66
+   "quality": 0.6
   },
   {
    "name": "title-p",
@@ -515,7 +515,7 @@
    "w": 768,
    "h": 1152,
    "fit": "cover",
-   "quality": 0.66
+   "quality": 0.6
   }
  ]
 }

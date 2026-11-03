@@ -21,7 +21,8 @@ const list = (d) => (fs.existsSync(d) ? fs.readdirSync(d).filter((f) => f.endsWi
 const sprites = list(path.join(src, 'sprites')), paints = list(path.join(src, 'paint'));
 // sizes are what the screen shows at 2× on a phone, not the generated size
 const paintSpec = (n) => {
-  if (/^bg/.test(n) || /^title/.test(n)) return n.endsWith('-l') ? [1280, 853, 0.66] : [768, 1152, 0.66];
+  // the 2026-11 repainted backdrops are busier, so they pack at 0.6 to stay inside the 6 MB asset budget
+  if (/^bg/.test(n) || /^title/.test(n)) return n.endsWith('-l') ? [1280, 853, 0.6] : [768, 1152, 0.6];
   if (/^map/.test(n)) return [640, 960, 0.62];
   if (/^postcard/.test(n)) return [720, 480, 0.66];
   if (/^della/.test(n)) return [360, 540, 0.8];
