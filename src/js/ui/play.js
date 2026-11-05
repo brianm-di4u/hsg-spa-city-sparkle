@@ -10,7 +10,7 @@ import { frameAt } from '../view/player.js';
 import { buildBackdrop, drawAmbient } from '../view/backdrop.js';
 import { goalIcon } from '../view/vector-art.js';
 import { sfx, unlockAudio, startMusic } from '../audio.js';
-import { SAVE, writeSave } from './save.js';
+import { SAVE, prepareSaveAction, recordComputedAction, saveSettledAction } from './save.js';
 import { ensurePack } from '../art.js';
 
 export const PLAY = {
@@ -153,22 +153,27 @@ export const isBusy = () => !!PLAY.anim;
 
 export function doSwap(a, b) {
   if (!PLAY.active || PLAY.anim || !PLAY.state || PLAY.state.phase !== 'play') return { valid: false, reason: 'busy' };
+  const mode = PLAY.state.mode === 'soak' ? 'soak' : 'journey';
+  const action = prepareSaveAction({ mode });
+  if (!action.ok) return { valid: false, reason: action.reason };
   clearHint();
   const pre = cloneState(PLAY.state);
   const r = apply(PLAY.state, { type: 'swap', a, b });
   if (r.reason === 'blocked') return r;
   PLAY.selected = -1; BOARD.sel = -1;
+  if (r.valid && mode !== 'soak') recordComputedAction(action, { levelId: PLAY.level.id, state: cloneState(PLAY.state) });
   play(pre, r, () => afterMove(r));
   return r;
 }
 
 export function doBooster(name, cell, dir) {
   if (!PLAY.active || PLAY.anim || !PLAY.state) return { valid: false, reason: 'busy' };
+  const action = prepareSaveAction({ mode: PLAY.state.mode === 'soak' ? 'soak' : 'journey', booster: name, localAvailable: PLAY.state.boosters[name] || 0 });
+  if (!action.ok) return { valid: false, reason: action.reason };
   const pre = cloneState(PLAY.state);
   const r = apply(PLAY.state, { type: 'booster', name, cell, dir });
   if (!r.valid) return r;
-  SAVE.boosters[name] = Math.max(0, (SAVE.boosters[name] || 0) - 1);
-  writeSave();
+  recordComputedAction(action, { levelId: PLAY.level.id, state: cloneState(PLAY.state) }, name);
   PLAY.armed = null;
   sfx('booster');
   play(pre, r, () => afterMove(r));
@@ -288,7 +293,7 @@ function afterMove(r) {
     if (tl.some((e) => e.t === 'reshuffle')) PLAY.ui.toast('No moves left: reshuffled!');
     PLAY.ui.announce(announceText(r));
   }
-  if (r.valid && s.mode !== 'soak') { SAVE.current = s.phase === 'play' ? { levelId: PLAY.level.id, state: cloneState(s) } : null; writeSave(); }
+  if (r.valid && s.phase === 'play') saveSettledAction(); // No unresumable encore publication; final outcome owns its coherent transaction.
   if (s.phase === 'encore') {
     PLAY.ui && PLAY.ui.toast('Encore!');
     sfx('win');

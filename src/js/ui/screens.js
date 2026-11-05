@@ -1,7 +1,8 @@
 // DOM screens and dialogs: title, world map, level intro, results, world complete, pause, help,
 // settings, about, Free Soak and tutorial tips. Game logic stays in play.js and the engine.
 import { PLAY, startLevel, showGameChrome, levelById, updateHud, goalLabel, layoutAndBuild, doBooster } from './play.js';
-import { SAVE, writeSave, resetSave } from './save.js';
+import { SAVE, changeSettings, markTutorial, resetSave, configureSaveEffects, reserveCurrent, adoptCurrent, saveTerminal } from './save.js';
+import { cloneState } from '../engine/game.js';
 import { goalIcon, PIECES, ICON_IMAGES } from '../view/vector-art.js';
 import { VIEW, WORLD_LOOK, requestRender } from '../view/stage.js';
 import { sfx, stopMusic, startMusic, AUDIO, applyLevels, unlockAudio } from '../audio.js';
@@ -78,7 +79,7 @@ export function showTitle() {
       </div>
     </div>`;
   bindActs(screenEl(), {
-    continue: () => { const L = levelById(SAVE.current.levelId); enterLevel(L, { state: SAVE.current.state, skipIntro: true }); },
+    continue: () => enterLevel(null, { continue: true, skipIntro: true }),
     play: () => showMap(),
     soak: () => soakOpen && startSoak(),
     help: () => showHelp(), settings: () => showSettings(), about: () => showAbout(),
@@ -197,6 +198,15 @@ export function showIntro(L) {
 }
 
 export function enterLevel(L, opts = {}) {
+  if (opts.continue) {
+    const saved = adoptCurrent();
+    if (!saved) { showTitle(); toast('That saved level changed. Choose a current level or start a new one.'); return false; }
+    L = levelById(saved.levelId); opts = { ...opts, state: saved.state };
+    if (!L) { showTitle(); toast('Saved level unavailable'); return false; }
+  } else {
+    const reserved = reserveCurrent();
+    if (!reserved.ok && reserved.reason !== 'storage-unavailable') return false;
+  }
   closeModal();
   screenEl().innerHTML = ''; screenEl().className = 'screen';
   setScene('game');
@@ -229,7 +239,7 @@ export function showTip(id) {
     const d = el.querySelector('.della');
     if (over > 0) { const h = d.offsetHeight - over; if (h >= 70) d.style.height = `${h}px`; else d.style.display = 'none'; }
   }
-  bindActs(el, { ok: () => { closeTip(); SAVE.tutorialSeen.push(id); writeSave(); } });
+  bindActs(el, { ok: () => { markTutorial(id); closeTip(); } });
   el.querySelector('[data-focus]').focus();
 }
 export function closeTip() { const t = document.getElementById('tip'); if (t) t.remove(); UI.tipOpen = false; }
@@ -243,18 +253,13 @@ export function onWin(s, L) {
   closeTip();
   setScene('win');
   if (s.mode === 'soak') return;
-  const prev = SAVE.progress[L.id];
   const stars = s.starsWon;
-  const best = Math.max(prev ? prev.best : 0, s.score);
-  const rewards = [];
-  if (stars === 3 && !(prev && prev.stars === 3)) { const b = ['hammer', 'line', 'shuffle', 'plus5'][LEVELS.indexOf(L) % 4]; SAVE.boosters[b]++; rewards.push(BOOSTER_NAMES[b]); }
-  SAVE.progress[L.id] = { stars: Math.max(stars, prev ? prev.stars : 0), best };
   const card = loreFor(L);
-  if (card && !SAVE.lore.includes(card.id)) SAVE.lore.push(card.id);
-  SAVE.current = null;
-  const worldComplete = !prev && worldDone(L.world);
-  if (worldComplete) for (const k of Object.keys(SAVE.boosters)) SAVE.boosters[k]++;
-  writeSave();
+  const receipt = saveTerminal({ levelId: L.id, stars, score: s.score, loreId: card && card.id,
+    rewardType: ['hammer', 'line', 'shuffle', 'plus5'][LEVELS.indexOf(L) % 4],
+    worldLevels: LEVELS.filter((l) => l.world === L.world).map((l) => l.id) }, { levelId: L.id, state: cloneState(s) });
+  const rewards = receipt.outcome?.levelReward ? [BOOSTER_NAMES[receipt.outcome.levelReward]] : [];
+  const worldComplete = !!receipt.outcome?.worldComplete;
   sfx('win');
   const idx = LEVELS.indexOf(L), next = LEVELS[idx + 1];
   const m = openModal(`
@@ -293,6 +298,7 @@ function celebrate(m) {
 }
 
 export function onLose(s, L) {
+  if (s.mode !== 'soak') saveTerminal(null, { levelId: L.id, state: cloneState(s) });
   closeTip();
   setScene('lose');
   sfx('lose');
@@ -309,8 +315,8 @@ export function onLose(s, L) {
   fillIcons(m);
   bindActs(m, {
     plus: () => { closeModal(); setScene('game'); doBooster('plus5'); },
-    retry: () => { SAVE.current = null; writeSave(); enterLevel(L); },
-    map: () => { SAVE.current = null; writeSave(); showMap(L.id); },
+    retry: () => enterLevel(L),
+    map: () => showMap(L.id),
   });
 }
 export function showWorldComplete(w) {
@@ -332,7 +338,7 @@ export function showPause() {
   const L = PLAY.level;
   const m = openModal(`<h2>Paused</h2><p class="fine">${esc(L.name)}</p>
     <div class="menu" style="margin:12px auto 0"><button class="btn" data-act="resume" data-focus>Resume</button><button class="btn alt" data-act="restart">Restart level</button><button class="btn alt" data-act="help">How to play</button><button class="btn alt" data-act="settings">Settings</button><button class="btn alt" data-act="map">Save &amp; quit to map</button></div>`, { label: 'Paused' });
-  bindActs(m, { resume: () => { closeModal(); setScene('game'); }, restart: () => { SAVE.current = null; writeSave(); enterLevel(L); }, help: () => showHelp('game'), settings: () => showSettings('game'), map: () => showMap(L.id) });
+  bindActs(m, { resume: () => { closeModal(); setScene('game'); }, restart: () => enterLevel(L), help: () => showHelp('game'), settings: () => showSettings('game'), map: () => showMap(L.id) });
 }
 
 // --- help ----------------------------------------------------------------------------------------
@@ -393,16 +399,16 @@ export function showSettings(back) {
     ${SAVE.storageOk ? '' : '<p class="fine">Storage is unavailable: progress lasts for this visit only.</p>'}
     <div class="actions"><button class="btn small" data-act="close" data-focus>Done</button></div>`, { label: 'Settings' });
   m.querySelectorAll('[data-toggle]').forEach((b) => b.addEventListener('click', () => {
-    const k = b.dataset.toggle; st[k] = !st[k]; b.setAttribute('aria-pressed', st[k]); b.textContent = st[k] ? 'On' : 'Off';
-    writeSave(); applySettings(); unlockAudio(); sfx('click');
+    const k = b.dataset.toggle; changeSettings({ [k]: !st[k] }); b.setAttribute('aria-pressed', st[k]); b.textContent = st[k] ? 'On' : 'Off';
+    applySettings(); unlockAudio(); sfx('click');
     if (k === 'music' && st.music && UI.scene !== 'title') startMusic(PLAY.world);
   }));
   m.querySelectorAll('[data-motion]').forEach((b) => b.addEventListener('click', () => {
-    st.motion = b.dataset.motion; m.querySelectorAll('[data-motion]').forEach((x) => x.setAttribute('aria-pressed', x === b)); writeSave(); applySettings();
+    changeSettings({ motion: b.dataset.motion }); m.querySelectorAll('[data-motion]').forEach((x) => x.setAttribute('aria-pressed', st.motion === x.dataset.motion)); applySettings();
   }));
-  m.querySelector('#vol').addEventListener('input', (e) => { st.volume = +e.target.value; applySettings(); writeSave(); });
+  m.querySelector('#vol').addEventListener('input', (e) => { changeSettings({ volume: +e.target.value }); applySettings(); });
   bindActs(m, {
-    reset: () => { if (window.confirm('Reset all progress, stars and boosters?')) { resetSave(); toast('Progress reset'); } },
+    reset: () => { if (window.confirm('Reset all progress, stars and boosters?')) { const result = resetSave(); toast(result.ok ? 'Progress reset' : 'Reset is not saved yet. Storage or another tab changed.'); } },
     close: () => (back === 'game' ? showPause() : (closeModal(), prev === 'map' ? showMap() : setScene(prev === 'settings' ? 'title' : prev))),
   });
 }
@@ -424,6 +430,8 @@ export function showAbout() {
 // --- Free Soak -----------------------------------------------------------------------------------
 export function soakSeed(date = new Date()) { return date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate(); }
 export function startSoak() {
+  const reserved = reserveCurrent('soak');
+  if (!reserved.ok && reserved.reason !== 'storage-unavailable') return;
   const L = { id: 'soak', world: 2, n: 0, name: 'Free Soak', mode: 'soak', moves: null, goals: [], stars: [5000, 15000, 30000], grid: { cells: Array(8).fill('........') } };
   closeModal();
   screenEl().innerHTML = ''; screenEl().className = 'screen';
@@ -434,6 +442,7 @@ export function startSoak() {
 }
 
 export function wireUi() {
+  configureSaveEffects({ onChange: applySettings, onUnsaved: () => toast('Progress is not saved yet. Keep this tab open; storage is unavailable.', 4200), onConflict: (reason) => toast(reason.includes(' ') ? reason : 'Saved progress or booster balance changed in another tab. Choose Continue or a new level deliberately.', 3200) });
   PLAY.ui = { onWin, onLose, toast, announce };
   $('btn-pause').addEventListener('click', () => { sfx('click'); if (UI.scene === 'soak') showTitle(); else showPause(); });
   window.addEventListener('resize', () => {

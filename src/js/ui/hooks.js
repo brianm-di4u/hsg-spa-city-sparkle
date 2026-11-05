@@ -1,7 +1,7 @@
 // window.__game: the test-harness contract (shared/test-harness/README.md, DEV-PLAN §3).
 import { PLAY, startLevel, doSwap, doBooster, skipAnim, showHint, layoutAndBuild, updateHud, levelById, armBooster, replayLast, beatAt } from './play.js';
 import { UI, showTitle, showMap, showIntro, enterLevel, showHelp, showSettings, showAbout, showPause, onWin, onLose, showWorldComplete, startSoak, closeModal, showTip, closeTip } from './screens.js';
-import { SAVE, writeSave } from './save.js';
+import { SAVE, arrangeSaveFixture, adoptCurrent } from './save.js';
 import { VIEW, requestRender } from '../view/stage.js';
 import { BOARD } from '../view/board-view.js';
 import { boardFromAscii, cloneState, hashState } from '../engine/grid.js';
@@ -9,6 +9,14 @@ import { legalMoves } from '../engine/moves.js';
 import { AUDIO } from '../audio.js';
 
 export const HOOK = { seed: 1, artReady: () => true };
+
+// Explicit synthetic setup only. Normal persistence/authority guards never branch on __TEST__.
+function arrangeFixture(patch) {
+  const current = PLAY.state && PLAY.level ? { levelId: PLAY.level.id, state: cloneState(PLAY.state) } : null;
+  const result = arrangeSaveFixture({ ...patch, current });
+  if (result.ok && current) adoptCurrent();
+  return result.ok;
+}
 
 const idxOf = (p) => (Array.isArray(p) ? p[1] * PLAY.state.w + p[0] : p);
 
@@ -36,7 +44,7 @@ export function installHooks() {
     seed(n) { HOOK.seed = n; return n; },
     getState: () => summary(),
     engineState: () => (PLAY.state ? cloneState(PLAY.state) : null),
-    setState(s) { PLAY.state = cloneState(s); PLAY.anim = null; layoutAndBuild(); updateHud(); return true; },
+    setState(s) { PLAY.state = cloneState(s); PLAY.anim = null; arrangeFixture({ boosters: { ...PLAY.state.boosters } }); layoutAndBuild(); updateHud(); return true; },
     isIdle: () => VIEW.ready && HOOK.artReady() && !PLAY.anim && !PLAY.pendingEncore && UI.transitions === 0,
     scene(name, arg) {
       const L = levelById(arg || (PLAY.level && PLAY.level.id) || LEVELS[0].id);
@@ -53,7 +61,7 @@ export function installHooks() {
       const L = levelById(opts.level || LEVELS[0].id);
       if (opts.seed != null) HOOK.seed = opts.seed;
       closeModal(); closeTip();
-      if (opts.tips === false) for (const l of LEVELS) if (l.tip && !SAVE.tutorialSeen.includes(l.tip)) SAVE.tutorialSeen.push(l.tip);
+      if (opts.tips === false) arrangeFixture({ tutorialSeen: [...new Set([...SAVE.tutorialSeen, ...LEVELS.map((l) => l.tip).filter(Boolean)])] });
       enterLevel(L, { seed: HOOK.seed });
       return summary();
     },
@@ -80,9 +88,9 @@ export function installHooks() {
           s.stars = (args[1] && args[1].stars) || (prev ? prev.stars.slice() : [1000, 2000, 3000]);
           if (!(args[1] && args[1].goals) && prev) { s.goals = prev.goals.map((g) => ({ ...g, have: 0 })); }
           s.boosters = { ...SAVE.boosters, ...((args[1] && args[1].boosters) || {}) };
-          PLAY.state = s; PLAY.anim = null; layoutAndBuild(); updateHud(); return true;
+          PLAY.state = s; PLAY.anim = null; arrangeFixture({ boosters: { ...s.boosters } }); layoutAndBuild(); updateHud(); return true;
         }
-        case 'progress': Object.assign(SAVE.progress, args[0] || {}); if (args[1]) Object.assign(SAVE.boosters, args[1]); writeSave(); return true;
+        case 'progress': return arrangeFixture({ progress: { ...SAVE.progress, ...(args[0] || {}) }, boosters: { ...SAVE.boosters, ...(args[1] || {}) } });
         case 'tip': showTip(args[0]); return true;
         case 'win': onWin(PLAY.state, PLAY.level); return true;
         case 'lose': onLose(PLAY.state, PLAY.level); return true;
