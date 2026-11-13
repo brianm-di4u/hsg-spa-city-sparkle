@@ -326,3 +326,67 @@ tests.push(
     },
   },
 );
+
+// --- S6-17: table-driven corruption cases against the save store (no browser) ---------------------------
+import assert from 'node:assert/strict';
+import { createSaveStore } from '../src/js/ui/save.js';
+const memory = (initial) => {
+  const m = new Map(initial === undefined ? [] : [[KEY, initial]]);
+  return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, v); }, removeItem: (k) => { m.delete(k); }, m };
+};
+const CORRUPT = {
+  'truncated JSON': TRUNC,
+  'empty string': '',
+  'not JSON at all': 'hello',
+  'wrong type (array)': '[1,2,3]',
+  'wrong type (number)': '42',
+  'version 2': '{"v":2,"progress":{}}',
+  'progress is a string': '{"v":1,"progress":"x"}',
+  'partial identity': '{"v":1,"resourceId":"only-this"}',
+};
+for (const [label, text] of Object.entries(CORRUPT)) {
+  tests.push({
+    name: `S6-17 corrupt save (${label}): Reset succeeds, keeps a backup, and the next write succeeds`,
+    node: true,
+    run() {
+      const st = memory(text);
+      let n = 0;
+      const s = createSaveStore({ storage: () => st, newToken: () => 'tok-' + (++n) });
+      s.load();
+      assert.equal(s.unreadable(), true, 'the value is reported unreadable');
+      assert.equal(s.reserve().ok, false, 'a normal write is still refused before the player opts in');
+      assert.equal(st.getItem(KEY), text, 'and the stored text is untouched');
+      assert.equal(s.reset().ok, true, 'reset succeeds');
+      assert.equal(st.getItem(BACKUP), text, 'the old text is kept as a backup');
+      assert.equal(JSON.parse(st.getItem(KEY)).v, 1, 'a valid save replaces it');
+      assert.equal(s.reserve().ok, true, 'the next reservation succeeds');
+      assert.equal(s.unreadable(), false, 'nothing is unreadable any more');
+    },
+  }, {
+    name: `S6-17 corrupt save (${label}): Start fresh keeps a backup and later settings persist`,
+    node: true,
+    run() {
+      const st = memory(text);
+      let n = 0;
+      const s = createSaveStore({ storage: () => st, newToken: () => 'tok-' + (++n) });
+      s.load();
+      assert.equal(s.startFresh().ok, true, 'startFresh succeeds');
+      assert.equal(st.getItem(BACKUP), text, 'backup kept');
+      assert.equal(s.settings({ sound: false }).ok, true, 'a settings write succeeds');
+      assert.equal(JSON.parse(st.getItem(KEY)).settings.sound, false, 'and persists');
+    },
+  });
+}
+tests.push({
+  name: 'S6-17 a readable save is never reported unreadable and startFresh refuses to touch it',
+  node: true,
+  run() {
+    const st = memory(GOOD);
+    const s = createSaveStore({ storage: () => st });
+    s.load();
+    assert.equal(s.unreadable(), false);
+    assert.equal(s.startFresh().ok, false);
+    assert.equal(st.getItem(KEY), GOOD, 'untouched');
+    assert.equal(st.getItem(BACKUP), null, 'no backup made');
+  },
+});
