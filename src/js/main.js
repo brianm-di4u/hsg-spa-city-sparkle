@@ -2,9 +2,9 @@
 import { loadSave } from './ui/save.js';
 import { VIEW, initStage, buildVectorTextures, requestRender } from './view/stage.js';
 import { PLAY, bindInput, handleKey, playFrame, levelById, layoutAndBuild, armBooster } from './ui/play.js';
-import { UI, showTitle, showPause, wireUi, applySettings, closeModal, enterLevel, showMap } from './ui/screens.js';
+import { UI, showTitle, showPause, wireUi, applySettings, enterLevel, showMap, dismissModal, trapTab } from './ui/screens.js';
 import { installHooks, HOOK } from './ui/hooks.js';
-import { unlockAudio, pauseAudio, resumeAudio, releaseMusic } from './audio.js';
+import { unlockAudio, pauseAudio, resumeAudio } from './audio.js';
 import { ensurePack, artBusy, disableArt } from './art.js';
 
 const params = new URLSearchParams(location.search);
@@ -29,7 +29,10 @@ async function boot() {
   window.addEventListener('keydown', (e) => {
     unlockAudio();
     if (document.getElementById('tip') && (e.key === 'Enter' || e.key === 'Escape')) { document.querySelector('#tip [data-act="ok"]').click(); e.preventDefault(); return; }
-    if (UI.modalOpen) { if (e.key === 'Escape' && UI.scene === 'pause') { closeModal(); UI.scene = 'game'; document.body.dataset.scene = 'game'; releaseMusic('pause'); } return; }
+    if (UI.modalOpen) {
+      if (e.key === 'Escape') { if (!e.repeat) dismissModal(); e.preventDefault(); } else if (e.key === 'Tab') trapTab(e);
+      return;
+    }
     if ((e.key === 'p' || e.key === 'P' || (e.key === 'Escape' && PLAY.selected < 0 && !PLAY.anim && !PLAY.armed)) && UI.scene === 'game') { showPause(); e.preventDefault(); return; }
     if (handleKey(e)) e.preventDefault();
   });

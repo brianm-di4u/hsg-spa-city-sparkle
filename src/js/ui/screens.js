@@ -53,6 +53,24 @@ export function closeModal() {
   if (UI.lastFocus && UI.lastFocus.focus) try { UI.lastFocus.focus(); } catch (_) { /* element gone */ }
 }
 
+// Esc: press the open dialog's own way out (Resume on Pause, else Close/Back, else Map on result cards).
+export function dismissModal() {
+  const m = modalEl();
+  for (const act of ['resume', 'close', 'back', 'map']) {
+    const b = m.querySelector(`[data-act="${act}"]`);
+    if (b) { b.click(); return true; }
+  }
+  return false;
+}
+// Tab and Shift+Tab wrap inside the open dialog instead of reaching the screen behind it.
+export function trapTab(e) {
+  const items = [...modalEl().querySelectorAll('button, input, [href], select, textarea, [tabindex]:not([tabindex="-1"])')].filter((x) => !x.disabled && x.offsetParent !== null);
+  if (!items.length) return;
+  const first = items[0], last = items[items.length - 1], at = document.activeElement;
+  if (e.shiftKey && (at === first || !modalEl().contains(at))) { last.focus(); e.preventDefault(); }
+  else if (!e.shiftKey && (at === last || !modalEl().contains(at))) { first.focus(); e.preventDefault(); }
+}
+
 // --- title ---------------------------------------------------------------------------------------
 export function showTitle() {
   closeModal(); showGameChrome(false); stopMusic();

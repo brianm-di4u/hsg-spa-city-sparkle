@@ -168,3 +168,70 @@ tests.push({
     t.equal((await t.state()).movesUsed, 1, 'a move was made');
   },
 });
+
+// --- S6-05: Esc closes dialogs, Tab stays inside them ----------------------------------------------
+const modalOpen = (t) => t.page.evaluate(() => !document.getElementById('modal').classList.contains('hidden'));
+tests.push(
+  {
+    name: 'S6-05 Esc closes Help, Settings, About and the level intro',
+    async run(t) {
+      await t.waitIdle();
+      for (const act of ['help', 'settings', 'about']) {
+        await t.page.locator(`.screen [data-act="${act}"]`).click();
+        await t.waitIdle();
+        t.expect(await modalOpen(t), `${act} dialog is open`);
+        await t.page.keyboard.press('Escape');
+        await t.waitIdle();
+        t.expect(!(await modalOpen(t)), `Esc closes the ${act} dialog`);
+        t.equal((await t.state()).scene, 'title', `back on the title after ${act}`);
+      }
+      await t.game('scene', 'map');
+      await t.waitIdle();
+      await t.page.locator('.node[data-level="w1-01"]').click({ force: true });
+      await t.waitIdle();
+      t.equal((await t.state()).scene, 'intro', 'intro is open');
+      await t.page.keyboard.press('Escape');
+      await t.waitIdle();
+      t.equal((await t.state()).scene, 'map', 'Esc closes the intro card');
+      t.expect(!(await modalOpen(t)), 'no dialog is left open');
+    },
+  },
+  {
+    name: 'S6-05 Esc steps back out of Pause > Help, then resumes; a lose card goes to the map',
+    async run(t) {
+      await inLevel(t);
+      await openPause(t);
+      await t.page.locator('#modal [data-act="help"]').click();
+      await t.waitIdle();
+      await t.page.keyboard.press('Escape');
+      await t.waitIdle();
+      t.equal(await heading(t), 'Paused', 'Esc from help returns to Paused');
+      await t.page.keyboard.press('Escape');
+      await t.waitIdle();
+      t.equal((await t.state()).scene, 'game', 'Esc on Paused resumes');
+      await t.game('scene', 'lose');
+      await t.waitIdle();
+      await t.page.keyboard.press('Escape');
+      await t.waitIdle();
+      t.equal((await t.state()).scene, 'map', 'Esc on the lose card goes to the map');
+    },
+  },
+  {
+    name: 'S6-05 Tab and Shift+Tab stay inside an open dialog',
+    viewports: ['desktop'],
+    async run(t) {
+      await t.waitIdle();
+      await t.page.locator('.screen [data-act="settings"]').click();
+      await t.waitIdle();
+      const inside = () => t.page.evaluate(() => !!document.activeElement.closest('#modal'));
+      for (let i = 0; i < 14; i++) {
+        await t.page.keyboard.press('Tab');
+        t.expect(await inside(), `focus is inside the dialog after Tab ${i + 1}`);
+      }
+      for (let i = 0; i < 14; i++) {
+        await t.page.keyboard.press('Shift+Tab');
+        t.expect(await inside(), `focus is inside the dialog after Shift+Tab ${i + 1}`);
+      }
+    },
+  },
+);
