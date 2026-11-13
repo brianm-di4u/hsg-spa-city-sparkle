@@ -145,3 +145,26 @@ tests.push({
     t.expect(/Play/.test(await t.page.locator('#modal [data-act="go"]').innerText()), 'the intro card is back with its Play button');
   },
 });
+
+// --- S2-28: the Pause round trip through Help and Settings, then Resume and a move ---------------
+tests.push({
+  name: 'S2-28 Pause > Help > Back > Settings > Done > Resume leaves a playable board',
+  async run(t) {
+    await inLevel(t);
+    await t.game('act', 'board', WIN_BOARD, { moves: 6, goals: [{ type: 'score', need: 1e9 }] });
+    await t.waitIdle();
+    await openPause(t);
+    await t.page.locator('#modal [data-act="help"]').click();
+    await t.page.locator('#modal [data-act="close"]').click();
+    await t.page.locator('#modal [data-act="settings"]').click();
+    await t.page.locator('#modal [data-act="close"]').click();
+    t.equal(await heading(t), 'Paused', 'back on the Paused card');
+    await t.page.locator('#modal [data-act="resume"]').click();
+    await t.waitIdle();
+    t.equal((await t.state()).scene, 'game', 'Resume returns to the game');
+    const r = await t.game('act', 'swap', [1, 1], [1, 0]);
+    t.expect(r.valid, 'the board accepts a move after Resume');
+    await t.waitIdle(8000);
+    t.equal((await t.state()).movesUsed, 1, 'a move was made');
+  },
+});
