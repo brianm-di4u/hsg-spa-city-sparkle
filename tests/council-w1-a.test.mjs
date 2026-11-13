@@ -390,3 +390,46 @@ tests.push({
     assert.equal(st.getItem(BACKUP), null, 'no backup made');
   },
 });
+
+// --- S1-01 / S1-07: input that arrives during an animation ------------------------------------------------
+const cellXY = async (t, x, y) => { const L = (await t.state()).layout; return [L.bx + (x + 0.5) * L.cell, L.by + (y + 0.5) * L.cell]; };
+async function startMoveAnimation(t) {
+  await inLevel(t);
+  await t.game('act', 'board', WIN_BOARD, { moves: 8, goals: [{ type: 'score', need: 1e9 }] });
+  await t.waitIdle();
+  const r = await t.game('act', 'swap', [1, 1], [1, 0]);
+  t.expect(r.valid, 'the first move is legal');
+  t.expect(!(await t.page.evaluate(() => window.__game.isIdle())), 'the first move is still animating');
+}
+tests.push(
+  {
+    name: 'S1-01 a drag that starts during an animation skips it and still makes the move',
+    async run(t) {
+      await startMoveAnimation(t);
+      const legal = await t.game('act', 'legal');
+      t.expect(legal.length > 0, 'there is a legal second move on the final board');
+      const [[ax, ay], [bx, by]] = legal[0];
+      const [x1, y1] = await cellXY(t, ax, ay), [x2, y2] = await cellXY(t, bx, by);
+      if (t.viewport === 'mobile') await t.touchDrag([x1, y1], [x2, y2], { steps: 6 });
+      else {
+        await t.page.mouse.move(x1, y1); await t.page.mouse.down();
+        await t.page.mouse.move((x1 + x2) / 2, (y1 + y2) / 2, { steps: 3 }); await t.page.mouse.move(x2, y2, { steps: 3 });
+        await t.page.mouse.up();
+      }
+      await t.waitIdle(8000);
+      t.equal((await t.state()).movesUsed, 2, 'the early drag was made as a second move');
+    },
+  },
+  {
+    name: 'S1-01 a tap during an animation skips it and selects the piece tapped',
+    async run(t) {
+      await startMoveAnimation(t);
+      const [x, y] = await cellXY(t, 3, 3);
+      if (t.viewport === 'mobile') await t.tap([x, y]); else await t.page.mouse.click(x, y);
+      await t.waitIdle(8000);
+      const s = await t.state();
+      t.equal(s.movesUsed, 1, 'no extra move was made');
+      t.equal(s.selected, 3 * 5 + 3, 'the tapped piece is selected');
+    },
+  },
+);

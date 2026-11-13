@@ -359,7 +359,10 @@ export function bindInput(canvas) {
   canvas.addEventListener('pointerdown', (e) => {
     unlockAudio();
     if (!PLAY.active || !PLAY.state) return;
-    if (PLAY.anim) { skipAnim(); return; }
+    if (PLAY.anim) { // early input is intent: finish the animation now, then treat this touch as a normal one
+      skipAnim(); playFrame(performance.now());
+      if (PLAY.anim || PLAY.state.phase !== 'play') return;
+    }
     const i = cellAt(e.clientX, e.clientY);
     PLAY.keyMode = false; BOARD.showCursor = false;
     if (i < 0) { setSelected(-1); return; }
