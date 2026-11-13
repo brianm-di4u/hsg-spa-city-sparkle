@@ -73,8 +73,9 @@ export function computeLayout(cols, rows) {
     bx = Math.round((W - cell * cols) / 2);
     by = Math.round(top + (H - top - bottom - cell * rows) * 0.8);
   } else {
-    const left = 300;
-    cell = Math.floor(Math.min((W - left - 48) / cols, (H - 104) / rows, 86));
+    const compact = H < 540; // phone on its side: slim HUD column and tray, so the board gets the height
+    const left = compact ? 292 : 300;
+    cell = Math.floor(Math.min((W - left - (compact ? 16 : 48)) / cols, (H - (compact ? 16 : 104)) / rows, 86));
     bx = Math.round(left + (W - left - cell * cols) / 2);
     by = Math.round((H - cell * rows) / 2);
   }

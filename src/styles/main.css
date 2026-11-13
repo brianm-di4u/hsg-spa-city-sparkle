@@ -152,6 +152,27 @@ body.landscape .hud-score .thermo { width: auto; margin: 4px 10px; }
 body.landscape .hud-score-n { text-align: right; padding-right: 14px; transform-origin: 100% 50%; font-variant-numeric: tabular-nums; }
 body.landscape .hud-moves { justify-self: start; }
 body.landscape #tray { left: 24px; bottom: 24px; width: 260px; flex-wrap: wrap; justify-content: space-between; padding: 14px; border-radius: 20px; background: rgba(12, 28, 34, .78); box-shadow: var(--shadow); }
+/* short landscape screens (phones on their side): a compact HUD above a one-row tray, so the two never overlap */
+@media (max-height: 540px) {
+  body.landscape #hud { top: 8px; padding: 10px 12px; gap: 6px; border-radius: 16px; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "moves level" "goals goals" "score score"; align-items: center; column-gap: 10px; }
+  body.landscape .hud-moves { grid-area: moves; width: 56px; height: 56px; }
+  body.landscape .hud-moves-n { font-size: 1.6rem; }
+  body.landscape .hud-moves-l { font-size: .58rem; }
+  body.landscape .hud-level { grid-area: level; }
+  body.landscape .hud-name { font-size: 1.05rem; }
+  body.landscape .hud-goals { grid-area: goals; gap: 5px; }
+  body.landscape .hud-goals .goal { min-width: 0; padding: 2px 8px 2px 2px; gap: 3px; }
+  body.landscape .hud-goals .goal canvas, body.landscape .hud-goals .goal img { width: 28px; height: 28px; }
+  body.landscape .hud-goals .goal .n { font-size: 1rem; }
+  body.landscape .hud-score { grid-area: score; gap: 2px; }
+  body.landscape .hud-score-n { font-size: 1.3rem; }
+  body.landscape #tray { bottom: 8px; padding: 8px; gap: 6px; flex-wrap: nowrap; border-radius: 16px; }
+  body.landscape .booster { width: 44px; height: 52px; border-radius: 12px; padding: 4px 0 2px; }
+  body.landscape .booster .b-icon { width: 24px; height: 24px; }
+  body.landscape .booster .b-name { font-size: .62rem; }
+  body.landscape .booster .b-count { top: -6px; right: -4px; }
+  body.landscape #tray .round { width: 44px; height: 44px; flex: none; }
+}
 
 /* ---------- modal & dialogs ---------- */
 .modal { position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px; background: rgba(8, 18, 24, .55); }

@@ -21,3 +21,33 @@ export const tests = [
     },
   },
 ];
+
+// --- P-N01: phone landscape HUD, tray and board must not overlap ---------------------------------
+const overlap = (a, b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+tests.push({
+  name: 'P-N01 phone landscape: HUD, booster tray and board do not overlap',
+  async run(t) {
+    for (const [w, h] of [[844, 390], [667, 375]]) {
+      await t.page.setViewportSize({ width: w, height: h });
+      for (const level of ['w1-01', 'w6-10', 'w6-07']) {
+        await t.game('newGame', { level, seed: 3, tips: false });
+        await t.waitIdle();
+        const r = await t.page.evaluate(() => {
+          const box = (el) => { const b = el.getBoundingClientRect(); return { left: b.left, top: b.top, right: b.right, bottom: b.bottom }; };
+          const hud = document.getElementById('hud'), tray = document.getElementById('tray');
+          const l = window.__game.getState().layout;
+          const kids = [...hud.querySelectorAll('.hud-level, .hud-moves, .hud-goals, .hud-score')].map(box);
+          return { hud: box(hud), tray: box(tray), board: { left: l.bx, top: l.by, right: l.bx + l.cell * l.cols, bottom: l.by + l.cell * l.rows }, cell: l.cell, kids, H: window.innerHeight, W: window.innerWidth, boosters: [...document.querySelectorAll('.booster')].map((b) => b.getBoundingClientRect().height) };
+        });
+        const tag = `${level} at ${w}x${h}`;
+        t.expect(!overlap(r.hud, r.tray), `HUD and tray apart, ${tag} (hud bottom ${Math.round(r.hud.bottom)}, tray top ${Math.round(r.tray.top)})`);
+        t.expect(!overlap(r.hud, r.board) && !overlap(r.tray, r.board), `board clear of HUD and tray, ${tag}`);
+        t.expect(r.hud.top >= 0 && r.tray.bottom <= r.H && r.board.bottom <= r.H && r.board.right <= r.W, `everything on screen, ${tag}`);
+        for (const k of r.kids) t.expect(k.bottom <= r.hud.bottom + 1, `HUD content stays inside its panel, ${tag}`);
+        t.expect(r.cell >= 38, `cells stay playable (${r.cell}px), ${tag}`);
+        t.expect(r.boosters.every((x) => x >= 44), `booster buttons stay 44px or more, ${tag}`);
+        if (level === 'w6-10' && w === 844) await t.shot('p-n01-landscape-hud');
+      }
+    }
+  },
+});
