@@ -181,7 +181,7 @@ body.landscape #tray { left: 24px; bottom: 24px; width: 260px; flex-wrap: wrap; 
 
 /* ---------- modal & dialogs ---------- */
 .modal { position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px; background: rgba(8, 18, 24, .55); }
-.modal .card { width: min(440px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; }
+.modal .card { width: min(440px, 100%); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto; }
 .modal.enter .card { animation: rise .32s cubic-bezier(.25,.7,.25,1); }
 @keyframes rise { from { transform: translateY(24px) scale(.96); opacity: 0; } }
 .goals-big { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 12px 0; }

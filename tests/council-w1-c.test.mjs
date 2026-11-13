@@ -149,3 +149,19 @@ tests.push({
     t.equal(native, 0, 'still no native dialog');
   },
 });
+
+// --- S6-10: dialogs size to the visible viewport on phones with a dynamic toolbar -----------------
+tests.push({
+  name: 'S6-10 dialog height uses dvh, with vh kept as the fallback before it',
+  async run(t) {
+    const css = await t.page.evaluate(() => [...document.querySelectorAll('style')].map((s) => s.textContent).join('\n'));
+    const rule = (css.match(/\.modal \.card\s*\{[^}]*\}/) || [''])[0];
+    const vh = rule.indexOf('max-height: calc(100vh - 32px)'), dvh = rule.indexOf('max-height: calc(100dvh - 32px)');
+    t.expect(vh >= 0, 'vh fallback is declared');
+    t.expect(dvh > vh, 'dvh declaration comes after the fallback');
+    await t.game('scene', 'help');
+    await t.waitIdle();
+    const fits = await t.page.evaluate(() => document.querySelector('#modal .card').getBoundingClientRect().bottom <= window.innerHeight);
+    t.expect(fits, 'the help card stays inside the visible height');
+  },
+});
