@@ -5,7 +5,7 @@ import { SAVE, changeSettings, markTutorial, resetSave, configureSaveEffects, re
 import { cloneState } from '../engine/game.js';
 import { goalIcon, PIECES, ICON_IMAGES } from '../view/vector-art.js';
 import { VIEW, WORLD_LOOK, requestRender } from '../view/stage.js';
-import { sfx, stopMusic, startMusic, AUDIO, applyLevels, unlockAudio } from '../audio.js';
+import { sfx, stopMusic, startMusic, holdMusic, releaseMusic, AUDIO, applyLevels, unlockAudio } from '../audio.js';
 import { TIPS } from './tips.js';
 import { ensurePack } from '../art.js';
 
@@ -334,11 +334,11 @@ export function showWorldComplete(w) {
 // --- pause ---------------------------------------------------------------------------------------
 export function showPause() {
   if (UI.scene !== 'game') return;
-  setScene('pause');
+  setScene('pause'); holdMusic('pause');
   const L = PLAY.level;
   const m = openModal(`<h2>Paused</h2><p class="fine">${esc(L.name)}</p>
     <div class="menu" style="margin:12px auto 0"><button class="btn" data-act="resume" data-focus>Resume</button><button class="btn alt" data-act="restart">Restart level</button><button class="btn alt" data-act="help">How to play</button><button class="btn alt" data-act="settings">Settings</button><button class="btn alt" data-act="map">Save &amp; quit to map</button></div>`, { label: 'Paused' });
-  bindActs(m, { resume: () => { closeModal(); setScene('game'); }, restart: () => enterLevel(L), help: () => showHelp('game'), settings: () => showSettings('game'), map: () => showMap(L.id) });
+  bindActs(m, { resume: () => { closeModal(); setScene('game'); releaseMusic('pause'); }, restart: () => enterLevel(L), help: () => showHelp('game'), settings: () => showSettings('game'), map: () => showMap(L.id) });
 }
 
 // --- help ----------------------------------------------------------------------------------------

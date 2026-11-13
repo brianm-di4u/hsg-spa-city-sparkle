@@ -4,7 +4,7 @@ import { VIEW, initStage, buildVectorTextures, requestRender } from './view/stag
 import { PLAY, bindInput, handleKey, playFrame, levelById, layoutAndBuild, armBooster } from './ui/play.js';
 import { UI, showTitle, showPause, wireUi, applySettings, closeModal, enterLevel, showMap } from './ui/screens.js';
 import { installHooks, HOOK } from './ui/hooks.js';
-import { unlockAudio } from './audio.js';
+import { unlockAudio, pauseAudio, resumeAudio, releaseMusic } from './audio.js';
 import { ensurePack, artBusy, disableArt } from './art.js';
 
 const params = new URLSearchParams(location.search);
@@ -29,11 +29,13 @@ async function boot() {
   window.addEventListener('keydown', (e) => {
     unlockAudio();
     if (document.getElementById('tip') && (e.key === 'Enter' || e.key === 'Escape')) { document.querySelector('#tip [data-act="ok"]').click(); e.preventDefault(); return; }
-    if (UI.modalOpen) { if (e.key === 'Escape' && UI.scene === 'pause') { closeModal(); UI.scene = 'game'; document.body.dataset.scene = 'game'; } return; }
+    if (UI.modalOpen) { if (e.key === 'Escape' && UI.scene === 'pause') { closeModal(); UI.scene = 'game'; document.body.dataset.scene = 'game'; releaseMusic('pause'); } return; }
     if ((e.key === 'p' || e.key === 'P' || (e.key === 'Escape' && PLAY.selected < 0 && !PLAY.anim && !PLAY.armed)) && UI.scene === 'game') { showPause(); e.preventDefault(); return; }
     if (handleKey(e)) e.preventDefault();
   });
-  document.addEventListener('visibilitychange', () => requestRender());
+  document.addEventListener('visibilitychange', () => { if (document.hidden) pauseAudio(); else resumeAudio(); requestRender(); });
+  window.addEventListener('pagehide', pauseAudio);
+  window.addEventListener('pageshow', () => { if (!document.hidden) resumeAudio(); });
   await ensurePack('core');
   const lv = params.get('level') && levelById(params.get('level'));
   if (lv) enterLevel(lv, { seed: +(params.get('seed') || 1) });

@@ -1,7 +1,7 @@
 // WebAudio synthesis: no audio files. Glassy chimes that rise with each chain wave, plus a soft
 // ambient arpeggio per world. Quiet by default and mutable (PRD §7, AC42). Pattern adapted from
 // games/property-game/src/js/audio.js (tone + filtered noise with exponential envelopes).
-export const AUDIO = { ctx: null, master: null, sfxGain: null, musicGain: null, sound: true, music: true, volume: 0.5, played: [], musicTimer: 0, world: 1 };
+export const AUDIO = { ctx: null, master: null, sfxGain: null, musicGain: null, sound: true, music: true, volume: 0.5, played: [], musicTimer: 0, world: 1, resumeWorld: 0, holds: new Set(), suspendTimer: 0 };
 
 function ensure() {
   if (AUDIO.ctx) return AUDIO.ctx;
@@ -15,9 +15,11 @@ function ensure() {
   applyLevels();
   return ctx;
 }
-export function unlockAudio() { const c = ensure(); if (c && c.state === 'suspended') c.resume(); }
+// Resume on any state but 'running': iOS Safari reports 'interrupted' after a call, lock or alarm.
+export function unlockAudio() { const c = ensure(); if (c && c.state !== 'running') try { c.resume().catch(() => {}); } catch (_) { /* resume is best effort */ } }
 export function applyLevels() {
   if (!AUDIO.ctx) return;
+  AUDIO.master.gain.cancelScheduledValues(AUDIO.ctx.currentTime);
   AUDIO.master.gain.value = AUDIO.volume * 0.6;
   AUDIO.sfxGain.gain.value = AUDIO.sound ? 1 : 0;
   AUDIO.musicGain.gain.value = AUDIO.music ? 0.22 : 0;
@@ -94,4 +96,26 @@ export function startMusic(world) {
   };
   AUDIO.musicTimer = setInterval(tick, 420);
 }
-export function stopMusic() { if (AUDIO.musicTimer) clearInterval(AUDIO.musicTimer); AUDIO.musicTimer = 0; }
+const clearTick = () => { if (AUDIO.musicTimer) clearInterval(AUDIO.musicTimer); AUDIO.musicTimer = 0; };
+export function stopMusic() { clearTick(); AUDIO.resumeWorld = 0; AUDIO.holds.delete('pause'); }
+// holdMusic stops the tick for a reason ('tab' hidden, 'pause' card); the music restarts once every hold is released.
+export function holdMusic(reason) { if (AUDIO.musicTimer) AUDIO.resumeWorld = AUDIO.world; clearTick(); AUDIO.holds.add(reason); }
+export function releaseMusic(reason) {
+  AUDIO.holds.delete(reason);
+  const w = AUDIO.resumeWorld;
+  if (!AUDIO.holds.size && w) { AUDIO.resumeWorld = 0; startMusic(w); }
+}
+// Tab hidden or page leaving: fade out, then suspend the context so nothing plays in the background.
+export function pauseAudio() {
+  holdMusic('tab');
+  const c = AUDIO.ctx; if (!c) return;
+  clearTimeout(AUDIO.suspendTimer);
+  if (c.state === 'running') AUDIO.master.gain.setTargetAtTime(0, c.currentTime, 0.04);
+  AUDIO.suspendTimer = setTimeout(() => { try { c.suspend().catch(() => {}); } catch (_) { /* best effort */ } }, 150);
+}
+export function resumeAudio() {
+  clearTimeout(AUDIO.suspendTimer);
+  const c = AUDIO.ctx;
+  if (c) { applyLevels(); if (c.state !== 'running') try { c.resume().catch(() => {}); } catch (_) { /* best effort */ } }
+  releaseMusic('tab');
+}

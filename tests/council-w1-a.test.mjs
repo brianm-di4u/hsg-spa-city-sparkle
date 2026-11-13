@@ -34,3 +34,86 @@ export const tests = [
     },
   },
 ];
+
+// --- S5-05: audio lifecycle ---------------------------------------------------------------------
+function trackAudio() {
+  window.__osc = 0; window.__ctxs = [];
+  const Base = window.AudioContext;
+  const co = Base.prototype.createOscillator;
+  Base.prototype.createOscillator = function () { window.__osc++; return co.call(this); };
+  window.AudioContext = class extends Base { constructor(...a) { super(...a); window.__ctxs.push(this); } };
+}
+const setHidden = (t, hidden) => t.page.evaluate((h) => {
+  Object.defineProperty(document, 'hidden', { configurable: true, get: () => h });
+  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => (h ? 'hidden' : 'visible') });
+  document.dispatchEvent(new Event('visibilitychange'));
+}, hidden);
+const oscCount = (t) => t.page.evaluate(() => window.__osc);
+async function unlock(t) {
+  await t.page.mouse.click(5, 5);
+  await t.page.waitForFunction(() => window.__ctxs.length && window.__ctxs[0].state === 'running', null, { timeout: 5000 });
+}
+
+tests.push(
+  {
+    name: 'S5-05 hiding the tab suspends audio and stops the music tick; returning resumes it',
+    initScript: trackAudio,
+    async run(t) {
+      await inLevel(t);
+      await unlock(t);
+      await t.page.waitForTimeout(1000);
+      t.expect((await oscCount(t)) > 0, 'music is playing in the visible tab');
+      await setHidden(t, true);
+      await t.page.waitForTimeout(600);
+      t.equal(await t.page.evaluate(() => window.__ctxs[0].state), 'suspended', 'context suspended while hidden');
+      const before = await oscCount(t);
+      await t.page.waitForTimeout(1500);
+      t.equal(await oscCount(t), before, 'no notes are scheduled while hidden');
+      await setHidden(t, false);
+      await t.page.waitForFunction(() => window.__ctxs[0].state === 'running', null, { timeout: 3000 });
+      await t.page.waitForTimeout(1200);
+      t.expect((await oscCount(t)) > before, 'music plays again after returning');
+      await t.page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
+      await t.page.waitForTimeout(600);
+      t.equal(await t.page.evaluate(() => window.__ctxs[0].state), 'suspended', 'pagehide suspends too');
+    },
+  },
+  {
+    name: 'S5-05 a context left interrupted (iOS) is resumed by the next gesture',
+    initScript: trackAudio,
+    async run(t) {
+      await inLevel(t);
+      await unlock(t);
+      await t.page.evaluate(() => {
+        const c = window.__ctxs[0];
+        let o = Object.getPrototypeOf(c), proto;
+        while (o && !(proto = Object.getOwnPropertyDescriptor(o, 'state'))) o = Object.getPrototypeOf(o);
+        let interrupted = true;
+        Object.defineProperty(c, 'state', { configurable: true, get: () => (interrupted ? 'interrupted' : proto.get.call(c)) });
+        const r = c.resume.bind(c);
+        window.__resumes = 0;
+        c.resume = () => { window.__resumes++; interrupted = false; return r(); };
+      });
+      await t.page.mouse.click(5, 5);
+      t.equal(await t.page.evaluate(() => window.__resumes), 1, 'a gesture calls resume() on an interrupted context');
+    },
+  },
+  {
+    name: 'S5-05 the Pause card silences the music and Resume brings it back',
+    viewports: ['desktop'],
+    initScript: trackAudio,
+    async run(t) {
+      await inLevel(t);
+      await unlock(t);
+      await t.page.waitForTimeout(900);
+      await openPause(t);
+      await t.page.waitForTimeout(300);
+      const before = await oscCount(t);
+      await t.page.waitForTimeout(1500);
+      t.equal(await oscCount(t), before, 'no music notes while paused');
+      await t.page.locator('#modal [data-act="resume"]').click();
+      await t.page.waitForTimeout(1200);
+      t.expect((await oscCount(t)) > before, 'music returns after Resume');
+    },
+  },
+);
