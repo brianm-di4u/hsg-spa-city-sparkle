@@ -88,7 +88,7 @@ export function showTitle() {
       <div class="menu">
         ${cont ? `<button class="btn" data-act="continue" data-focus>Continue ${esc(cont.n)}. ${esc(cont.name)}</button>` : ''}
         <button class="btn${cont ? ' alt' : ''}" data-act="play" ${cont ? '' : 'data-focus'}>${Object.keys(SAVE.progress).length ? 'World map' : 'Play'}</button>
-        <button class="btn alt" data-act="soak" ${soakOpen ? '' : 'disabled aria-disabled="true"'}>Free Soak${soakOpen ? '' : ' 🔒'}</button>
+        <button class="btn alt" data-act="soak" ${soakOpen ? '' : 'aria-disabled="true"'}>Free Soak${soakOpen ? '' : ' 🔒'}</button>${soakOpen ? '' : '<p class="menu-note">Finish Bathhouse Row to unlock Free Soak.</p>'}
         <div class="menu-row">
           <button class="btn small alt" data-act="help">Help</button>
           <button class="btn small alt" data-act="settings">Settings</button>
@@ -99,7 +99,7 @@ export function showTitle() {
   bindActs(screenEl(), {
     continue: () => enterLevel(null, { continue: true, skipIntro: true }),
     play: () => showMap(),
-    soak: () => soakOpen && startSoak(),
+    soak: () => (soakOpen ? startSoak() : toast('Finish Bathhouse Row to unlock Free Soak', 2200)),
     help: () => showHelp(), settings: () => showSettings(), about: () => showAbout(),
   });
   const f = screenEl().querySelector('[data-focus]');

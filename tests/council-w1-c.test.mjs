@@ -51,3 +51,19 @@ tests.push({
     }
   },
 });
+
+// --- S2-04: a locked Free Soak explains itself ---------------------------------------------------
+tests.push({
+  name: 'S2-04 locked Free Soak says why and answers a tap',
+  async run(t) {
+    await t.game('scene', 'title');
+    await t.waitIdle();
+    const soak = t.page.locator('#screen [data-act="soak"]');
+    t.equal(await soak.getAttribute('aria-disabled'), 'true', 'announced as unavailable');
+    t.expect(await soak.evaluate((b) => !b.disabled), 'still a live button, so the tap is answered');
+    t.expect(/Bathhouse Row/.test(await t.page.locator('#screen .menu-note').innerText()), 'subtitle names what unlocks it');
+    await soak.click({ force: true });
+    t.expect(/Bathhouse Row/.test(await t.page.locator('#toast').innerText()), 'tap shows the unlock hint');
+    t.equal((await t.state()).scene, 'title', 'stays on the title');
+  },
+});
