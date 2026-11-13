@@ -185,6 +185,7 @@ body.landscape #tray { left: 24px; bottom: 24px; width: 260px; flex-wrap: wrap; 
 @media (max-width: 599px) { .map-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } }
 .map-pc { flex: none; width: 54px; height: 36px; border-radius: 3px; border: 2px solid #FFF6DE; background: #6B7B70 center / cover; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
 .map-top { gap: 8px; }
+@media (max-width: 440px) { .map-pc { display: none; } }
 .lore { margin-top: 12px; padding: 12px 14px; border-radius: 8px; background: #EFE4C8; border-left: 5px solid var(--brick); }
 .lore.framed { border-radius: 0; border: 22px solid transparent; border-image: var(--card-frame) 120 round; background: #F8F1DF; background-clip: padding-box; padding: 6px 8px; }
 .lore h4 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 400; color: var(--brick); font-size: 1.05rem; }

@@ -117,3 +117,31 @@ tests.push(
     },
   },
 );
+
+// --- S2-05: Help from the map and the level intro ----------------------------------------------
+tests.push({
+  name: 'S2-05 the map header and the level intro card each have a Help button that returns to where it was opened',
+  async run(t) {
+    await t.game('scene', 'map');
+    await t.waitIdle();
+    await t.page.locator('.map-top [data-act="help"]').click();
+    await t.waitIdle();
+    t.equal(await heading(t), 'How to play', 'help opens from the map');
+    await t.page.locator('#modal [data-act="close"]').click();
+    await t.waitIdle();
+    const s = await t.state();
+    t.equal(s.scene, 'map', 'closing help returns to the map');
+    t.expect(!s.modal, 'no dialog is left open');
+    await t.checkLayout();
+    await t.page.locator('.node[data-level="w1-01"]').click({ force: true });
+    await t.waitIdle();
+    t.equal((await t.state()).scene, 'intro', 'intro card is open');
+    await t.page.locator('#modal [data-act="help"]').click();
+    await t.waitIdle();
+    t.equal(await heading(t), 'How to play', 'help opens from the intro card');
+    await t.page.locator('#modal [data-act="close"]').click();
+    await t.waitIdle();
+    t.equal((await t.state()).scene, 'intro', 'closing help returns to the intro card');
+    t.expect(/Play/.test(await t.page.locator('#modal [data-act="go"]').innerText()), 'the intro card is back with its Play button');
+  },
+});

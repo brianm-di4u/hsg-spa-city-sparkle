@@ -117,7 +117,7 @@ export function showMap(focusId) {
   el.className = 'screen map';
   el.style.backgroundImage = '';
   const current = LEVELS.find((l) => !SAVE.progress[l.id] && isUnlocked(l)) || LEVELS[LEVELS.length - 1];
-  let html = `<div class="map-top"><button class="round" data-act="home" aria-label="Back to title">⌂</button><span class="map-pc" id="map-pc" aria-hidden="true"></span><div class="map-head"><b class="map-title" id="map-world"></b><span class="map-sub" id="map-sub"></span></div><span class="totals" aria-label="Stars earned">★ ${totalStars()}</span><button class="round" data-act="settings" aria-label="Settings">⚙</button></div>`;
+  let html = `<div class="map-top"><button class="round" data-act="home" aria-label="Back to title">⌂</button><span class="map-pc" id="map-pc" aria-hidden="true"></span><div class="map-head"><b class="map-title" id="map-world"></b><span class="map-sub" id="map-sub"></span></div><span class="totals" aria-label="Stars earned">★ ${totalStars()}</span><button class="round" data-act="help" aria-label="How to play">?</button><button class="round" data-act="settings" aria-label="Settings">⚙</button></div>`;
   html += `<div class="map-canvas" style="height:${6 * MAP_WORLD_H}px">`;
   for (let w = 6; w >= 1; w--) {
     const look = WORLD_LOOK[w], top = (6 - w) * MAP_WORLD_H;
@@ -135,7 +135,7 @@ export function showMap(focusId) {
   }
   html += '</div>';
   el.innerHTML = html;
-  bindActs(el, { home: () => showTitle(), settings: () => showSettings() });
+  bindActs(el, { home: () => showTitle(), help: () => showHelp(), settings: () => showSettings() });
   el.querySelectorAll('.node').forEach((b) => b.addEventListener('click', () => {
     unlockAudio();
     const L = levelById(b.dataset.level);
@@ -192,9 +192,9 @@ export function showIntro(L) {
     <p>${L.goals.map((g) => GOAL_TEXT[g.type]).join(' · ')}${L.moves ? ` in <b>${L.moves} moves</b>` : ''}.</p>
     <div class="goals-big">${goalChips(L.goals)}</div>
     <p class="fine">Stars at ${L.stars.map((x) => x.toLocaleString('en-US')).join(' · ')} points${pr ? ` · best ${pr.best.toLocaleString('en-US')}` : ''}</p>
-    <div class="actions"><button class="btn" data-act="go" data-focus>Play</button><button class="btn alt small" data-act="back">Map</button></div>`, { label: `Level ${L.world}-${L.n} ${L.name}` });
+    <div class="actions"><button class="btn" data-act="go" data-focus>Play</button><button class="btn alt small" data-act="back">Map</button><button class="round" data-act="help" aria-label="How to play">?</button></div>`, { label: `Level ${L.world}-${L.n} ${L.name}` });
   fillIcons(m);
-  bindActs(m, { go: () => enterLevel(L), back: () => showMap(L.id) });
+  bindActs(m, { go: () => enterLevel(L), back: () => showMap(L.id), help: () => showHelp(() => showIntro(L)) });
 }
 
 export function enterLevel(L, opts = {}) {
@@ -357,7 +357,7 @@ export function showHelp(back, tab = 'basics') {
     const t = HELP.find((h) => h[0] === id) || HELP[0];
     const m = openModal(`<h2>How to play</h2><div class="tabs" role="tablist">${HELP.map((h) => `<button class="tab" role="tab" aria-selected="${h[0] === t[0]}" data-tab="${h[0]}">${h[1]}</button>`).join('')}</div>
       <div role="tabpanel" aria-label="${t[1]}">${t[2]}</div>
-      <div class="actions"><button class="btn small" data-act="close">${back === 'game' ? 'Back' : 'Close'}</button></div>`, { label: 'How to play' });
+      <div class="actions"><button class="btn small" data-act="close">${back ? 'Back' : 'Close'}</button></div>`, { label: 'How to play' });
     m.querySelectorAll('[data-pieces]').forEach((box) => {
       for (const [n, label] of box.dataset.pieces.split(',').map((n, i) => [n, ['Cascade', 'Hot Stone', 'Spring Crystal'][i]])) {
         const img = ICON_IMAGES[n];
@@ -368,7 +368,7 @@ export function showHelp(back, tab = 'basics') {
       }
     });
     m.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => { sfx('click'); render(b.dataset.tab); m.querySelector(`[data-tab="${b.dataset.tab}"]`).focus(); }));
-    bindActs(m, { close: () => back === 'game' ? (setScene('game'), showPause()) : (closeModal(), setScene(prev === 'help' ? 'title' : prev)) });
+    bindActs(m, { close: () => back === 'game' ? (setScene('game'), showPause()) : back ? back() : (closeModal(), setScene(prev === 'help' ? 'title' : prev)) });
   };
   render(tab);
 }
