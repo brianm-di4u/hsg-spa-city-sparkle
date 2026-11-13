@@ -476,7 +476,7 @@ export function startSoak() {
   screenEl().innerHTML = ''; screenEl().className = 'screen';
   setScene('soak');
   startLevel(L, { seed: soakSeed() });
-  document.getElementById('hud-world').textContent = 'Daily board · just relax';
+  document.getElementById('hud-world').textContent = 'Daily board';
   toast('Relax: no goals, no move limit');
 }
 

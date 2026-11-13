@@ -165,3 +165,43 @@ tests.push({
     t.expect(fits, 'the help card stays inside the visible height');
   },
 });
+
+// --- S2-11: next-star text under the score; Free Soak has no star bar and a whole label -----------
+const hudNext = (t) => t.page.evaluate(() => { const n = document.getElementById('hud-next'); return n ? { text: n.textContent, shown: n.offsetParent !== null } : null; });
+tests.push({
+  name: 'S2-11 the HUD says what the next star needs',
+  async run(t) {
+    await t.game('newGame', { level: 'w1-01', seed: 3, tips: false });
+    await t.waitIdle();
+    const st = (await t.state()).starThresholds;
+    const fmt = (n) => n.toLocaleString('en-US');
+    let h = await hudNext(t);
+    await t.shot('s2-11-hud');
+    t.expect(!!h && h.shown, 'next-star line is visible');
+    t.equal(h && h.text, `Next star at ${fmt(st[0])}`, 'first star at the start');
+    const s = await t.page.evaluate(() => window.__game.engineState());
+    s.score = st[0];
+    await t.game('setState', s);
+    h = await hudNext(t);
+    t.equal(h && h.text, `Next star at ${fmt(st[1])}`, 'second star after the first');
+    s.score = st[2];
+    await t.game('setState', s);
+    h = await hudNext(t);
+    t.equal(h && h.text, 'All stars earned', 'all stars earned');
+  },
+});
+tests.push({
+  name: 'S2-11 Free Soak HUD: whole label, no star bar',
+  async run(t) {
+    await t.game('scene', 'soak');
+    await t.waitIdle();
+    const r = await t.page.evaluate(() => {
+      const w = document.getElementById('hud-world'), th = document.querySelector('.thermo'), n = document.getElementById('hud-next');
+      return { text: w.textContent, clipped: w.scrollWidth > w.clientWidth, thermo: th.offsetParent !== null, next: n.offsetParent !== null };
+    });
+    t.equal(r.text, 'Daily board', 'short label');
+    t.expect(!r.clipped, 'label is not truncated');
+    t.expect(!r.thermo, 'star thermometer hidden in a goal-less mode');
+    t.expect(!r.next, 'next-star line hidden in a goal-less mode');
+  },
+});

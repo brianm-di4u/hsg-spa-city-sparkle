@@ -110,6 +110,9 @@ export function updateHud(partialScore, movesOverride) {
   if ($('hud-score').textContent !== sc && !VIEW.reduced && !$('hud-score').classList.contains('bump')) { bump($('hud-score')); setTimeout(() => $('hud-score').classList.remove('bump'), 340); }
   $('hud-score').textContent = sc;
   const max = s.stars[2] || 1;
+  $('hud').classList.toggle('soak', s.mode === 'soak'); // no goals, so no star bar or star text
+  const nextStar = s.stars.find((v) => score < v);
+  $('hud-next').textContent = nextStar != null ? `Next star at ${nextStar.toLocaleString('en-US')}` : 'All stars earned';
   $('thermo-fill').style.width = `max(0px, calc(${Math.min(100, (score / max) * 100)}% - 4px))`;
   const stars = document.querySelectorAll('.thermo .star');
   // markers at their thresholds, but at least 20% apart so they never stack
