@@ -253,9 +253,10 @@ export function showTip(id) {
   el.innerHTML = `<div class="della" style="${della ? `background-image:url(${della})` : 'display:none'}"></div><div class="bubble card"><div class="who">Della <small>· your bath attendant (fictional)</small></div><p>${tip.html}</p><button class="btn small" data-act="ok" data-focus>Got it</button></div>`;
   document.getElementById('app').appendChild(el);
   if (!portrait) {
-    const tray = document.getElementById('tray').getBoundingClientRect(), over = el.getBoundingClientRect().bottom - (tray.top - 12);
-    const d = el.querySelector('.della');
-    if (over > 0) { const h = d.offsetHeight - over; if (h >= 70) d.style.height = `${h}px`; else d.style.display = 'none'; }
+    // Della stands beside the card, over the backdrop between the HUD column and the board; a card that would run off the bottom moves up.
+    const d = el.querySelector('.della'), r = el.getBoundingClientRect();
+    d.style.width = `${Math.max(60, Math.min(130, L.bx - r.right - 8))}px`;
+    if (r.bottom > L.H - 8) el.style.top = `${Math.max(8, L.H - 8 - r.height)}px`;
   }
   bindActs(el, { ok: () => { markTutorial(id); closeTip(); } });
   el.querySelector('[data-focus]').focus();

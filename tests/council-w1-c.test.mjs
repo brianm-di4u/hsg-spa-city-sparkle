@@ -67,3 +67,31 @@ tests.push({
     t.equal((await t.state()).scene, 'title', 'stays on the title');
   },
 });
+
+// --- S4-09: Della's portrait on landscape screens -----------------------------------------------
+tests.push({
+  name: 'S4-09 Della is shown on the tip card in landscape, clear of the tray',
+  viewports: ['desktop'],
+  async run(t) {
+    for (const [w, h] of [[1280, 800], [1024, 600], [844, 390]]) {
+      await t.page.setViewportSize({ width: w, height: h });
+      await t.game('newGame', { level: 'w1-01', seed: 3, tips: true });
+      await t.waitIdle();
+      const r = await t.page.evaluate(() => {
+        const d = document.querySelector('#tip .della'), tip = document.getElementById('tip'), tray = document.getElementById('tray').getBoundingClientRect();
+        if (!d) return null;
+        const b = d.getBoundingClientRect(), tb = tip.getBoundingClientRect(), l = window.__game.getState().layout;
+        return { right: b.right, shown: getComputedStyle(d).display !== 'none', w: b.width, h: b.height, art: d.style.backgroundImage !== '', tipBottom: tb.bottom, tipRight: tb.right, tipTop: tb.top, trayTop: tray.top, bx: l.bx, W: window.innerWidth, H: window.innerHeight };
+      });
+      const tag = `${w}x${h}`;
+      await t.shot(`s4-09-${w}x${h}`);
+      t.expect(!!r, `tip is open at ${tag}`);
+      if (!r) continue;
+      t.expect(r.art, `Della's painting loaded at ${tag}`);
+      t.expect(r.shown && r.h >= 70 && r.w >= 40, `Della is visible (${Math.round(r.w)}x${Math.round(r.h)}) at ${tag}`);
+      t.expect(r.right <= r.bx + 1, `Della stays off the board at ${tag}`);
+      t.expect(r.tipBottom <= r.H && r.tipRight <= r.W, `tip card stays on screen at ${tag}`);
+      if (h >= 800) t.expect(r.tipBottom <= r.trayTop, `tip card clear of the tray at ${tag}`);
+    }
+  },
+});
