@@ -423,7 +423,7 @@ export function handleKey(e) {
   const s = PLAY.state;
   const dirs = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
   if (PLAY.anim && (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter')) { skipAnim(); return true; }
-  if (PLAY.anim) return false;
+  if (PLAY.anim && !dirs[e.key]) return false;
   if (dirs[e.key]) {
     clearHint();
     if (PLAY.cursor < 0) PLAY.cursor = PLAY.selected >= 0 ? PLAY.selected : firstCell(s);
@@ -432,7 +432,7 @@ export function handleKey(e) {
     PLAY.keyMode = true; BOARD.showCursor = true;
     if (nx < 0 || ny < 0 || nx >= s.w || ny >= s.h || !s.mask[ny * s.w + nx]) { requestRender(); return true; }
     const j = ny * s.w + nx;
-    if (PLAY.selected >= 0) { const a = PLAY.selected; setSelected(-1); PLAY.cursor = j; BOARD.cursor = j; doSwap(a, j); return true; }
+    if (PLAY.selected >= 0 && !PLAY.anim) { const a = PLAY.selected; setSelected(-1); PLAY.cursor = j; BOARD.cursor = j; doSwap(a, j); return true; }
     PLAY.cursor = j; BOARD.cursor = j; requestRender();
     return true;
   }

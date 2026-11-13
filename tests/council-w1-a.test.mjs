@@ -432,4 +432,18 @@ tests.push(
       t.equal(s.selected, 3 * 5 + 3, 'the tapped piece is selected');
     },
   },
+  {
+    name: 'S1-07 arrow keys during an animation move the cursor and are not left to the browser',
+    viewports: ['desktop'],
+    async run(t) {
+      await startMoveAnimation(t);
+      await t.page.evaluate(() => { window.__prevented = []; window.addEventListener('keydown', (e) => window.__prevented.push(e.defaultPrevented)); });
+      t.equal((await t.state()).cursor, -1, 'no cursor yet');
+      await t.page.keyboard.press('ArrowRight');
+      t.expect((await t.state()).cursor >= 0, 'the cursor was placed during the animation');
+      t.equal(await t.page.evaluate(() => window.__prevented), [true], 'the arrow key was handled (default prevented)');
+      await t.waitIdle(8000);
+      t.equal((await t.state()).movesUsed, 1, 'the arrow key during the animation did not make a move');
+    },
+  },
 );
