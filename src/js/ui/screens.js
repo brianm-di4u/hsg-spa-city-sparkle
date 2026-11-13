@@ -368,7 +368,7 @@ export function showHelp(back, tab = 'basics') {
       }
     });
     m.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => { sfx('click'); render(b.dataset.tab); m.querySelector(`[data-tab="${b.dataset.tab}"]`).focus(); }));
-    bindActs(m, { close: () => back === 'game' ? showPause() : (closeModal(), setScene(prev === 'help' ? 'title' : prev)) });
+    bindActs(m, { close: () => back === 'game' ? (setScene('game'), showPause()) : (closeModal(), setScene(prev === 'help' ? 'title' : prev)) });
   };
   render(tab);
 }
@@ -409,7 +409,7 @@ export function showSettings(back) {
   m.querySelector('#vol').addEventListener('input', (e) => { changeSettings({ volume: +e.target.value }); applySettings(); });
   bindActs(m, {
     reset: () => { if (window.confirm('Reset all progress, stars and boosters?')) { const result = resetSave(); toast(result.ok ? 'Progress reset' : 'Reset is not saved yet. Storage or another tab changed.'); } },
-    close: () => (back === 'game' ? showPause() : (closeModal(), prev === 'map' ? showMap() : setScene(prev === 'settings' ? 'title' : prev))),
+    close: () => (back === 'game' ? (setScene('game'), showPause()) : (closeModal(), prev === 'map' ? showMap() : setScene(prev === 'settings' ? 'title' : prev))),
   });
 }
 
