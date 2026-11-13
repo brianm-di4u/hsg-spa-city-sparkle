@@ -1,5 +1,6 @@
 // One v1 resource; explicit intents never serialize an unrelated cached snapshot.
 const KEY = 'spa-city-sparkle:v1';
+const BACKUP = KEY + ':corrupt';
 const clone = (v) => JSON.parse(JSON.stringify(v));
 const obj = (v) => v && typeof v === 'object' && !Array.isArray(v);
 const own = (v, k) => Object.prototype.hasOwnProperty.call(v, k);
@@ -16,7 +17,7 @@ const same = (a, b) => canonical(a) === canonical(b);
 const affectedReset = (d) => ({ ...currentGroup(d), progress: d.progress, boosters: d.boosters, lore: d.lore, tutorialSeen: d.tutorialSeen, soakBest: d.soakBest });
 
 export function createSaveStore({ storage = () => globalThis.localStorage, newToken = token, projection = freshSave() } = {}) {
-  let last = null, active = null, serial = 0, conflictKey = null, unsavedNotice = false;
+  let last = null, active = null, serial = 0, conflictKey = null, unsavedNotice = false, corrupt = null; // corrupt: raw text of a stored value that cannot be read
   const pending = { reservation: null, bundle: null, settings: {}, preferenceBirth: null, wins: new Map(), tutorials: new Map(), reset: null };
   const effects = { onChange() {}, onConflict() {}, onUnsaved() {} };
   const issued = new Map();
@@ -33,15 +34,21 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
   function observe() {
     const raw = storage().getItem(KEY);
     if (raw === null) { last = { kind: 'missing', raw: null, data: freshSave() }; return clone(last); }
-    const d = JSON.parse(raw);
-    if (!obj(d) || d.v !== 1 || ['settings', 'progress', 'boosters'].some((k) => own(d, k) && !obj(d[k]))) throw Error('Unsupported save');
+    let d; try { d = JSON.parse(raw); } catch { throw Object.assign(Error('Unreadable save'), { raw }); }
+    if (!obj(d) || d.v !== 1 || ['settings', 'progress', 'boosters'].some((k) => own(d, k) && !obj(d[k]))) throw Object.assign(Error('Unsupported save'), { raw });
     const count = META.filter((k) => own(d, k)).length;
-    if (count && (count !== META.length || META.some((k) => typeof d[k] !== 'string' || !d[k]))) throw Error('Partial save identity');
+    if (count && (count !== META.length || META.some((k) => typeof d[k] !== 'string' || !d[k]))) throw Object.assign(Error('Partial save identity'), { raw });
     const data = { ...freshSave(), ...d, settings: { ...freshSave().settings, ...(d.settings || {}) }, boosters: { ...freshSave().boosters, ...(d.boosters || {}) } };
     delete data.storageOk;
     last = { kind: count ? 'identified' : 'legacy', raw, data, payload: d }; return clone(last);
   }
-  function read() { try { return observe(); } catch { projection.storageOk = false; return null; } }
+  function read() { try { corrupt = null; return observe(); } catch (e) { corrupt = typeof e?.raw === 'string' ? e.raw : null; projection.storageOk = false; return null; } }
+  // The player opted in (Start fresh or Reset): keep the unreadable text under a backup key, then treat the slot as missing.
+  function discardUnreadable() {
+    if (corrupt === null) return fail('not-unreadable');
+    try { storage().setItem(BACKUP, corrupt); storage().removeItem(KEY); } catch { return fail('storage-unavailable'); }
+    corrupt = null; last = null; return { ok: true };
+  }
   const birth = () => ({ resourceId: newToken(), resetEpoch: newToken(), currentGeneration: newToken() });
   const identify = (o, ids) => o.kind === 'identified' ? clone(o.data) : { ...clone(o.data), ...ids };
   const metadataOnly = (o, ids) => o.kind === 'legacy' ? { ...clone(o.payload), ...ids } : identify(o, ids);
@@ -227,7 +234,15 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
       return publish(globals(next), (saved) => { active.base = currentGroup(saved); });
     },
     tutorial(tip) { if (!active) { if (!projection.tutorialSeen.includes(tip)) projection.tutorialSeen.push(tip); return fail('no-resource-authority'); } const id = active.run + ':tip:' + tip; pending.tutorials.set(id, { tip, stamp: clone(active.stamp) }); return flushGlobals(); },
-    reset() { const o = read(); pending.reset = { observed: o || (last && clone(last)), affected: clone(affectedReset(o?.data || projection)), ids: birth(), epoch: newToken(), generation: newToken() }; const receipt = flushReset(); if (!receipt.ok && receipt.reason === 'storage-unavailable') project({ ...clone(projection), progress: {}, boosters: freshSave().boosters, lore: [], tutorialSeen: [], current: null, soakBest: 0, resetEpoch: pending.reset.epoch, currentGeneration: pending.reset.generation }, false); return receipt; },
+    unreadable() { read(); return corrupt !== null; },
+    startFresh() {
+      const r = discardUnreadable(); if (!r.ok) return r;
+      active = null; conflictKey = null; unsavedNotice = false; pending.reservation = null; pending.bundle = null; pending.reset = null; pending.wins.clear(); pending.tutorials.clear();
+      const o = read(); if (!o) return fail('storage-unavailable');
+      if (Object.keys(pending.settings).length) store.settings({}); else project(o.data, true);
+      effects.onChange(); return { ok: true };
+    },
+    reset() { let o = read(); if (!o && corrupt !== null && discardUnreadable().ok) o = read(); pending.reset = { observed: o || (last && clone(last)), affected: clone(affectedReset(o?.data || projection)), ids: birth(), epoch: newToken(), generation: newToken() }; const receipt = flushReset(); if (!receipt.ok && receipt.reason === 'storage-unavailable') project({ ...clone(projection), progress: {}, boosters: freshSave().boosters, lore: [], tutorialSeen: [], current: null, soakBest: 0, resetEpoch: pending.reset.epoch, currentGeneration: pending.reset.generation }, false); return receipt; },
     retryReset: flushReset,
     retry: flushBundle,
     // Separate installer: called only by explicit fixture arrangement, never by a normal mutation.
@@ -253,6 +268,8 @@ export const saveSettledAction = () => STORE.settle();
 export const saveTerminal = (result, current) => STORE.terminal(result, current);
 export const markTutorial = (tip) => STORE.tutorial(tip);
 export const resetSave = () => STORE.reset();
+export const saveUnreadable = () => STORE.unreadable();
+export const startFreshSave = () => STORE.startFresh();
 export function arrangeSaveFixture(patch) {
   if (!globalThis.window?.__TEST__) throw Error('Explicit fixture arrangement requires test context');
   return STORE.arrangeFixture(patch);

@@ -1,7 +1,7 @@
 // DOM screens and dialogs: title, world map, level intro, results, world complete, pause, help,
 // settings, about, Free Soak and tutorial tips. Game logic stays in play.js and the engine.
 import { PLAY, startLevel, showGameChrome, levelById, updateHud, goalLabel, layoutAndBuild, doBooster } from './play.js';
-import { SAVE, changeSettings, markTutorial, resetSave, configureSaveEffects, reserveCurrent, adoptCurrent, saveTerminal } from './save.js';
+import { SAVE, changeSettings, markTutorial, resetSave, saveUnreadable, startFreshSave, configureSaveEffects, reserveCurrent, adoptCurrent, saveTerminal } from './save.js';
 import { cloneState } from '../engine/game.js';
 import { goalIcon, PIECES, ICON_IMAGES } from '../view/vector-art.js';
 import { VIEW, WORLD_LOOK, requestRender } from '../view/stage.js';
@@ -414,7 +414,7 @@ export function showSettings(back) {
     <div class="set-row"><label id="l-motion">Motion</label><div class="seg" role="group" aria-labelledby="l-motion">${['auto', 'reduced', 'full'].map((v) => `<button class="chip-btn" data-motion="${v}" aria-pressed="${st.motion === v}">${v[0].toUpperCase() + v.slice(1)}</button>`).join('')}</div></div>
     ${toggle('steam', 'Ambient steam')}${toggle('hints', 'Hints after 5 s')}${toggle('badges', 'Colour-blind badges')}
     <div class="set-row"><label>Progress</label><button class="chip-btn" data-act="reset">Reset…</button></div>
-    ${SAVE.storageOk ? '' : '<p class="fine">Storage is unavailable: progress lasts for this visit only.</p>'}
+    ${SAVE.storageOk ? '' : saveUnreadable() ? (back === 'game' ? '<p class="fine">Your saved progress could not be read, so this visit is not being saved. Reset… starts fresh and keeps a copy of the old save.</p>' : '<div class="set-row" id="fresh-row"><label>Saved progress could not be read</label><button class="chip-btn" data-act="fresh">Start fresh (your old save is kept)</button></div>') : '<p class="fine">Storage is unavailable: progress lasts for this visit only.</p>'}
     <div class="actions"><button class="btn small" data-act="close" data-focus>Done</button></div>`, { label: 'Settings' });
   m.querySelectorAll('[data-toggle]').forEach((b) => b.addEventListener('click', () => {
     const k = b.dataset.toggle; changeSettings({ [k]: !st[k] }); b.setAttribute('aria-pressed', st[k]); b.textContent = st[k] ? 'On' : 'Off';
@@ -426,6 +426,7 @@ export function showSettings(back) {
   }));
   m.querySelector('#vol').addEventListener('input', (e) => { changeSettings({ volume: +e.target.value }); applySettings(); });
   bindActs(m, {
+    fresh: () => { const r = startFreshSave(); toast(r.ok ? 'Started fresh. Your old save is kept.' : 'Could not start fresh. Storage is unavailable.'); if (r.ok) m.querySelector('#fresh-row')?.remove(); },
     reset: () => { if (window.confirm('Reset all progress, stars and boosters?')) { const result = resetSave(); toast(result.ok ? 'Progress reset' : 'Reset is not saved yet. Storage or another tab changed.'); } },
     close: () => (back === 'game' ? (setScene('game'), showPause()) : (closeModal(), prev === 'map' ? showMap() : setScene(prev === 'settings' ? 'title' : prev))),
   });

@@ -276,3 +276,53 @@ tests.push(
     },
   },
 );
+
+// --- S6-02: a corrupt save can be repaired --------------------------------------------------------------
+const KEY = 'spa-city-sparkle:v1';
+const BACKUP = KEY + ':corrupt';
+const GOOD = '{"v":1,"settings":{"sound":false},"progress":{"w1-01":{"stars":2,"best":900}}}';
+const TRUNC = GOOD.slice(0, 40);
+const stored = (t, k) => t.page.evaluate((key) => localStorage.getItem(key), k);
+async function loadWith(t, text) {
+  await t.page.evaluate(([k, v]) => localStorage.setItem(k, v), [KEY, text]);
+  await t.reload();
+  await t.waitIdle();
+}
+tests.push(
+  {
+    name: 'S6-02 a truncated save offers Start fresh, keeps the old text as a backup and saves again afterwards',
+    async run(t) {
+      await loadWith(t, TRUNC);
+      await t.page.locator('.screen [data-act="settings"]').click();
+      await t.waitIdle();
+      await t.page.locator('#modal [data-act="fresh"]').click();
+      await t.waitForAnimations();
+      t.equal(await stored(t, BACKUP), TRUNC, 'the unreadable text is kept under the backup key');
+      t.equal(await t.page.locator('#modal [data-act="fresh"]').count(), 0, 'the button is gone');
+      await t.page.locator('#modal [data-toggle="sound"]').click();
+      const saved = JSON.parse(await stored(t, KEY));
+      t.equal(saved.v, 1, 'a valid save now sits under the real key');
+      t.equal(saved.settings.sound, false, 'a settings change persists');
+      await t.reload();
+      await t.waitIdle();
+      await t.page.locator('.screen [data-act="settings"]').click();
+      await t.waitIdle();
+      t.equal(await t.page.locator('#modal [data-act="fresh"]').count(), 0, 'after a reload the save is readable and no repair is offered');
+    },
+  },
+  {
+    name: 'S6-02 Reset works on a corrupt save and the backup is kept',
+    async run(t) {
+      await loadWith(t, TRUNC);
+      t.page.once('dialog', (d) => d.accept());
+      await t.page.locator('.screen [data-act="settings"]').click();
+      await t.waitIdle();
+      await t.page.locator('#modal [data-act="reset"]').click();
+      await t.page.waitForFunction((k) => { try { return JSON.parse(localStorage.getItem(k)).v === 1; } catch (_) { return false; } }, KEY, { timeout: 5000 });
+      t.equal(await stored(t, BACKUP), TRUNC, 'backup kept');
+      await t.reload();
+      await t.waitIdle();
+      t.equal(await t.page.locator('.screen [data-act="settings"]').count(), 1, 'the game reloads cleanly');
+    },
+  },
+);
