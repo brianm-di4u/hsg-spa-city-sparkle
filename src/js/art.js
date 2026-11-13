@@ -19,22 +19,27 @@ export function ensurePack(key) {
     const sc = document.createElement('script');
     sc.src = `${pack.file}?v=${pack.v}`;
     sc.onload = async () => {
-      const data = (window.SCS_ART || {})[key] || { textures: {}, paintings: {} };
-      const tex = {};
-      const decode = async (name, uri) => { const img = new Image(); img.src = uri; try { await img.decode(); tex[name] = img; } catch (_) { /* keep the fallback */ } };
-      await Promise.all(Object.entries(data.textures).map(([n, u]) => decode(n, u)));
-      for (const [n, u] of Object.entries(data.paintings)) {
-        VIEW.paintings[n] = u;
-        if (/^bg/.test(n)) await decode(n, u);
+      let ok = false;
+      try {
+        const data = (window.SCS_ART || {})[key] || { textures: {}, paintings: {} };
+        const tex = {};
+        const decode = async (name, uri) => { const img = new Image(); img.src = uri; try { await img.decode(); tex[name] = img; } catch (_) { /* keep the fallback */ } };
+        await Promise.all(Object.entries(data.textures).map(([n, u]) => decode(n, u)));
+        for (const [n, u] of Object.entries(data.paintings)) {
+          VIEW.paintings[n] = u;
+          if (/^bg/.test(n)) await decode(n, u);
+        }
+        for (const [n, img] of Object.entries(tex)) ICON_IMAGES[n] = img;
+        if (Object.keys(tex).length) {
+          setTextures(tex);
+          for (const n of Object.keys(tex)) VIEW.artNames.add(n);
+          if (key === 'core') VIEW.artSource = 'art';
+        }
+        ST.loaded.add(key); ok = true;
+      } catch (_) { /* a pack that fails to unpack leaves the vector fallback art in place */ } finally {
+        ST.loading--; ST.pending.delete(key);
+        resolve(ok);
       }
-      for (const [n, img] of Object.entries(tex)) ICON_IMAGES[n] = img;
-      if (Object.keys(tex).length) {
-        setTextures(tex);
-        for (const n of Object.keys(tex)) VIEW.artNames.add(n);
-        if (key === 'core') VIEW.artSource = 'art';
-      }
-      ST.loaded.add(key); ST.loading--; ST.pending.delete(key);
-      resolve(true);
     };
     sc.onerror = () => { ST.loading--; ST.pending.delete(key); resolve(false); };
     document.head.appendChild(sc);

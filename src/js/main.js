@@ -8,6 +8,19 @@ import { unlockAudio, pauseAudio, resumeAudio } from './audio.js';
 import { ensurePack, artBusy, disableArt } from './art.js';
 
 const params = new URLSearchParams(location.search);
+// Last resort for an uncaught error or a failed boot: a card with a Reload button instead of a blank or frozen screen.
+function showFatal() {
+  if (document.getElementById('fatal')) return;
+  const d = document.createElement('div');
+  d.id = 'fatal'; d.className = 'modal'; d.setAttribute('role', 'alertdialog'); d.setAttribute('aria-modal', 'true'); d.setAttribute('aria-label', 'Something went wrong');
+  d.innerHTML = '<div class="card"><h2>Something went wrong</h2><p>Spa City Sparkle hit an unexpected error. Reload the page to start again.</p><div class="actions"><button class="btn" data-focus>Reload</button></div></div>';
+  (document.getElementById('app') || document.body).appendChild(d);
+  const b = d.querySelector('button');
+  b.addEventListener('click', () => location.reload());
+  b.focus();
+}
+window.addEventListener('error', (e) => { if (e.error) showFatal(); });
+window.addEventListener('unhandledrejection', () => showFatal());
 async function boot() {
   window.__game = undefined;
   loadSave();
@@ -48,4 +61,4 @@ async function boot() {
   requestRender();
 }
 
-boot();
+boot().catch(showFatal);

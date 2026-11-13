@@ -235,3 +235,44 @@ tests.push(
     },
   },
 );
+
+// --- S6-08: errors in art loading and boot ------------------------------------------------------------
+tests.push(
+  {
+    name: 'S6-08 a throw while an art pack loads does not stop the title from showing',
+    allowConsoleErrors: true,
+    initScript: () => {
+      const store = new Proxy({}, { get: (o, k) => (k === 'core' ? { textures: {}, paintings: null } : o[k]), set: (o, k, v) => { o[k] = v; return true; } });
+      Object.defineProperty(window, 'SCS_ART', { get: () => store, set: () => {}, configurable: true });
+    },
+    async run(t) {
+      await t.waitIdle();
+      t.equal((await t.state()).scene, 'title', 'the title shows although the core pack failed to unpack');
+      t.equal(await t.page.locator('#fatal').count(), 0, 'no error card for a recoverable art failure');
+    },
+  },
+  {
+    name: 'S6-08 an uncaught error shows a card with a Reload button',
+    allowConsoleErrors: true,
+    async run(t) {
+      await t.waitIdle();
+      await t.page.evaluate(() => setTimeout(() => { throw new Error('council probe'); }, 0));
+      await t.page.locator('#fatal button').waitFor({ timeout: 5000 });
+      t.expect(/Reload/.test(await t.page.locator('#fatal button').first().innerText()), 'the card offers Reload');
+      await t.page.evaluate(() => setTimeout(() => { throw new Error('second probe'); }, 0));
+      await t.page.waitForTimeout(200);
+      t.equal(await t.page.locator('#fatal').count(), 1, 'a second error does not stack another card');
+      await t.checkLayout();
+    },
+  },
+  {
+    name: 'S6-08 a rejected promise shows the card too',
+    allowConsoleErrors: true,
+    viewports: ['desktop'],
+    async run(t) {
+      await t.waitIdle();
+      await t.page.evaluate(() => { Promise.reject(new Error('council rejection')); });
+      await t.page.locator('#fatal').waitFor({ timeout: 5000 });
+    },
+  },
+);
