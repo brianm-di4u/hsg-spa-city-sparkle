@@ -9,7 +9,7 @@ import { BOARD, buildBoard, drawStatic, startAnim, drawAnim } from '../view/boar
 import { frameAt } from '../view/player.js';
 import { buildBackdrop, drawAmbient } from '../view/backdrop.js';
 import { goalIcon } from '../view/vector-art.js';
-import { sfx, unlockAudio, startMusic } from '../audio.js';
+import { sfx, unlockAudio, startMusic, setMusicIntensity } from '../audio.js';
 import { SAVE, prepareSaveAction, recordComputedAction, saveSettledAction } from './save.js';
 import { ensurePack } from '../art.js';
 
@@ -21,6 +21,7 @@ export const PLAY = {
 
 const $ = (id) => document.getElementById(id);
 const KIND_NAMES = ['quartz', 'magnolia', 'horseshoe', 'drop', 'scallop', 'pine'];
+const LOW_MOVES_MUSIC = 5; // the music lifts (a little faster, brighter) when this many moves or fewer are left
 
 export function levelById(id) { return LEVELS.find((l) => l.id === id); }
 
@@ -105,6 +106,7 @@ export function updateHud(partialScore, movesOverride) {
   if ($('hud-moves').textContent !== mv && !VIEW.reduced) bump($('hud-moves-wrap'));
   $('hud-moves').textContent = mv;
   $('hud-moves-wrap').classList.toggle('low', s.movesLeft != null && s.movesLeft <= 3 && s.phase === 'play');
+  setMusicIntensity(s.movesLeft != null && s.movesLeft <= LOW_MOVES_MUSIC && s.phase === 'play' ? 0.7 : 0);
   const score = partialScore != null ? partialScore : s.score;
   const sc = score.toLocaleString('en-US');
   if ($('hud-score').textContent !== sc && !VIEW.reduced && !$('hud-score').classList.contains('bump')) { bump($('hud-score')); setTimeout(() => $('hud-score').classList.remove('bump'), 340); }

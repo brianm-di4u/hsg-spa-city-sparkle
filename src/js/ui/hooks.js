@@ -6,7 +6,7 @@ import { VIEW, requestRender } from '../view/stage.js';
 import { BOARD } from '../view/board-view.js';
 import { boardFromAscii, cloneState, hashState } from '../engine/grid.js';
 import { legalMoves } from '../engine/moves.js';
-import { AUDIO } from '../audio.js';
+import { AUDIO, audioList, audioRender, audioState } from '../audio.js';
 
 export const HOOK = { seed: 1, artReady: () => true };
 
@@ -42,6 +42,9 @@ function summary() {
 export function installHooks() {
   window.__game = {
     seed(n) { HOOK.seed = n; return n; },
+    audioList: () => audioList(),
+    audioState: () => audioState(),
+    audioRender: (name, seconds, wantWav) => audioRender(name, seconds, wantWav),
     getState: () => summary(),
     engineState: () => (PLAY.state ? cloneState(PLAY.state) : null),
     setState(s) { PLAY.state = cloneState(s); PLAY.anim = null; arrangeFixture({ boosters: { ...PLAY.state.boosters } }); layoutAndBuild(); updateHud(); return true; },

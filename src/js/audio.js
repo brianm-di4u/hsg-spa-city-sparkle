@@ -1,7 +1,15 @@
-// WebAudio synthesis: no audio files. Glassy chimes that rise with each chain wave, plus a soft
-// ambient arpeggio per world. Quiet by default and mutable (PRD §7, AC42). Pattern adapted from
-// games/property-game/src/js/audio.js (tone + filtered noise with exponential envelopes).
-export const AUDIO = { ctx: null, master: null, sfxGain: null, musicGain: null, sound: true, music: true, volume: 0.5, played: [], musicTimer: 0, world: 1, resumeWorld: 0, holds: new Set(), suspendTimer: 0 };
+// WebAudio synthesis: no audio files. Glassy chimes that rise with each chain wave, a piece of generative
+// music per world and screen, and a bed of place sound under it (music.js holds the scores and scenes, audio-kit.js
+// the engine). Quiet by default, with separate Sound effects, Music and Ambience switches (PRD §7, AC42).
+// Pattern adapted from games/property-game/src/js/audio.js (tone + filtered noise with exponential envelopes).
+import { makeAudioKit, measureAudio } from './audio-kit.js';
+import { SCORES, SCENES, WORLD_MOOD } from './music.js';
+
+export const AUDIO = { ctx: null, master: null, sfxGain: null, kit: null, sound: true, music: true, ambience: true, volume: 0.5, played: [], mood: null, holds: new Set(), suspendTimer: 0 };
+// Levels of the shipping mix. MASTER_SCALE was 0.6; at 1.2 the default volume (0.5) leaves the cues audible over the music.
+const MASTER_SCALE = 1.2;
+const MUSIC_LEVEL = 0.6, AMBIENCE_LEVEL = 1; // measured: every piece peaks 0.06 to 0.16 and every bed under 0.07 at the default volume
+const limiter = (ctx) => { const c = ctx.createDynamicsCompressor(); c.threshold.value = -6; c.knee.value = 6; c.ratio.value = 12; c.attack.value = 0.003; c.release.value = 0.25; return c; };
 
 function ensure() {
   if (AUDIO.ctx) return AUDIO.ctx;
@@ -9,10 +17,13 @@ function ensure() {
   if (!AC) return null;
   const ctx = new AC();
   AUDIO.ctx = ctx;
-  AUDIO.master = ctx.createGain(); AUDIO.master.connect(ctx.destination);
+  AUDIO.master = ctx.createGain(); AUDIO.master.connect(limiter(ctx)).connect(ctx.destination);
   AUDIO.sfxGain = ctx.createGain(); AUDIO.sfxGain.connect(AUDIO.master);
-  AUDIO.musicGain = ctx.createGain(); AUDIO.musicGain.connect(AUDIO.master);
+  AUDIO.kit = makeAudioKit(ctx, AUDIO.master, { seed: (Math.random() * 0xffffff) | 1 });
+  AUDIO.kit.start();
+  if (AUDIO.holds.size) AUDIO.kit.hold();
   applyLevels();
+  syncMood(1.2);
   return ctx;
 }
 // Resume on any state but 'running': iOS Safari reports 'interrupted' after a call, lock or alarm.
@@ -20,9 +31,11 @@ export function unlockAudio() { const c = ensure(); if (c && c.state !== 'runnin
 export function applyLevels() {
   if (!AUDIO.ctx) return;
   AUDIO.master.gain.cancelScheduledValues(AUDIO.ctx.currentTime);
-  AUDIO.master.gain.value = AUDIO.volume * 0.6;
+  AUDIO.master.gain.value = AUDIO.volume * MASTER_SCALE;
   AUDIO.sfxGain.gain.value = AUDIO.sound ? 1 : 0;
-  AUDIO.musicGain.gain.value = AUDIO.music ? 0.22 : 0;
+  // Music and ambience obey the master Sound switch as well as their own, so a save that had sound off stays silent.
+  AUDIO.kit.music.level(AUDIO.sound && AUDIO.music ? MUSIC_LEVEL : 0);
+  AUDIO.kit.amb.level(AUDIO.sound && AUDIO.ambience ? AMBIENCE_LEVEL : 0);
 }
 
 function tone(freq, dur, { type = 'sine', gain = 0.2, at = 0, attack = 0.005, dest, slide = 0 } = {}) {
@@ -68,8 +81,8 @@ export function sfx(name, arg = 0) {
     case 'token': tone(1568, 0.25, { type: 'triangle', gain: 0.07 }); tone(2093, 0.3, { type: 'sine', gain: 0.05, at: 0.08 }); break;
     case 'spread': tone(150, 0.3, { type: 'sawtooth', gain: 0.02, slide: 0.8 }); break;
     case 'reshuffle': for (let j = 0; j < 4; j++) noise(0.1, { gain: 0.05, freq: 1200 + j * 300, at: j * 0.07 }); break;
-    case 'win': [0, 2, 4, 5].forEach((s, j) => tone(note(523.25, s + 2), 0.5, { type: 'triangle', gain: 0.09, at: j * 0.12 })); break;
-    case 'lose': [4, 2, 0].forEach((s, j) => tone(note(261.6, s), 0.5, { type: 'sine', gain: 0.08, at: j * 0.18 })); break;
+    case 'win': AUDIO.kit?.music.duck(6, 700); [0, 2, 4, 5].forEach((s, j) => tone(note(523.25, s + 2), 0.5, { type: 'triangle', gain: 0.09, at: j * 0.12 })); break;
+    case 'lose': AUDIO.kit?.music.duck(6, 700); [4, 2, 0].forEach((s, j) => tone(note(261.6, s), 0.5, { type: 'sine', gain: 0.08, at: j * 0.18 })); break;
     case 'star': tone(note(880, arg * 2), 0.3, { type: 'triangle', gain: 0.07 }); break;
     case 'click': tone(660, 0.04, { type: 'square', gain: 0.025 }); break;
     case 'booster': noise(0.3, { gain: 0.1, freq: 800, sweep: 3 }); break;
@@ -77,34 +90,34 @@ export function sfx(name, arg = 0) {
   }
 }
 
-// Ambient music: a gentle pentatonic arpeggio over a soft pad, varied per world.
-const MOODS = { 1: [261.6, 1], 2: [233.1, 0], 3: [220, 2], 4: [293.7, 1], 5: [246.9, 0], 6: [277.2, 1] };
-export function startMusic(world) {
-  AUDIO.world = world;
-  stopMusic();
-  if (!ensure()) return;
-  let step = 0;
-  const [base, style] = MOODS[world] || MOODS[1];
-  const pattern = [[0, 4, 7, 4], [0, 2, 4, 7, 9, 7, 4, 2], [0, 3, 7, 10, 7, 3]][style];
-  const tick = () => {
-    if (AUDIO.music && AUDIO.ctx.state === 'running') {
-      const s = pattern[step % pattern.length];
-      tone(base * 2 ** (s / 12), 0.9, { type: 'sine', gain: 0.12, dest: AUDIO.musicGain, attack: 0.04 });
-      if (step % pattern.length === 0) { tone(base / 2, 2.6, { type: 'triangle', gain: 0.08, dest: AUDIO.musicGain, attack: 0.3 }); tone(base * 0.75, 2.6, { type: 'sine', gain: 0.05, dest: AUDIO.musicGain, attack: 0.4 }); }
-    }
-    step++;
-  };
-  AUDIO.musicTimer = setInterval(tick, 420);
+// Music and ambience. A mood is the piece and the bed that should be playing: the title and the map share a
+// theme, the level card has a calmer bed, each world has its own piece and place, and the result cards cool down.
+// setMood only records the wish until the first gesture has made the audio context; nothing is scheduled before that.
+export function setMood(kind, world = 1) {
+  const [score, scene] = WORLD_MOOD[world] || WORLD_MOOD[1];
+  AUDIO.mood = kind === 'title' || kind === 'map' ? { score: 'title', scene: 'town' }
+    : kind === 'intro' ? { score: 'intro', scene }
+      : kind === 'results' ? { score: 'results', scene }
+        : kind === 'play' ? { score, scene } : null;
+  AUDIO.holds.delete('pause');
+  if (AUDIO.kit) { AUDIO.kit.music.intensity(0); syncHold(); syncMood(); }
 }
-const clearTick = () => { if (AUDIO.musicTimer) clearInterval(AUDIO.musicTimer); AUDIO.musicTimer = 0; };
-export function stopMusic() { clearTick(); AUDIO.resumeWorld = 0; AUDIO.holds.delete('pause'); }
-// holdMusic stops the tick for a reason ('tab' hidden, 'pause' card); the music restarts once every hold is released.
-export function holdMusic(reason) { if (AUDIO.musicTimer) AUDIO.resumeWorld = AUDIO.world; clearTick(); AUDIO.holds.add(reason); }
-export function releaseMusic(reason) {
-  AUDIO.holds.delete(reason);
-  const w = AUDIO.resumeWorld;
-  if (!AUDIO.holds.size && w) { AUDIO.resumeWorld = 0; startMusic(w); }
+function syncMood(fade = 1.6) {
+  const k = AUDIO.kit, m = AUDIO.mood;
+  if (!k) return;
+  k.music.play(m ? SCORES[m.score] : null, { fade });
+  k.amb.play(m ? SCENES[m.scene] : null, { fade: fade + 0.6 });
 }
+const syncHold = () => { const k = AUDIO.kit; if (!k) return; if (AUDIO.holds.size) { if (!k.held) k.hold(); } else if (k.held) { k.release(); restartMusic(); } };
+// A hold leaves the rest of the bar it interrupted in the graph (silent); starting the piece afresh on release means that tail never plays over the new notes.
+function restartMusic() { const m = AUDIO.mood; if (!AUDIO.kit || !m) return; AUDIO.kit.music.play(null, { fade: 0.02 }); AUDIO.kit.music.play(SCORES[m.score], { fade: 0.6 }); }
+export const startMusic = (world) => setMood('play', world);
+export const stopMusic = () => setMood(null);
+// The last few moves: the pulse lifts a little (tempo, brightness) until the level ends.
+export function setMusicIntensity(x) { if (AUDIO.kit) AUDIO.kit.music.intensity(x); }
+// holdMusic fades music and ambience out for a reason ('tab' hidden, 'pause' card) and schedules nothing; they come back once every hold is released.
+export function holdMusic(reason) { AUDIO.holds.add(reason); syncHold(); }
+export function releaseMusic(reason) { AUDIO.holds.delete(reason); syncHold(); }
 // Tab hidden or page leaving: fade out, then suspend the context so nothing plays in the background.
 export function pauseAudio() {
   holdMusic('tab');
@@ -118,4 +131,25 @@ export function resumeAudio() {
   const c = AUDIO.ctx;
   if (c) { applyLevels(); if (c.state !== 'running') try { c.resume().catch(() => {}); } catch (_) { /* best effort */ } }
   releaseMusic('tab');
+}
+
+// Test hooks: every piece and bed by name, and a render of one of them on its own offline context through the same
+// chain the game ships (master volume, limiter, level). Never touches the live audio or the settings.
+// What a player would hear right now, for tests: the mood, whether it is held, and the two buses' levels.
+export function audioState() {
+  const k = AUDIO.kit;
+  return { ctx: AUDIO.ctx ? AUDIO.ctx.state : null, mood: AUDIO.mood, held: !!(k && k.held), holds: [...AUDIO.holds], music: k ? +k.buses.music.gain.value.toFixed(3) : null, ambience: k ? +k.buses.ambience.gain.value.toFixed(3) : null, intensity: k ? k.intensity : null, playing: k ? { music: !!k.music.score, ambience: !!k.amb.scene } : null };
+}
+export const audioList = () => ({ music: Object.keys(SCORES), ambience: Object.keys(SCENES) });
+export function audioRender(name, seconds = 30, wantWav = false) {
+  const score = SCORES[name], scene = SCENES[name];
+  if (!score && !scene) return Promise.reject(new Error('unknown audio: ' + name));
+  return measureAudio((ctx, out) => {
+    const master = ctx.createGain(); master.gain.value = 0.5 * MASTER_SCALE; master.connect(limiter(ctx)).connect(out);
+    const kit = makeAudioKit(ctx, master, { seed: 0x5EED1 });
+    kit.music.level(MUSIC_LEVEL); kit.amb.level(AMBIENCE_LEVEL);
+    if (score) kit.music.play(score, { fade: 0.05, at: 0 }); else kit.amb.play(scene, { fade: 0.05, at: 0 });
+    kit.scheduleUntil(seconds);
+    return () => { const b = score && kit.music.info(); return b && { ...b, formSeconds: +((b.formBars * (score.beats || 4) * 60) / score.bpm).toFixed(1) }; };
+  }, seconds, { wav: wantWav });
 }

@@ -39,6 +39,7 @@ async function boot() {
   bindInput(VIEW.app.canvas);
   wireUi();
   document.querySelectorAll('.booster').forEach((b) => b.addEventListener('click', () => { unlockAudio(); armBooster(b.dataset.booster); }));
+  window.addEventListener('pointerdown', unlockAudio, { passive: true, capture: true }); // the first touch anywhere starts the title theme
   window.addEventListener('keydown', (e) => {
     unlockAudio();
     if (document.getElementById('tip') && (e.key === 'Enter' || e.key === 'Escape')) { document.querySelector('#tip [data-act="ok"]').click(); e.preventDefault(); return; }

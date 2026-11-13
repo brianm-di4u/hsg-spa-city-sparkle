@@ -5,7 +5,7 @@ import { SAVE, changeSettings, markTutorial, resetSave, saveUnreadable, startFre
 import { cloneState } from '../engine/game.js';
 import { goalIcon, PIECES, ICON_IMAGES } from '../view/vector-art.js';
 import { VIEW, WORLD_LOOK, requestRender } from '../view/stage.js';
-import { sfx, stopMusic, startMusic, holdMusic, releaseMusic, AUDIO, applyLevels, unlockAudio } from '../audio.js';
+import { sfx, setMood, holdMusic, releaseMusic, AUDIO, applyLevels, unlockAudio } from '../audio.js';
 import { TIPS } from './tips.js';
 import { ensurePack } from '../art.js';
 
@@ -81,7 +81,7 @@ export function trapTab(e) {
 
 // --- title ---------------------------------------------------------------------------------------
 export function showTitle() {
-  closeModal(); showGameChrome(false); stopMusic();
+  closeModal(); showGameChrome(false); setMood('title');
   setScene('title');
   const cont = SAVE.current && levelById(SAVE.current.levelId);
   const soakOpen = worldDone(1);
@@ -135,7 +135,7 @@ export function nodePos(level) {
   return [x, y];
 }
 export function showMap(focusId) {
-  closeModal(); showGameChrome(false); stopMusic();
+  closeModal(); showGameChrome(false); setMood('map');
   ensurePack('map').then((ok) => { if (ok && UI.scene === 'map' && !UI.mapPainted) { UI.mapPainted = true; showMap(focusId); } });
   setScene('map');
   const el = screenEl();
@@ -209,7 +209,7 @@ const GOAL_TEXT = { score: 'Reach the score', collect: 'Collect pieces', crust: 
 export function showIntro(L) {
   const node = document.querySelector(`.node[data-level="${L.id}"]`), map = document.querySelector('.screen.map');
   if (node && map) { map.scrollTop = Math.max(0, node.offsetTop - map.clientHeight * 0.55); map.dispatchEvent(new Event('scroll')); }
-  setScene('intro');
+  setScene('intro'); setMood('intro', L.world);
   const look = WORLD_LOOK[L.world], pr = SAVE.progress[L.id];
   const m = openModal(`
     <div class="stamp">W${L.world}<br>No. ${L.n}</div>
@@ -287,7 +287,7 @@ export function onWin(s, L) {
     worldLevels: LEVELS.filter((l) => l.world === L.world).map((l) => l.id) }, { levelId: L.id, state: cloneState(s) });
   const rewards = receipt.outcome?.levelReward ? [BOOSTER_NAMES[receipt.outcome.levelReward]] : [];
   const worldComplete = !!receipt.outcome?.worldComplete;
-  sfx('win');
+  sfx('win'); setMood('results', L.world);
   const idx = LEVELS.indexOf(L), next = LEVELS[idx + 1];
   const m = openModal(`
     <div class="ribbon"><span>Level cleared!</span></div>
@@ -328,7 +328,7 @@ export function onLose(s, L) {
   if (s.mode !== 'soak') saveTerminal(null, { levelId: L.id, state: cloneState(s) });
   closeTip();
   setScene('lose');
-  sfx('lose');
+  sfx('lose'); setMood('results', L.world);
   const plus = SAVE.boosters.plus5 > 0 && s.movesLeft != null && !s.stuck;
   const left = s.goals.filter((g) => !(g.type === 'moss' ? g.have === 0 : g.have >= g.need));
   const frac = s.goals.length ? s.goals.reduce((a, g) => a + (g.type === 'moss' ? (g.start ? 1 - g.have / g.start : 0) : g.type === 'score' ? Math.min(1, s.score / g.need) : Math.min(1, g.have / Math.max(1, g.need))), 0) / s.goals.length : 0;
@@ -403,7 +403,7 @@ export function showHelp(back, tab = 'basics') {
 // --- settings ------------------------------------------------------------------------------------
 export function applySettings() {
   const st = SAVE.settings;
-  AUDIO.sound = st.sound; AUDIO.music = st.music; AUDIO.volume = st.volume; applyLevels();
+  AUDIO.sound = st.sound; AUDIO.music = st.music; AUDIO.ambience = st.ambience; AUDIO.volume = st.volume; applyLevels();
   const sysReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   VIEW.reduced = st.motion === 'reduced' || (st.motion === 'auto' && sysReduced);
   VIEW.steam = st.steam;
@@ -418,7 +418,7 @@ export function showSettings(back) {
   const st = SAVE.settings;
   const toggle = (key, label) => `<div class="set-row"><label id="l-${key}">${label}</label><button class="chip-btn" data-toggle="${key}" aria-labelledby="l-${key}" aria-pressed="${!!st[key]}">${st[key] ? 'On' : 'Off'}</button></div>`;
   const m = openModal(`<h2>Settings</h2>
-    ${toggle('sound', 'Sound effects')}${toggle('music', 'Music')}
+    ${toggle('sound', 'Sound effects')}${toggle('music', 'Music')}${toggle('ambience', 'Ambience')}
     <div class="set-row"><label for="vol">Volume</label><input id="vol" type="range" min="0" max="1" step="0.05" value="${st.volume}"></div>
     <div class="set-row"><label id="l-motion">Motion</label><div class="seg" role="group" aria-labelledby="l-motion">${['auto', 'reduced', 'full'].map((v) => `<button class="chip-btn" data-motion="${v}" aria-pressed="${st.motion === v}">${v[0].toUpperCase() + v.slice(1)}</button>`).join('')}</div></div>
     ${toggle('steam', 'Ambient steam')}${toggle('hints', 'Hints after 5 s')}${toggle('badges', 'Colour-blind badges')}
@@ -428,7 +428,6 @@ export function showSettings(back) {
   m.querySelectorAll('[data-toggle]').forEach((b) => b.addEventListener('click', () => {
     const k = b.dataset.toggle; changeSettings({ [k]: !st[k] }); b.setAttribute('aria-pressed', st[k]); b.textContent = st[k] ? 'On' : 'Off';
     applySettings(); unlockAudio(); sfx('click');
-    if (k === 'music' && st.music && UI.scene !== 'title') startMusic(PLAY.world);
   }));
   m.querySelectorAll('[data-motion]').forEach((b) => b.addEventListener('click', () => {
     changeSettings({ motion: b.dataset.motion }); m.querySelectorAll('[data-motion]').forEach((x) => x.setAttribute('aria-pressed', st.motion === x.dataset.motion)); applySettings();
