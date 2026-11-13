@@ -64,6 +64,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .menu .btn { width: 100%; }
 .menu-row { display: flex; gap: 8px; justify-content: center; }
 .menu-row .btn { flex: 1; min-width: 0; padding: .4em .5em; font-size: .95rem; }
+@media (max-height: 520px) {
+  .screen.title { overflow-y: auto; }
+  .title-wrap { display: grid; grid-template-columns: 1fr auto; align-items: center; max-width: 760px; padding: 8px 24px; gap: 8px 20px; }
+  .title-wrap::before { top: 0; height: 100%; }
+  .logo { font-size: 2.6rem; }
+  .tagline { display: none; }
+  .menu { gap: 8px; width: min(300px, 44vw); }
+}
 
 /* world map */
 .screen.map { background: radial-gradient(ellipse at 50% 40%, #3F6E4B, #1B3B2C 70%, #10261C); overflow-y: auto; overflow-x: hidden; touch-action: pan-y; }
