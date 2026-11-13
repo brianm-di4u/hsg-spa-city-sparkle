@@ -314,10 +314,10 @@ tests.push(
     name: 'S6-02 Reset works on a corrupt save and the backup is kept',
     async run(t) {
       await loadWith(t, TRUNC);
-      t.page.once('dialog', (d) => d.accept());
       await t.page.locator('.screen [data-act="settings"]').click();
       await t.waitIdle();
       await t.page.locator('#modal [data-act="reset"]').click();
+      await t.page.locator('#modal [data-act="erase"]').click();
       await t.page.waitForFunction((k) => { try { return JSON.parse(localStorage.getItem(k)).v === 1; } catch (_) { return false; } }, KEY, { timeout: 5000 });
       t.equal(await stored(t, BACKUP), TRUNC, 'backup kept');
       await t.reload();

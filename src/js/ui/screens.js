@@ -21,6 +21,14 @@ export function isUnlocked(level) {
   return idx <= 0 || !!SAVE.progress[LEVELS[idx - 1].id];
 }
 const worldDone = (w) => LEVELS.filter((l) => l.world === w).every((l) => SAVE.progress[l.id]);
+// Small drawn icons (brass-button style) in place of system glyphs, which look different on every OS.
+const ICONS = {
+  home: '<path d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z"/>',
+  star: '<path d="M12 2.2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17.1l-6.1 3.5 1.5-6.8-5.2-4.6 6.9-.7z"/>',
+  lock: '<rect x="5" y="10.5" width="14" height="10.5" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2.4"/>',
+  gear: '<circle cx="12" cy="12" r="5.6" fill="none" stroke="currentColor" stroke-width="3.2"/>' + [0, 45, 90, 135, 180, 225, 270, 315].map((a) => `<path d="M10.4 1.6h3.2v3.6h-3.2z" transform="rotate(${a} 12 12)"/>`).join(''),
+};
+const ico = (name, cls = '') => `<svg class="ico ${cls}" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">${ICONS[name]}</svg>`;
 const paint = (name) => (VIEW.paintings && VIEW.paintings[name]) || '';
 
 function setScene(name) {
@@ -88,7 +96,7 @@ export function showTitle() {
       <div class="menu">
         ${cont ? `<button class="btn" data-act="continue" data-focus>Continue ${esc(cont.n)}. ${esc(cont.name)}</button>` : ''}
         <button class="btn${cont ? ' alt' : ''}" data-act="play" ${cont ? '' : 'data-focus'}>${Object.keys(SAVE.progress).length ? 'World map' : 'Play'}</button>
-        <button class="btn alt" data-act="soak" ${soakOpen ? '' : 'aria-disabled="true"'}>Free Soak${soakOpen ? '' : ' 🔒'}</button>${soakOpen ? '' : '<p class="menu-note">Finish Bathhouse Row to unlock Free Soak.</p>'}
+        <button class="btn alt" data-act="soak" ${soakOpen ? '' : 'aria-disabled="true"'}>Free Soak${soakOpen ? '' : ' ' + ico('lock')}</button>${soakOpen ? '' : '<p class="menu-note">Finish Bathhouse Row to unlock Free Soak.</p>'}
         <div class="menu-row">
           <button class="btn small alt" data-act="help">Help</button>
           <button class="btn small alt" data-act="settings">Settings</button>
@@ -135,7 +143,7 @@ export function showMap(focusId) {
   el.className = 'screen map';
   el.style.backgroundImage = '';
   const current = LEVELS.find((l) => !SAVE.progress[l.id] && isUnlocked(l)) || LEVELS[LEVELS.length - 1];
-  let html = `<div class="map-top"><button class="round" data-act="home" aria-label="Back to title">⌂</button><span class="map-pc" id="map-pc" aria-hidden="true"></span><div class="map-head"><b class="map-title" id="map-world"></b><span class="map-sub" id="map-sub"></span></div><span class="totals" aria-label="Stars earned">★ ${totalStars()}</span><button class="round" data-act="help" aria-label="How to play">?</button><button class="round" data-act="settings" aria-label="Settings">⚙</button></div>`;
+  let html = `<div class="map-top"><button class="round" data-act="home" aria-label="Back to title">${ico('home')}</button><span class="map-pc" id="map-pc" aria-hidden="true"></span><div class="map-head"><b class="map-title" id="map-world"></b><span class="map-sub" id="map-sub"></span></div><span class="totals" aria-label="Stars earned">${ico('star')} ${totalStars()}</span><button class="round" data-act="help" aria-label="How to play">?</button><button class="round" data-act="settings" aria-label="Settings">${ico('gear')}</button></div>`;
   html += `<div class="map-canvas" style="height:${6 * MAP_WORLD_H}px">`;
   for (let w = 6; w >= 1; w--) {
     const look = WORLD_LOOK[w], top = (6 - w) * MAP_WORLD_H;
@@ -148,7 +156,7 @@ export function showMap(focusId) {
   html += '"/></svg>';
   for (const l of LEVELS) {
     const [x, y] = nodePos(l), pr = SAVE.progress[l.id], open = isUnlocked(l);
-    const stars = pr ? '★'.repeat(pr.stars) + '☆'.repeat(3 - pr.stars) : '';
+    const stars = pr ? ico('star').repeat(pr.stars) + ico('star', 'off').repeat(3 - pr.stars) : '';
     html += `<button class="node${open ? '' : ' locked'}${l === current ? ' current' : ''}" style="left:${x}%;top:${y}px" data-level="${l.id}" ${open ? '' : 'aria-disabled="true"'} aria-label="Level ${l.world}-${l.n}, ${esc(l.name)}${pr ? `, ${pr.stars} stars` : open ? ', not played' : ', locked'}">${l.n}${stars ? `<span class="stars">${stars}</span>` : ''}</button>`;
   }
   html += '</div>';
@@ -428,8 +436,19 @@ export function showSettings(back) {
   m.querySelector('#vol').addEventListener('input', (e) => { changeSettings({ volume: +e.target.value }); applySettings(); });
   bindActs(m, {
     fresh: () => { const r = startFreshSave(); toast(r.ok ? 'Started fresh. Your old save is kept.' : 'Could not start fresh. Storage is unavailable.'); if (r.ok) m.querySelector('#fresh-row')?.remove(); },
-    reset: () => { if (window.confirm('Reset all progress, stars and boosters?')) { const result = resetSave(); toast(result.ok ? 'Progress reset' : 'Reset is not saved yet. Storage or another tab changed.'); } },
+    reset: () => confirmReset(prev, back),
     close: () => (back === 'game' ? (setScene('game'), showPause()) : (closeModal(), prev === 'map' ? showMap() : setScene(prev === 'settings' ? 'title' : prev))),
+  });
+}
+
+// Reset asks in the game's own card; Keep is the default and what Esc picks.
+function confirmReset(prev, back) {
+  const m = openModal(`<h2>Erase everything?</h2><p>This clears all your stars, boosters and saved levels. It cannot be undone.</p>
+    <div class="actions"><button class="btn small" data-act="back" data-focus>Keep</button><button class="btn alt small" data-act="erase">Erase</button></div>`, { label: 'Confirm reset' });
+  const again = () => { setScene(prev); showSettings(back); };
+  bindActs(m, {
+    back: again,
+    erase: () => { const result = resetSave(); again(); toast(result.ok ? 'Progress reset' : 'Reset is not saved yet. Storage or another tab changed.'); },
   });
 }
 

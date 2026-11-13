@@ -16,6 +16,10 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: var(--pool-d
 body { user-select: none; -webkit-user-select: none; touch-action: none; }
 button { font: inherit; color: inherit; cursor: pointer; }
 .hidden { display: none !important; }
+.ico { width: 1em; height: 1em; vertical-align: -.14em; flex: none; }
+.ico.off { fill: none; stroke: currentColor; stroke-width: 2; opacity: .75; }
+.round .ico { width: 1.35em; height: 1.35em; vertical-align: middle; }
+.node .stars { display: inline-flex; gap: 1px; align-items: center; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 #app { position: fixed; inset: 0; }
 #stage { position: absolute; inset: 0; }

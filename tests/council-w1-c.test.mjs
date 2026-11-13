@@ -95,3 +95,57 @@ tests.push({
     }
   },
 });
+
+// --- S4-12: drawn icons and an in-game Reset confirmation ----------------------------------------
+tests.push({
+  name: 'S4-12 map and title use drawn icons, not system glyphs',
+  async run(t) {
+    await t.game('act', 'progress', { 'w1-01': { stars: 2, best: 9000 } });
+    await t.game('scene', 'map');
+    await t.waitIdle();
+    await t.shot('s4-12-map');
+    const glyphs = /[⌂⚙★☆\u{1F512}]/u;
+    const m = await t.page.evaluate(() => ({
+      home: document.querySelector('.map-top [data-act="home"]').innerHTML, gear: document.querySelector('.map-top [data-act="settings"]').innerHTML,
+      totals: document.querySelector('.map-top .totals').innerHTML, stars: document.querySelector('.node .stars').innerHTML,
+      count: document.querySelectorAll('.node .stars svg').length,
+    }));
+    for (const k of ['home', 'gear', 'totals', 'stars']) t.expect(m[k].includes('<svg') && !glyphs.test(m[k]), `map ${k} is an SVG icon`);
+    t.equal(m.count, 3, 'node shows three star icons');
+    await t.game('scene', 'title');
+    await t.waitIdle();
+    const lock = await t.page.locator('#screen [data-act="soak"]').innerHTML();
+    t.expect(lock.includes('<svg') && !glyphs.test(lock), 'Free Soak padlock is an SVG icon');
+  },
+});
+tests.push({
+  name: 'S4-12 Reset asks in an in-game card with Keep as the default, not a browser dialog',
+  async run(t) {
+    let native = 0;
+    t.page.on('dialog', (d) => { native++; d.accept(); });
+    await t.game('act', 'progress', { 'w1-01': { stars: 2, best: 9000 } });
+    await t.game('scene', 'map');
+    await t.waitIdle();
+    const gear = t.page.locator('.map-top [data-act="settings"]');
+    const open = async () => { await gear.click(); await t.waitIdle(); await t.page.locator('#modal [data-act="reset"]').click(); await t.waitIdle(); };
+    await open();
+    t.equal(native, 0, 'no native confirm dialog');
+    const card = await t.page.locator('#modal').innerText();
+    t.expect(/Keep/.test(card) && /Erase/.test(card), 'card offers Keep and Erase');
+    t.equal(await t.page.evaluate(() => document.activeElement.textContent.trim()), 'Keep', 'Keep has focus');
+    await t.page.keyboard.press('Escape');
+    await t.waitIdle();
+    t.equal(await t.page.locator('#modal h2').innerText(), 'Settings', 'Esc keeps and returns to Settings');
+    t.equal(Object.keys((await t.state()).progress).length, 1, 'progress untouched after Keep');
+    await t.page.locator('#modal [data-act="reset"]').click();
+    await t.waitIdle();
+    await t.page.locator('#modal [data-act="erase"]').click();
+    await t.waitIdle();
+    t.equal(Object.keys((await t.state()).progress).length, 0, 'Erase clears progress');
+    t.equal(await t.page.locator('#modal h2').innerText(), 'Settings', 'back in Settings after Erase');
+    await t.page.locator('#modal [data-act="close"]').click();
+    await t.waitIdle();
+    t.equal((await t.state()).scene, 'map', 'Done returns to the map');
+    t.equal(native, 0, 'still no native dialog');
+  },
+});
