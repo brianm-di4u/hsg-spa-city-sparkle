@@ -209,7 +209,7 @@ const GOAL_TEXT = { score: 'Reach the score', collect: 'Collect pieces', crust: 
 export function showIntro(L) {
   const node = document.querySelector(`.node[data-level="${L.id}"]`), map = document.querySelector('.screen.map');
   if (node && map) { map.scrollTop = Math.max(0, node.offsetTop - map.clientHeight * 0.55); map.dispatchEvent(new Event('scroll')); }
-  setScene('intro'); setMood('intro', L.world);
+  setScene('intro'); setMood('intro', L.world); sfx('intro');
   const look = WORLD_LOOK[L.world], pr = SAVE.progress[L.id];
   const m = openModal(`
     <div class="stamp">W${L.world}<br>No. ${L.n}</div>
@@ -299,6 +299,7 @@ export function onWin(s, L) {
     ${card ? `<div class="lore${paint('card-frame') ? ' framed' : ''}" style="${paint('card-frame') ? `--card-frame: url(${paint('card-frame')})` : ''}" aria-label="Lore card"><span class="tag">Real history</span><h4>${esc(card.title)}</h4><p>${esc(card.text)}</p><p class="src">Source: ${esc(card.source)}</p></div>` : ''}
     <div class="actions">${next && !worldComplete ? '<button class="btn" data-act="next" data-focus>Next level</button>' : ''}${worldComplete ? '<button class="btn" data-act="world" data-focus>Postcard restored!</button>' : ''}<button class="btn alt small" data-act="replay">Replay</button><button class="btn alt small" data-act="map">Map</button></div>`, { label: 'Level cleared' });
   stars && [1, 2, 3].slice(0, stars).forEach((n) => setTimeout(() => sfx('star', n), 200 + n * 180));
+  if (rewards.length) setTimeout(() => { if (UI.scene === 'win') sfx('earned'); }, 200 + (stars + 1) * 180 + 250);
   celebrate(m);
   bindActs(m, { next: () => showIntro(next), replay: () => enterLevel(L), map: () => showMap(L.id), world: () => showWorldComplete(L.world) });
 }
@@ -347,7 +348,7 @@ export function onLose(s, L) {
   });
 }
 export function showWorldComplete(w) {
-  setScene('world');
+  setScene('world'); sfx('world'); setTimeout(() => { if (UI.scene === 'world') sfx('earned'); }, 1100);
   const look = WORLD_LOOK[w], pc = paint(`postcard${w}`);
   const m = openModal(`
     <h2 style="text-align:center">World ${w} complete</h2>

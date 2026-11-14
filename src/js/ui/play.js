@@ -21,6 +21,7 @@ export const PLAY = {
 
 const $ = (id) => document.getElementById(id);
 const KIND_NAMES = ['quartz', 'magnolia', 'horseshoe', 'drop', 'scallop', 'pine'];
+const LOW_MOVES_CUE = [3, 1]; // a soft tick when the moves left first drop to each of these
 const LOW_MOVES_MUSIC = 5; // the music lifts (a little faster, brighter) when this many moves or fewer are left
 
 export function levelById(id) { return LEVELS.find((l) => l.id === id); }
@@ -264,17 +265,28 @@ function countUp(A, ms) {
   if (el.textContent !== txt) updateHud(shown, A.replay && PLAY.playedBeat < 1 ? PLAY.lastPre.movesLeft : undefined);
 }
 
+// Where a cell is across the board, as a stereo position (-0.7 left to 0.7 right).
+const panCol = (x) => { const w = PLAY.state ? PLAY.state.w : 0; return w > 1 ? (x / (w - 1) * 2 - 1) * 0.7 : 0; };
+const panOf = (i) => (i >= 0 && PLAY.state ? panCol(i % PLAY.state.w) : 0);
+const goalIsDone = (e) => (e.type === 'moss' ? e.have === 0 : e.have >= e.need);
+
 function beatSounds(evs) {
   const once = new Set();
-  const s1 = (n, a) => { if (!once.has(n)) { once.add(n); sfx(n, a); } };
+  // A beat's cues come from where the first thing in it happened; a match is heard on the side the player swapped.
+  const here = evs.find((e) => e.t === 'swap' || e.t === 'fire' || e.t === 'hit' || e.t === 'special' || e.t === 'collect');
+  const w = PLAY.state.w, at = !here ? 0 : here.t === 'swap' ? panCol(((here.a % w) + (here.b % w)) / 2) : panOf(here.t === 'hit' ? here.i : here.at);
+  const size = evs.reduce((n, e) => n + (e.t === 'match' ? e.cells.length : 0), 0);
+  const s1 = (n, a, o) => { if (!once.has(n)) { once.add(n); sfx(n, a, { pan: at, ...o }); } };
   for (const e of evs) {
     if (e.t === 'swap') s1('swap');
     else if (e.t === 'swapBack') s1('bounce');
-    else if (e.t === 'wave') s1('match', e.n);
+    else if (e.t === 'wave') s1('match', e.n, { size });
+    else if (e.t === 'combo') s1('combo');
+    else if (e.t === 'goal' && goalIsDone(e)) s1('goal');
     else if (e.t === 'fire') s1(e.s === 'C' ? 'crystal' : e.s === 'b' || e.s === 'B' ? 'stone' : 'cascade');
     else if (e.t === 'special') s1('special');
     else if (e.t === 'hit' && e.layer !== 'tile') s1({ stone: 'tufa', lock: 'lock', moss: 'moss', fog: 'fog' }[e.layer] || 'tufa');
-    else if (e.t === 'collect') s1('token');
+    else if (e.t === 'collect') s1('token', Math.min(4, PLAY.state.tokens ? PLAY.state.tokens.collected : 0));
     else if (e.t === 'spread') s1('spread');
     else if (e.t === 'reshuffle') s1('reshuffle');
   }
@@ -298,6 +310,7 @@ function afterMove(r) {
     if (tl.some((e) => e.t === 'reshuffle')) PLAY.ui.toast('No moves left: reshuffled!');
     PLAY.ui.announce(announceText(r));
   }
+  if (r.valid && s.phase === 'play') cuesAfterMove(s);
   if (r.valid && s.phase === 'play') saveSettledAction(); // No unresumable encore publication; final outcome owns its coherent transaction.
   if (s.phase === 'encore') {
     PLAY.ui && PLAY.ui.toast('Encore!');
@@ -315,6 +328,17 @@ function afterMove(r) {
   if (s.phase === 'won') return endLevel('won');
   if (s.phase === 'lost') return endLevel('lost');
   scheduleHint();
+}
+
+// Cues for what the move left behind: a star line crossed, or the last moves coming up. The goal cue comes with the move's own sounds.
+function cuesAfterMove(s) {
+  const pre = PLAY.lastPre;
+  if (!pre || s.mode === 'soak') return;
+  const crossed = s.stars.filter((v) => pre.score < v && s.score >= v).length;
+  if (crossed) sfx('starline', s.stars.filter((v) => s.score >= v).length);
+  if (s.movesLeft != null && pre.movesLeft != null) {
+    for (const n of LOW_MOVES_CUE) if (s.movesLeft === n && pre.movesLeft > n) sfx('low', n);
+  }
 }
 
 function announceText(r) {
@@ -395,7 +419,7 @@ export function bindInput(canvas) {
     const s = PLAY.state;
     if (PLAY.selected >= 0 && PLAY.selected !== d.i && adjacent(s, PLAY.selected, d.i)) { const a = PLAY.selected; setSelected(-1); doSwap(a, d.i); return; }
     if (PLAY.selected === d.i) { setSelected(-1); return; }
-    if (swappableAt(s, d.i)) { setSelected(d.i); sfx('select'); }
+    if (swappableAt(s, d.i)) { setSelected(d.i); sfx('select', 0, { pan: panOf(d.i) }); }
     scheduleHint();
   };
   canvas.addEventListener('pointerup', up);
@@ -444,7 +468,7 @@ export function handleKey(e) {
   if (e.key === 'Enter' || e.key === ' ') {
     if (PLAY.cursor < 0) { PLAY.cursor = firstCell(s); BOARD.cursor = PLAY.cursor; BOARD.showCursor = true; requestRender(); return true; }
     if (PLAY.armed) { useArmed(PLAY.cursor); return true; }
-    if (PLAY.selected === PLAY.cursor) setSelected(-1); else if (swappableAt(s, PLAY.cursor)) { setSelected(PLAY.cursor); sfx('select'); }
+    if (PLAY.selected === PLAY.cursor) setSelected(-1); else if (swappableAt(s, PLAY.cursor)) { setSelected(PLAY.cursor); sfx('select', 0, { pan: panOf(PLAY.cursor) }); }
     return true;
   }
   if (e.key === 'Escape' && (PLAY.selected >= 0 || PLAY.armed)) { setSelected(-1); PLAY.armed = null; updateHud(); return true; }

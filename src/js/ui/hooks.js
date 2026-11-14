@@ -6,7 +6,7 @@ import { VIEW, requestRender } from '../view/stage.js';
 import { BOARD } from '../view/board-view.js';
 import { boardFromAscii, cloneState, hashState } from '../engine/grid.js';
 import { legalMoves } from '../engine/moves.js';
-import { AUDIO, audioList, audioRender, audioState } from '../audio.js';
+import { AUDIO, audioList, audioRender, audioState, cueRender, sfx } from '../audio.js';
 
 export const HOOK = { seed: 1, artReady: () => true };
 
@@ -45,6 +45,8 @@ export function installHooks() {
     audioList: () => audioList(),
     audioState: () => audioState(),
     audioRender: (name, seconds, wantWav) => audioRender(name, seconds, wantWav),
+    cueRender: (name, arg, opt, seconds, wantWav, seed) => cueRender(name, arg, opt, seconds, wantWav, seed),
+    cue: (name, arg, opt) => { sfx(name, arg, opt); return true; },
     getState: () => summary(),
     engineState: () => (PLAY.state ? cloneState(PLAY.state) : null),
     setState(s) { PLAY.state = cloneState(s); PLAY.anim = null; arrangeFixture({ boosters: { ...PLAY.state.boosters } }); layoutAndBuild(); updateHud(); return true; },
