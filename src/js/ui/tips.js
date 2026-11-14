@@ -1,7 +1,7 @@
 // Tutorial tips from Della, the fictional bath attendant (research/town-content.md: an original character,
 // drawn as a dignified expert). Each tip shows once, on the first level that uses its mechanic.
 export const TIPS = {
-  basics: { title: 'Swap to match', pose: 'wave', html: 'Welcome to the Row! Swap two neighbouring pieces to line up <b>three of a kind</b>. Drag a piece, or tap it and then its neighbour.' },
+  basics: { title: 'Swap to match', pose: 'wave', html: 'Welcome to the Row! Swap two neighbouring pieces to line up <b>three of a kind</b>. Follow the arrow: drag the piece, or tap it and then its neighbour.' },
   cascade: { title: 'Cascade', pose: 'point', html: 'Line up <b>four</b> and you make a <b>Cascade</b>, named for the Hot Water Cascade on the mountain. <b>Swipe it</b> or match it to sweep the whole row or column.' },
   stone: { title: 'Hot Stone', pose: 'point', html: 'An <b>L, T or + shape</b> makes a <b>Hot Stone</b>. <b>Swipe it</b> or match it: it bursts the pieces around it, then rumbles once more.' },
   crystal: { title: 'Spring Crystal', pose: 'cheer', html: 'Five in a row makes a <b>Spring Crystal</b>, clear as Ouachita quartz. Swap it with any piece to clear every piece of that kind.' },

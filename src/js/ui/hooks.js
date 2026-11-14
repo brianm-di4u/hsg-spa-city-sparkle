@@ -34,10 +34,18 @@ function summary() {
     boosters: s ? { ...s.boosters } : {}, saveBoosters: { ...SAVE.boosters }, progress: JSON.parse(JSON.stringify(SAVE.progress)), settings: { ...SAVE.settings },
     lore: SAVE.lore.slice(), daily: JSON.parse(JSON.stringify(SAVE.daily)), soakBest: SAVE.soakBest, soakDay: SAVE.soakDay, tutorialSeen: SAVE.tutorialSeen.slice(), storageOk: SAVE.storageOk, current: SAVE.current ? SAVE.current.levelId : null,
     lastTimeline: PLAY.lastResult, anim: { playing: !!PLAY.anim, frozen: VIEW.frozenMs }, hash: s ? hashState(s) : null,
-    selected: PLAY.selected, cursor: PLAY.cursor, hint: BOARD.hint, armed: PLAY.armed, art: VIEW.artSource,
+    selected: PLAY.selected, cursor: PLAY.cursor, hint: BOARD.hint, hintArrow: hintArrow(), armed: PLAY.armed, art: VIEW.artSource,
     layout: { ...VIEW.layout }, reduced: VIEW.reduced, modal: UI.modalOpen, tip: UI.tipOpen, sounds: AUDIO.played.slice(-20),
     stats: s ? { ...s.stats } : null, levels: LEVELS.length,
   };
+}
+
+// Where the hint arrow is drawn (centre in screen pixels), or null when it is hidden.
+function hintArrow() {
+  const g = BOARD.hintG;
+  if (!g || !g.visible || g.destroyed || !BOARD.hint) return null;
+  const b = g.getBounds();
+  return { x: b.x + b.width / 2, y: b.y + b.height / 2, alpha: g.alpha };
 }
 
 export function installHooks() {

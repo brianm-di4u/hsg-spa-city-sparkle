@@ -1,6 +1,6 @@
 // DOM screens and dialogs: title, world map, level intro, results, world complete, pause, help,
 // settings, about, Free Soak and tutorial tips. Game logic stays in play.js and the engine.
-import { PLAY, startLevel, showGameChrome, levelById, updateHud, goalLabel, layoutAndBuild, doBooster } from './play.js';
+import { PLAY, startLevel, showGameChrome, levelById, updateHud, goalLabel, layoutAndBuild, doBooster, showHint } from './play.js';
 import { SAVE, changeSettings, markTutorial, saveDaily, resetSave, saveUnreadable, startFreshSave, configureSaveEffects, reserveCurrent, adoptCurrent, saveTerminal } from './save.js';
 import { cloneState } from '../engine/game.js';
 import { goalIcon, PIECES, ICON_IMAGES } from '../view/vector-art.js';
@@ -239,7 +239,10 @@ export function enterLevel(L, opts = {}) {
   setScene('game');
   startLevel(L, opts);
   const tip = L.tip && TIPS[L.tip];
-  if (tip && !SAVE.tutorialSeen.includes(L.tip)) showTip(L.tip);
+  if (tip && !SAVE.tutorialSeen.includes(L.tip)) {
+    showTip(L.tip);
+    if (L.tip === 'basics') showHint(); // the first lesson shows the move as well as describing it: the hint arrow starts at once
+  }
 }
 
 // --- tutorial tips (Della, fictional guide) -------------------------------------------------------

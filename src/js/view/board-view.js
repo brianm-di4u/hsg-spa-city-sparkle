@@ -5,7 +5,7 @@ import { VIEW, WORLD_LOOK, retireTextures } from './stage.js';
 import { modelFromState, applyEvent } from './model.js';
 import { schedule, frameAt, ease, hrand, TICK_MS } from './player.js';
 
-const B = { halos: [], halosUsed: 0, built: null, cells: [], drains: [], layer: {}, tiles: new Map(), fx: [], fxUsed: 0, pops: [], popsUsed: 0, callout: null, frame: null, maskG: null, model: null, sel: -1, cursor: -1, hint: null, showCursor: false };
+const B = { halos: [], halosUsed: 0, built: null, cells: [], drains: [], layer: {}, tiles: new Map(), fx: [], fxUsed: 0, pops: [], popsUsed: 0, callout: null, frame: null, maskG: null, model: null, sel: -1, cursor: -1, hint: null, hintG: null, showCursor: false };
 export const BOARD = B;
 
 const texFor = (t) => {
@@ -25,7 +25,7 @@ export function buildBoard(s, world) {
   const Lr = VIEW.layers.board;
   Lr.removeChildren().forEach((c) => c.destroy({ children: true }));
   B.tiles.clear(); B.cells = []; B.drains = []; B.fx = []; B.pops = []; B.halos = [];
-  VIEW.layers.fx.removeChildren(); VIEW.layers.popups.removeChildren(); VIEW.layers.callout.removeChildren();
+  VIEW.layers.fx.removeChildren(); B.hintG = null; VIEW.layers.popups.removeChildren(); VIEW.layers.callout.removeChildren();
   if (B.callout) { B.callout.destroy(); B.callout = null; } // it was detached with the layer's children
   const look = WORLD_LOOK[world] || WORLD_LOOK[1];
   const { cell, bx, by } = VIEW.layout;
@@ -133,6 +133,32 @@ function popText(text, size, color) {
   return t;
 }
 
+// --- the hint: a ring on both pieces and an arrow that travels along the swap -----------------------
+const HINT_SMALL_CELL = 56; // cells narrower than this (a phone) get the stronger pulse
+const HINT_PULSE_SMALL = 1.8; // 1 on larger screens
+const HINT_ARROW_MS = 1100; // one pass of the arrow from the first piece to the second
+// Chevron arrow pointing along +x, in units of a cell.
+const HINT_ARROW = [[0.3, 0], [-0.04, -0.3], [-0.04, -0.12], [-0.3, -0.12], [-0.3, 0.12], [-0.04, 0.12], [-0.04, 0.3]];
+function drawHint() {
+  const { cell } = VIEW.layout, still = VIEW.reduced, [a, b] = B.hint;
+  const [ax, ay] = cellXY(a), [bx, by] = cellXY(b);
+  const pulse = still ? 1 : 0.5 + 0.5 * Math.sin(VIEW.ambientT / 180);
+  for (const [x, y] of [[ax, ay], [bx, by]]) {
+    const r = fxSprite(VIEW.tex.ring);
+    r.position.set(x, y); r.width = r.height = cell * (still ? 1.05 : 1 + 0.1 * pulse); r.alpha = still ? 0.9 : 0.55 + 0.4 * pulse; r.tint = 0xffe7a3;
+  }
+  if (!B.hintG || B.hintG.destroyed) B.hintG = new PIXI.Graphics();
+  const g = B.hintG;
+  if (!g.parent) VIEW.layers.fx.addChild(g);
+  const q = still ? 0.5 : (VIEW.ambientT % HINT_ARROW_MS) / HINT_ARROW_MS;
+  const e = ease.inOutSine(q), px = ax + (bx - ax) * (0.12 + 0.76 * e), py = ay + (by - ay) * (0.12 + 0.76 * e);
+  const ang = Math.atan2(by - ay, bx - ax), c = Math.cos(ang), s = Math.sin(ang);
+  g.clear();
+  g.poly(HINT_ARROW.flatMap(([u, v]) => [px + (u * c - v * s) * cell, py + (u * s + v * c) * cell]), true)
+    .fill({ color: 0xfff6de }).stroke({ width: Math.max(2, cell * 0.05), color: 0x0e5a6e, join: 'round' });
+  g.visible = true; g.alpha = still ? 1 : Math.min(1, Math.sin(q * Math.PI) * 2.2);
+}
+
 // --- per-frame drawing --------------------------------------------------------------------------
 // Draws the model, plus the beat at index i with progress p when a timeline plays.
 export function drawFrame(model, beat, p, opts = {}) {
@@ -213,10 +239,11 @@ export function drawFrame(model, beat, p, opts = {}) {
     }
     if (!beat && B.sel === i) sc = 1.12 + 0.04 * Math.sin(VIEW.ambientT / 120);
     if (!beat && B.hint && (B.hint[0] === i || B.hint[1] === i)) {
-      const w = Math.sin(VIEW.ambientT / 180);
-      sc = 1 + 0.07 * Math.max(0, w);
+      // the pair lean toward each other; on a small cell the pulse is stronger so it reads on a phone
+      const w = VIEW.reduced ? 0 : Math.sin(VIEW.ambientT / 180), k = cell < HINT_SMALL_CELL ? HINT_PULSE_SMALL : 1;
+      sc = 1 + 0.07 * k * Math.max(0, w);
       const [hx, hy] = cellXY(B.hint[0] === i ? B.hint[1] : B.hint[0]);
-      x += (hx - x) * 0.08 * Math.max(0, w); y += (hy - y) * 0.08 * Math.max(0, w);
+      x += (hx - x) * 0.08 * k * Math.max(0, w); y += (hy - y) * 0.08 * k * Math.max(0, w);
     }
     let sx = sc, sy = sc;
     if (movers.has(id) && !VIEW.reduced) { const sq = landing(movers.get(id), p, beat.dur); sx *= 1 + 0.22 * sq; sy *= 1 - 0.28 * sq; y += VIEW.layout.cell * 0.14 * sq; }
@@ -246,6 +273,7 @@ export function drawFrame(model, beat, p, opts = {}) {
   }
   B.layer.pieces.sortableChildren = true;
 
+  if (!beat && B.hint) drawHint(); else if (B.hintG) B.hintG.visible = false;
   drawFx(ev, p, beat);
   // cursor (keyboard) and selection
   const cur = B.cursorSprite;
