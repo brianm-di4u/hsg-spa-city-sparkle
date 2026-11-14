@@ -1,4 +1,4 @@
-// Screens: title, map, intro, help tabs, settings, about, pause, tutorial tip, results, world complete, Free Soak.
+// Screens: title, map, intro, help tabs, settings, about, pause, tutorial tip, results, world complete, Daily Challenge.
 export const tests = [
   {
     name: 'title, map and level intro',
@@ -81,21 +81,25 @@ export const tests = [
     },
   },
   {
-    name: 'Free Soak unlocks after world 1 and has no goals or move limit',
+    name: 'The Daily Challenge unlocks after world 1 and is one goal level with a move limit',
     async run(t) {
       const prog = {};
       for (let n = 1; n <= 10; n++) prog[`w1-${String(n).padStart(2, '0')}`] = { stars: 2, best: 1000 };
       await t.game('act', 'progress', prog);
       await t.game('scene', 'title');
       await t.waitIdle();
-      t.equal(await t.page.locator('[data-act="soak"]').isDisabled(), false, 'Free Soak enabled');
-      await t.page.locator('[data-act="soak"]').click();
+      t.equal(await t.page.locator('[data-act="daily"]').isDisabled(), false, 'Daily Challenge enabled');
+      await t.page.locator('[data-act="daily"]').click();
+      await t.waitIdle();
+      t.equal((await t.state()).scene, 'daily-card', 'the daily card opens first');
+      await t.shot('10-daily-card');
+      await t.page.locator('#modal [data-act="go"]').click();
       await t.waitIdle();
       const s = await t.state();
-      t.equal(s.scene, 'soak', 'soak scene');
-      t.equal(s.movesLeft, null, 'no move limit');
-      t.equal(s.goals.length, 0, 'no goals');
-      await t.shot('10-soak');
+      t.equal(s.scene, 'game', 'in play');
+      t.expect(s.movesLeft > 0, 'a fixed move limit');
+      t.expect(s.goals.length > 0, 'a goal to meet');
+      await t.shot('10-daily');
     },
   },
 ];

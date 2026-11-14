@@ -52,13 +52,13 @@ tests.push({
   },
 });
 
-// --- S2-04: a locked Free Soak explains itself ---------------------------------------------------
+// --- S2-04: a locked Daily Challenge explains itself ---------------------------------------------------
 tests.push({
-  name: 'S2-04 locked Free Soak says why and answers a tap',
+  name: 'S2-04 locked Daily Challenge says why and answers a tap',
   async run(t) {
     await t.game('scene', 'title');
     await t.waitIdle();
-    const soak = t.page.locator('#screen [data-act="soak"]');
+    const soak = t.page.locator('#screen [data-act="daily"]');
     t.equal(await soak.getAttribute('aria-disabled'), 'true', 'announced as unavailable');
     t.expect(await soak.evaluate((b) => !b.disabled), 'still a live button, so the tap is answered');
     t.expect(/Bathhouse Row/.test(await t.page.locator('#screen .menu-note').innerText()), 'subtitle names what unlocks it');
@@ -114,8 +114,8 @@ tests.push({
     t.equal(m.count, 3, 'node shows three star icons');
     await t.game('scene', 'title');
     await t.waitIdle();
-    const lock = await t.page.locator('#screen [data-act="soak"]').innerHTML();
-    t.expect(lock.includes('<svg') && !glyphs.test(lock), 'Free Soak padlock is an SVG icon');
+    const lock = await t.page.locator('#screen [data-act="daily"]').innerHTML();
+    t.expect(lock.includes('<svg') && !glyphs.test(lock), 'Daily Challenge padlock is an SVG icon');
   },
 });
 tests.push({
@@ -166,7 +166,7 @@ tests.push({
   },
 });
 
-// --- S2-11: next-star text under the score; Free Soak has no star bar and a whole label -----------
+// --- S2-11: next-star text under the score; the Daily Challenge HUD keeps a whole label -----------
 const hudNext = (t) => t.page.evaluate(() => { const n = document.getElementById('hud-next'); return n ? { text: n.textContent, shown: n.offsetParent !== null } : null; });
 tests.push({
   name: 'S2-11 the HUD says what the next star needs',
@@ -191,7 +191,7 @@ tests.push({
   },
 });
 tests.push({
-  name: 'S2-11 Free Soak HUD: whole label, no star bar',
+  name: 'S2-11 Daily Challenge HUD: whole label, star bar and next-star line like any level',
   async run(t) {
     await t.game('scene', 'soak');
     await t.waitIdle();
@@ -199,9 +199,9 @@ tests.push({
       const w = document.getElementById('hud-world'), th = document.querySelector('.thermo'), n = document.getElementById('hud-next');
       return { text: w.textContent, clipped: w.scrollWidth > w.clientWidth, thermo: th.offsetParent !== null, next: n.offsetParent !== null };
     });
-    t.equal(r.text, 'Daily board', 'short label');
+    t.equal(r.text, 'Daily challenge', 'short label');
     t.expect(!r.clipped, 'label is not truncated');
-    t.expect(!r.thermo, 'star thermometer hidden in a goal-less mode');
-    t.expect(!r.next, 'next-star line hidden in a goal-less mode');
+    t.expect(r.thermo, 'the daily has goals and stars, so the star thermometer shows');
+    t.expect(r.next, 'and so does the next-star line');
   },
 });

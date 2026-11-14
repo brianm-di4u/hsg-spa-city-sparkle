@@ -1,15 +1,16 @@
 // DOM screens and dialogs: title, world map, level intro, results, world complete, pause, help,
 // settings, about, Free Soak and tutorial tips. Game logic stays in play.js and the engine.
 import { PLAY, startLevel, showGameChrome, levelById, updateHud, goalLabel, layoutAndBuild, doBooster } from './play.js';
-import { SAVE, changeSettings, markTutorial, resetSave, saveUnreadable, startFreshSave, configureSaveEffects, reserveCurrent, adoptCurrent, saveTerminal } from './save.js';
+import { SAVE, changeSettings, markTutorial, saveDaily, resetSave, saveUnreadable, startFreshSave, configureSaveEffects, reserveCurrent, adoptCurrent, saveTerminal } from './save.js';
 import { cloneState } from '../engine/game.js';
 import { goalIcon, PIECES, ICON_IMAGES } from '../view/vector-art.js';
 import { VIEW, WORLD_LOOK, requestRender } from '../view/stage.js';
 import { sfx, setMood, holdMusic, releaseMusic, AUDIO, applyLevels, unlockAudio } from '../audio.js';
 import { TIPS } from './tips.js';
+import { dailyLevel, dayKey, addDays, streakNow, cleanDaily } from './daily.js';
 import { ensurePack } from '../art.js';
 
-export const UI = { scene: 'boot', transitions: 0, modalOpen: false, lastFocus: null, tipOpen: false };
+export const UI = { scene: 'boot', transitions: 0, modalOpen: false, lastFocus: null, tipOpen: false, dailyDate: null }; // dailyDate: a test can pin today's date
 const $ = (id) => document.getElementById(id);
 const screenEl = () => $('screen');
 const modalEl = () => $('modal');
@@ -84,7 +85,7 @@ export function showTitle() {
   closeModal(); showGameChrome(false); setMood('title');
   setScene('title');
   const cont = SAVE.current && levelById(SAVE.current.levelId);
-  const soakOpen = worldDone(1);
+  const dailyOpen = worldDone(1);
   const land = window.innerWidth / window.innerHeight > 1.05;
   const bg = paint(land ? 'title-l' : 'title-p') || (land && paint('bg1-l')) || paint('title-p');
   screenEl().className = 'screen title';
@@ -96,7 +97,7 @@ export function showTitle() {
       <div class="menu">
         ${cont ? `<button class="btn" data-act="continue" data-focus>Continue ${esc(cont.n)}. ${esc(cont.name)}</button>` : ''}
         <button class="btn${cont ? ' alt' : ''}" data-act="play" ${cont ? '' : 'data-focus'}>${Object.keys(SAVE.progress).length ? 'World map' : 'Play'}</button>
-        <button class="btn alt" data-act="soak" ${soakOpen ? '' : 'aria-disabled="true"'}>Free Soak${soakOpen ? '' : ' ' + ico('lock')}</button>${soakOpen ? '' : '<p class="menu-note">Finish Bathhouse Row to unlock Free Soak.</p>'}
+        <button class="btn alt" data-act="daily" ${dailyOpen ? '' : 'aria-disabled="true"'}>Daily Challenge${dailyOpen ? '' : ' ' + ico('lock')}</button><p class="menu-note">${dailyOpen ? esc(dailyNote()) : 'Finish Bathhouse Row to unlock the Daily Challenge.'}</p>
         <div class="menu-row">
           <button class="btn small alt" data-act="help">Help</button>
           <button class="btn small alt" data-act="settings">Settings</button>
@@ -107,7 +108,7 @@ export function showTitle() {
   bindActs(screenEl(), {
     continue: () => enterLevel(null, { continue: true, skipIntro: true }),
     play: () => showMap(),
-    soak: () => (soakOpen ? startSoak() : toast('Finish Bathhouse Row to unlock Free Soak', 2200)),
+    daily: () => (dailyOpen ? showDaily() : toast('Finish Bathhouse Row to unlock the Daily Challenge', 2200)),
     help: () => showHelp(), settings: () => showSettings(), about: () => showAbout(),
   });
   const f = screenEl().querySelector('[data-focus]');
@@ -279,6 +280,7 @@ function loreFor(L) {
 export function onWin(s, L) {
   closeTip();
   setScene('win');
+  if (L.mode === 'daily') return onDailyWin(s, L);
   if (s.mode === 'soak') return;
   const stars = s.starsWon, total = s.score + (s.encoreScore || 0); // stars are counted on the score plus the Encore
   const card = loreFor(L);
@@ -326,7 +328,9 @@ function celebrate(m) {
 }
 
 export function onLose(s, L) {
-  if (s.mode !== 'soak') saveTerminal(null, { levelId: L.id, state: cloneState(s) });
+  const daily = L.mode === 'daily';
+  if (daily) saveDaily({ key: L.dayKey, score: s.score, stars: 0, won: false });
+  else if (s.mode !== 'soak') saveTerminal(null, { levelId: L.id, state: cloneState(s) });
   closeTip();
   setScene('lose');
   sfx('lose'); setMood('results', L.world);
@@ -339,12 +343,12 @@ export function onLose(s, L) {
     <h2 style="text-align:center">${s.stuck ? 'No moves left' : 'Out of moves'}</h2>
     <p style="text-align:center">${s.stuck ? (s.moss.some(Boolean) ? 'The algae took over the board!' : 'No swaps are possible.') : frac >= 0.5 ? 'So close! Still to do:' : 'Still to do:'}</p>
     <div class="goals-big" aria-label="${esc(left.map((g) => goalLabel(g, remain(g))).join('; '))}">${pills}</div>
-    <div class="actions lose-actions">${plus ? `<button class="btn" data-act="plus" data-focus>+5 moves (${SAVE.boosters.plus5} left)</button>` : ''}<button class="btn${plus ? ' alt' : ''}" data-act="retry" ${plus ? '' : 'data-focus'}>Retry</button><button class="btn alt small" data-act="map">Map</button></div>`, { label: 'Out of moves' });
+    <div class="actions lose-actions">${plus ? `<button class="btn" data-act="plus" data-focus>+5 moves (${SAVE.boosters.plus5} left)</button>` : ''}<button class="btn${plus ? ' alt' : ''}" data-act="retry" ${plus ? '' : 'data-focus'}>Retry</button><button class="btn alt small" data-act="map">${daily ? 'Home' : 'Map'}</button></div>`, { label: 'Out of moves' });
   fillIcons(m);
   bindActs(m, {
     plus: () => { closeModal(); setScene('game'); doBooster('plus5'); },
-    retry: () => enterLevel(L),
-    map: () => showMap(L.id),
+    retry: () => (daily ? startDaily() : enterLevel(L)),
+    map: () => (daily ? showTitle() : showMap(L.id)),
   });
 }
 export function showWorldComplete(w) {
@@ -363,10 +367,10 @@ export function showWorldComplete(w) {
 export function showPause() {
   if (UI.scene !== 'game') return;
   setScene('pause'); holdMusic('pause');
-  const L = PLAY.level;
+  const L = PLAY.level, daily = L.mode === 'daily';
   const m = openModal(`<h2>Paused</h2><p class="fine">${esc(L.name)}</p>
-    <div class="menu" style="margin:12px auto 0"><button class="btn" data-act="resume" data-focus>Resume</button><button class="btn alt" data-act="restart">Restart level</button><button class="btn alt" data-act="help">How to play</button><button class="btn alt" data-act="settings">Settings</button><button class="btn alt" data-act="map">Save &amp; quit to map</button></div>`, { label: 'Paused' });
-  bindActs(m, { resume: () => { closeModal(); setScene('game'); releaseMusic('pause'); }, restart: () => enterLevel(L), help: () => showHelp('game'), settings: () => showSettings('game'), map: () => showMap(L.id) });
+    <div class="menu" style="margin:12px auto 0"><button class="btn" data-act="resume" data-focus>Resume</button><button class="btn alt" data-act="restart">Restart level</button><button class="btn alt" data-act="help">How to play</button><button class="btn alt" data-act="settings">Settings</button><button class="btn alt" data-act="map">${daily ? 'Quit to title' : 'Save &amp; quit to map'}</button></div>`, { label: 'Paused' });
+  bindActs(m, { resume: () => { closeModal(); setScene('game'); releaseMusic('pause'); }, restart: () => (daily ? startDaily() : enterLevel(L)), help: () => showHelp('game'), settings: () => showSettings('game'), map: () => (daily ? showTitle() : showMap(L.id)) });
 }
 
 // --- help ----------------------------------------------------------------------------------------
@@ -375,7 +379,7 @@ const HELP = [
   ['specials', 'Specials', `<div class="help-pieces" data-pieces="p0h,p2b,crystal"></div><ul class="help-list"><li><b>Cascade</b>: match 4 in a line. It sweeps its row or column (it follows the direction you swapped). <b>Swipe it</b> any way, or match it, to fire it.</li><li><b>Hot Stone</b>: match an L, T or + shape. <b>Swipe it</b> or match it: it bursts the cells around it, then gives one aftershock.</li><li><b>Spring Crystal</b>: match 5 in a line. Swap it with a piece to clear every piece of that kind.</li></ul><p class="fine">The names are game flavour: the town has a real Hot Water Cascade, but no geysers or hot stones.</p>`],
   ['combos', 'Combos', `<ul class="help-list"><li>Cascade + Cascade: a row and a column.</li><li>Cascade + Hot Stone: three rows and three columns.</li><li>Hot Stone + Hot Stone: a huge burst.</li><li>Crystal + Cascade or Hot Stone: every piece of that kind becomes that special and fires.</li><li>Crystal + Crystal: clears the whole board.</li></ul>`],
   ['blockers', 'Blockers', `<ul class="help-list"><li><b>Tufa</b> (1-3 layers): break it with matches beside it or with specials.</li><li><b>Mineral crust</b> under pieces: clear the piece above it.</li><li><b>Padlocked safe</b>: the piece can match but can't move.</li><li><b>Algae</b>: clear it with nearby matches, or it spreads after any move that doesn't touch it.</li><li><b>Steam fog</b>: hides a piece until a match beside it lifts the fog.</li></ul>`],
-  ['goals', 'Goals', `<ul class="help-list"><li>Reach a score · collect pieces · clear the crust · break tufa · clear algae · open padlocks.</li><li><b>Bath tokens</b> fall like pieces: bring them down to the brass drains.</li><li>Boosters (earned, never bought): Hammer, Line (tap the booster again to switch row and column), Shuffle, +5 moves.</li></ul>`],
+  ['goals', 'Goals', `<ul class="help-list"><li>Reach a score · collect pieces · clear the crust · break tufa · clear algae · open padlocks.</li><li><b>Bath tokens</b> fall like pieces: bring them down to the brass drains.</li><li><b>Daily Challenge</b>: one board a day, the same for every player. Clear it on consecutive days to build a streak.</li><li>Boosters (earned, never bought): Hammer, Line (tap the booster again to switch row and column), Shuffle, +5 moves.</li></ul>`],
   ['controls', 'Controls', `<ul class="help-list"><li><b>Mouse or touch</b>: drag a piece toward a neighbour, or tap one piece and then its neighbour.</li><li><b>Keyboard</b>: <span class="kbd">←</span><span class="kbd">↑</span><span class="kbd">→</span><span class="kbd">↓</span> move the cursor, <span class="kbd">Enter</span> or <span class="kbd">Space</span> picks a piece, then an arrow swaps it. <span class="kbd">H</span> hint, <span class="kbd">P</span> pause, <span class="kbd">Esc</span> cancels or skips.</li><li>Tap or press a key during a chain to skip the animation.</li></ul>`],
 ];
 export function showHelp(back, tab = 'basics') {
@@ -466,26 +470,83 @@ export function showAbout() {
   bindActs(m, { close: () => { closeModal(); setScene(prev === 'about' ? 'title' : prev); } });
 }
 
-// --- Free Soak -----------------------------------------------------------------------------------
-export function soakSeed(date = new Date()) { return date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate(); }
-export function startSoak() {
+// --- Daily Challenge -----------------------------------------------------------------------------
+export const todayKey = () => UI.dailyDate || dayKey();
+const dateOf = (k) => new Date(+k.slice(0, 4), +k.slice(5, 7) - 1, +k.slice(8, 10));
+const longDate = (k) => dateOf(k).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+function dailyNote() {
+  const key = todayKey(), day = cleanDaily(SAVE.daily).days[key], streak = streakNow(SAVE.daily, key);
+  const today = day && day.won ? `Today: ${plural(day.stars, 'star')}` : day ? 'Today: not cleared yet' : 'A new board today';
+  return streak ? `${today} · ${plural(streak, 'day')} in a row` : today;
+}
+export function showDaily() {
+  const key = todayKey(), { level: L } = dailyLevel(LEVELS, key), d = cleanDaily(SAVE.daily), day = d.days[key];
+  setScene('daily-card');
+  const streak = streakNow(d, key), n = (v) => v.toLocaleString('en-US');
+  const cells = [];
+  for (let i = 13; i >= 0; i--) {
+    const k = addDays(key, -i), e = d.days[k], cls = e ? (e.won ? 's' + e.stars : 'tried') : 'none';
+    const label = `${dateOf(k).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}: ${e ? (e.won ? plural(e.stars, 'star') : 'not cleared') : 'not played'}`;
+    cells.push(`<li class="dc ${cls}${i === 0 ? ' today' : ''}" aria-label="${esc(label)}" title="${esc(label)}"><span aria-hidden="true">${+k.slice(8)}</span></li>`);
+  }
+  const m = openModal(`
+    <div class="stamp">DAILY<br>${dateOf(key).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+    <p class="fine">${esc(longDate(key))}</p>
+    <h2>${esc(L.name)}</h2>
+    <p>${L.goals.map((g) => GOAL_TEXT[g.type]).join(' · ')} in <b>${L.moves} moves</b>.</p>
+    <div class="goals-big">${goalChips(L.goals)}</div>
+    <p class="fine">Stars at ${L.stars.map(n).join(' · ')} points, counting the Encore</p>
+    <dl class="daily-stats">
+      <div><dt>Streak</dt><dd>${plural(streak, 'day')}</dd></div>
+      <div><dt>Best today</dt><dd>${day && day.best ? n(day.best) : '–'}</dd></div>
+      <div><dt>Best ever</dt><dd>${SAVE.soakBest ? n(SAVE.soakBest) : '–'}</dd></div>
+    </dl>
+    <p class="fine">Longest streak: ${plural(d.bestStreak, 'day')}. The last two weeks:</p>
+    <ol class="daily-cal" aria-label="The last 14 days">${cells.join('')}</ol>
+    <div class="actions"><button class="btn" data-act="go" data-focus>${day && day.tries ? 'Play again' : 'Play'}</button><button class="btn alt small" data-act="back">Back</button></div>`, { label: 'Daily Challenge' });
+  fillIcons(m);
+  bindActs(m, { go: () => startDaily(), back: () => { closeModal(); setScene('title'); } });
+}
+export function startDaily() {
+  const key = todayKey(), { level: L, seed } = dailyLevel(LEVELS, key);
   const reserved = reserveCurrent('soak');
   if (!reserved.ok && reserved.reason !== 'storage-unavailable') return;
-  const L = { id: 'soak', world: 2, n: 0, name: 'Free Soak', mode: 'soak', moves: null, goals: [], stars: [5000, 15000, 30000], grid: { cells: Array(8).fill('........') } };
+  L.dayKey = key;
   closeModal();
   screenEl().innerHTML = ''; screenEl().className = 'screen';
-  setScene('soak');
-  startLevel(L, { seed: soakSeed() });
-  document.getElementById('hud-world').textContent = 'Daily board';
-  toast('Relax: no goals, no move limit');
+  setScene('game');
+  startLevel(L, { seed });
+  toast(`Daily challenge: ${L.moves} moves`);
+}
+function onDailyWin(s, L) {
+  const total = s.score + (s.encoreScore || 0), stars = s.starsWon;
+  const receipt = saveDaily({ key: L.dayKey, score: total, stars, won: true });
+  const o = receipt.outcome || {}, d = cleanDaily(SAVE.daily), n = (v) => v.toLocaleString('en-US');
+  sfx('win'); setMood('results', L.world);
+  const bits = [];
+  if (o.newBest) bits.push('new best today');
+  if (o.newEver) bits.push('new best ever');
+  const m = openModal(`
+    <div class="ribbon"><span>Daily cleared!</span></div>
+    <p class="fine" style="text-align:center">${esc(longDate(L.dayKey))}</p>
+    <h2 style="text-align:center">${esc(L.name)}</h2>
+    <div class="stars-big burst" aria-label="${stars} of 3 stars">${[1, 2, 3].map((k) => `<i class="${k <= stars ? 'on pop' : ''}" style="animation-delay:${k * 0.18}s"></i>`).join('')}</div>
+    <p class="result-score" data-to="${total}">${n(total)}</p>
+    <p class="result-sub">${s.encoreScore ? `${n(s.score)} + ${n(s.encoreScore)} Encore bonus` : 'points'}${bits.length ? ' · ' + bits.join(' · ') : ''}</p>
+    <p class="daily-line" style="text-align:center"><b>${plural(o.streak != null ? o.streak : streakNow(d, L.dayKey), 'day')}</b> in a row · best ever ${n(SAVE.soakBest || total)}</p>
+    <div class="actions"><button class="btn" data-act="again" data-focus>Play again</button><button class="btn alt small" data-act="back">Home</button></div>`, { label: 'Daily cleared' });
+  stars && [1, 2, 3].slice(0, stars).forEach((k) => setTimeout(() => sfx('star', k), 200 + k * 180));
+  celebrate(m);
+  bindActs(m, { again: () => startDaily(), back: () => showTitle() });
 }
 
 export function wireUi() {
   configureSaveEffects({ onChange: applySettings, onUnsaved: () => toast('Progress is not saved yet. Keep this tab open; storage is unavailable.', 4200), onConflict: (reason) => toast(reason.includes(' ') ? reason : 'Saved progress or booster balance changed in another tab. Choose Continue or a new level deliberately.', 3200) });
   PLAY.ui = { onWin, onLose, toast, announce };
-  $('btn-pause').addEventListener('click', () => { sfx('click'); if (UI.scene === 'soak') showTitle(); else showPause(); });
+  $('btn-pause').addEventListener('click', () => { sfx('click'); showPause(); });
   window.addEventListener('resize', () => {
-    if (UI.scene === 'game' || UI.scene === 'soak' || UI.scene === 'pause') layoutAndBuild();
+    if (UI.scene === 'game' || UI.scene === 'pause') layoutAndBuild();
   });
   updateHud();
 }

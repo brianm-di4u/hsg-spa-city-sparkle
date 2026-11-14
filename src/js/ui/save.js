@@ -1,4 +1,5 @@
 // One v1 resource; explicit intents never serialize an unrelated cached snapshot.
+import { freshDaily, cleanDaily, dailyInto } from './daily.js';
 const KEY = 'spa-city-sparkle:v1';
 const BACKUP = KEY + ':corrupt';
 const clone = (v) => JSON.parse(JSON.stringify(v));
@@ -10,11 +11,11 @@ const token = () => globalThis.crypto?.randomUUID?.() || ('save-' + Date.now().t
 const META = ['resourceId', 'resetEpoch', 'currentGeneration'];
 const TYPES = ['hammer', 'line', 'shuffle', 'plus5'];
 const SETTING_KEYS = ['sound', 'music', 'ambience', 'volume', 'motion', 'steam', 'hints', 'badges'];
-export const freshSave = () => ({ v: 1, settings: { sound: true, music: true, ambience: true, volume: 0.5, motion: 'auto', steam: true, hints: true, badges: false }, progress: {}, boosters: { hammer: 1, line: 1, shuffle: 1, plus5: 1 }, lore: [], tutorialSeen: [], current: null, soakDay: null, soakBest: 0 });
+export const freshSave = () => ({ v: 1, settings: { sound: true, music: true, ambience: true, volume: 0.5, motion: 'auto', steam: true, hints: true, badges: false }, progress: {}, boosters: { hammer: 1, line: 1, shuffle: 1, plus5: 1 }, lore: [], tutorialSeen: [], current: null, soakDay: null, soakBest: 0, daily: freshDaily() });
 const stamp = (d) => ({ resourceId: d.resourceId, resetEpoch: d.resetEpoch });
 const currentGroup = (d) => ({ ...stamp(d), currentGeneration: d.currentGeneration, current: clone(d.current ?? null) });
 const same = (a, b) => canonical(a) === canonical(b);
-const affectedReset = (d) => ({ ...currentGroup(d), progress: d.progress, boosters: d.boosters, lore: d.lore, tutorialSeen: d.tutorialSeen, soakBest: d.soakBest });
+const affectedReset = (d) => ({ ...currentGroup(d), progress: d.progress, boosters: d.boosters, lore: d.lore, tutorialSeen: d.tutorialSeen, soakBest: d.soakBest, soakDay: d.soakDay, daily: d.daily });
 
 export function createSaveStore({ storage = () => globalThis.localStorage, newToken = token, projection = freshSave() } = {}) {
   let last = null, active = null, serial = 0, conflictKey = null, unsavedNotice = false, corrupt = null; // corrupt: raw text of a stored value that cannot be read
@@ -39,6 +40,7 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
     const count = META.filter((k) => own(d, k)).length;
     if (count && (count !== META.length || META.some((k) => typeof d[k] !== 'string' || !d[k]))) throw Object.assign(Error('Partial save identity'), { raw });
     const data = { ...freshSave(), ...d, settings: { ...freshSave().settings, ...(d.settings || {}) }, boosters: { ...freshSave().boosters, ...(d.boosters || {}) } };
+    data.daily = cleanDaily(data.daily); if (!Number.isFinite(data.soakBest) || data.soakBest < 0) data.soakBest = 0; if (typeof data.soakDay !== 'string') data.soakDay = null;
     delete data.storageOk;
     last = { kind: count ? 'identified' : 'legacy', raw, data, payload: d }; return clone(last);
   }
@@ -80,7 +82,8 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
       outcomes[id] = resultInto(next, w.result); wins.push(id);
       if (w.clearBase && same(currentGroup(next), w.clearBase)) { next.current = null; next.currentGeneration = w.terminalGeneration; clearedRuns.push(w.run); }
     }
-    for (const [id, t] of pending.tutorials) if (hasIdentity(next, t.stamp)) { if (!next.tutorialSeen.includes(t.tip)) next.tutorialSeen.push(t.tip); tutorials.push(id); }
+    // pending.tutorials also carries finished Daily Challenge attempts ({daily}): small, idempotent records that never touch the Continue slot
+    for (const [id, t] of pending.tutorials) if (hasIdentity(next, t.stamp)) { if (t.daily) outcomes[id] = dailyInto(next, t.daily); else if (!next.tutorialSeen.includes(t.tip)) next.tutorialSeen.push(t.tip); tutorials.push(id); }
     return { next, wins, tutorials, outcomes, clearedRuns };
   }
   const unpublished = () => !!(pending.reservation || pending.bundle || pending.reset || pending.wins.size || pending.tutorials.size || Object.keys(pending.settings).length);
@@ -128,7 +131,7 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
     const o = read(); if (!o) return fail('storage-unavailable');
     if (!observationMatches(o, p.observed) || !same(affectedReset(o.data), p.affected)) return conflict('reset-resource-changed');
     const next = identify(o, p.ids);
-    next.progress = {}; next.boosters = freshSave().boosters; next.lore = []; next.tutorialSeen = []; next.current = null; next.soakBest = 0;
+    next.progress = {}; next.boosters = freshSave().boosters; next.lore = []; next.tutorialSeen = []; next.current = null; next.soakBest = 0; next.soakDay = null; next.daily = freshDaily();
     next.resetEpoch = p.epoch; next.currentGeneration = p.generation;
     return publish(globals(next), () => {
       pending.reset = null; pending.reservation = null; pending.bundle = null; pending.wins.clear(); pending.tutorials.clear(); active = null; conflictKey = null;
@@ -234,6 +237,14 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
       return publish(globals(next), (saved) => { active.base = currentGroup(saved); });
     },
     tutorial(tip) { if (!active) { if (!projection.tutorialSeen.includes(tip)) projection.tutorialSeen.push(tip); return fail('no-resource-authority'); } const id = active.run + ':tip:' + tip; pending.tutorials.set(id, { tip, stamp: clone(active.stamp) }); return flushGlobals(); },
+    // A finished Daily Challenge attempt: {key, score, stars, won}. Its outcome says what was new (best, streak).
+    daily(result) {
+      if (!active) { const out = dailyInto(projection, result); return { ...fail('no-resource-authority'), outcome: out }; }
+      const id = active.run + ':daily:' + result.key + ':' + result.score + ':' + result.stars + ':' + (result.won ? 1 : 0);
+      pending.tutorials.set(id, { daily: { ...result }, stamp: clone(active.stamp) });
+      const r = flushGlobals();
+      return { ...r, outcome: r.outcomes?.[id] };
+    },
     unreadable() { read(); return corrupt !== null; },
     startFresh() {
       const r = discardUnreadable(); if (!r.ok) return r;
@@ -242,7 +253,7 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
       if (Object.keys(pending.settings).length) store.settings({}); else project(o.data, true);
       effects.onChange(); return { ok: true };
     },
-    reset() { let o = read(); if (!o && corrupt !== null && discardUnreadable().ok) o = read(); pending.reset = { observed: o || (last && clone(last)), affected: clone(affectedReset(o?.data || projection)), ids: birth(), epoch: newToken(), generation: newToken() }; const receipt = flushReset(); if (!receipt.ok && receipt.reason === 'storage-unavailable') project({ ...clone(projection), progress: {}, boosters: freshSave().boosters, lore: [], tutorialSeen: [], current: null, soakBest: 0, resetEpoch: pending.reset.epoch, currentGeneration: pending.reset.generation }, false); return receipt; },
+    reset() { let o = read(); if (!o && corrupt !== null && discardUnreadable().ok) o = read(); pending.reset = { observed: o || (last && clone(last)), affected: clone(affectedReset(o?.data || projection)), ids: birth(), epoch: newToken(), generation: newToken() }; const receipt = flushReset(); if (!receipt.ok && receipt.reason === 'storage-unavailable') project({ ...clone(projection), progress: {}, boosters: freshSave().boosters, lore: [], tutorialSeen: [], current: null, soakBest: 0, soakDay: null, daily: freshDaily(), resetEpoch: pending.reset.epoch, currentGeneration: pending.reset.generation }, false); return receipt; },
     retryReset: flushReset,
     retry: flushBundle,
     // Separate installer: called only by explicit fixture arrangement, never by a normal mutation.
@@ -267,6 +278,7 @@ export const recordComputedAction = (action, current, debit) => STORE.computed(a
 export const saveSettledAction = () => STORE.settle();
 export const saveTerminal = (result, current) => STORE.terminal(result, current);
 export const markTutorial = (tip) => STORE.tutorial(tip);
+export const saveDaily = (result) => STORE.daily(result);
 export const resetSave = () => STORE.reset();
 export const saveUnreadable = () => STORE.unreadable();
 export const startFreshSave = () => STORE.startFresh();

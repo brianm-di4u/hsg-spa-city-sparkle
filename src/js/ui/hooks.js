@@ -1,8 +1,9 @@
 // window.__game: the test-harness contract (shared/test-harness/README.md, DEV-PLAN §3).
 import { PLAY, startLevel, doSwap, doBooster, skipAnim, showHint, layoutAndBuild, updateHud, levelById, armBooster, replayLast, beatAt } from './play.js';
-import { UI, showTitle, showMap, showIntro, enterLevel, showHelp, showSettings, showAbout, showPause, onWin, onLose, showWorldComplete, startSoak, closeModal, showTip, closeTip } from './screens.js';
+import { UI, showTitle, showMap, showIntro, enterLevel, showHelp, showSettings, showAbout, showPause, onWin, onLose, showWorldComplete, showDaily, startDaily, todayKey, closeModal, showTip, closeTip } from './screens.js';
 import { SAVE, arrangeSaveFixture, adoptCurrent } from './save.js';
 import { VIEW, requestRender } from '../view/stage.js';
+import { dailyLevel } from './daily.js';
 import { BOARD } from '../view/board-view.js';
 import { boardFromAscii, cloneState, hashState } from '../engine/grid.js';
 import { legalMoves } from '../engine/moves.js';
@@ -31,7 +32,7 @@ function summary() {
     movesLeft: s ? s.movesLeft : null, movesUsed: s ? s.movesUsed : 0, score: s ? s.score : 0, encoreScore: s ? s.encoreScore : 0,
     goals: s ? s.goals.map((g) => ({ ...g })) : [], phase: s ? s.phase : null, stars: s ? s.starsWon : 0, starThresholds: s ? s.stars : [],
     boosters: s ? { ...s.boosters } : {}, saveBoosters: { ...SAVE.boosters }, progress: JSON.parse(JSON.stringify(SAVE.progress)), settings: { ...SAVE.settings },
-    lore: SAVE.lore.slice(), tutorialSeen: SAVE.tutorialSeen.slice(), storageOk: SAVE.storageOk, current: SAVE.current ? SAVE.current.levelId : null,
+    lore: SAVE.lore.slice(), daily: JSON.parse(JSON.stringify(SAVE.daily)), soakBest: SAVE.soakBest, soakDay: SAVE.soakDay, tutorialSeen: SAVE.tutorialSeen.slice(), storageOk: SAVE.storageOk, current: SAVE.current ? SAVE.current.levelId : null,
     lastTimeline: PLAY.lastResult, anim: { playing: !!PLAY.anim, frozen: VIEW.frozenMs }, hash: s ? hashState(s) : null,
     selected: PLAY.selected, cursor: PLAY.cursor, hint: BOARD.hint, armed: PLAY.armed, art: VIEW.artSource,
     layout: { ...VIEW.layout }, reduced: VIEW.reduced, modal: UI.modalOpen, tip: UI.tipOpen, sounds: AUDIO.played.slice(-20),
@@ -48,6 +49,8 @@ export function installHooks() {
     cueRender: (name, arg, opt, seconds, wantWav, seed) => cueRender(name, arg, opt, seconds, wantWav, seed),
     cue: (name, arg, opt) => { sfx(name, arg, opt); return true; },
     getState: () => summary(),
+    dailyPick(key) { const p = dailyLevel(LEVELS, key || todayKey()); return { key: p.key, from: p.from, name: p.level.name, moves: p.level.moves, seed: p.seed, stars: p.level.stars }; },
+    dailyDate(key) { UI.dailyDate = key; return key; }, // pins today's date for the Daily Challenge (null: the real one)
     engineState: () => (PLAY.state ? cloneState(PLAY.state) : null),
     setState(s) { PLAY.state = cloneState(s); PLAY.anim = null; arrangeFixture({ boosters: { ...PLAY.state.boosters } }); layoutAndBuild(); updateHud(); return true; },
     isIdle: () => VIEW.ready && HOOK.artReady() && !PLAY.anim && !PLAY.pendingEncore && UI.transitions === 0,
@@ -55,7 +58,7 @@ export function installHooks() {
       const L = levelById(arg || (PLAY.level && PLAY.level.id) || LEVELS[0].id);
       const map = {
         title: () => showTitle(), map: () => showMap(arg), intro: () => showIntro(L), help: () => showHelp(undefined, arg), settings: () => showSettings(), about: () => showAbout(),
-        game: () => enterLevel(L, { seed: HOOK.seed }), pause: () => showPause(), soak: () => startSoak(), world: () => showWorldComplete(+(arg || 1)),
+        game: () => enterLevel(L, { seed: HOOK.seed }), pause: () => showPause(), daily: () => showDaily(), soak: () => startDaily(), world: () => showWorldComplete(+(arg || 1)),
         win: () => { if (!PLAY.state) enterLevel(L, { seed: HOOK.seed }); const s = PLAY.state; s.score = Math.max(s.score, s.stars[2]); s.encoreScore = s.encoreScore || 1860; for (const g of s.goals) g.have = g.type === 'moss' ? 0 : g.type === 'score' ? s.score : g.need; s.movesLeft = 0; s.phase = 'won'; s.starsWon = 3; PLAY.ui && updateHud(); onWin(s, PLAY.level); },
         lose: () => { if (!PLAY.state) enterLevel(L, { seed: HOOK.seed }); PLAY.state.movesLeft = 0; PLAY.state.phase = 'lost'; updateHud(); onLose(PLAY.state, PLAY.level); },
       };
@@ -96,6 +99,7 @@ export function installHooks() {
           PLAY.state = s; PLAY.anim = null; arrangeFixture({ boosters: { ...s.boosters } }); layoutAndBuild(); updateHud(); return true;
         }
         case 'progress': return arrangeFixture({ progress: { ...SAVE.progress, ...(args[0] || {}) }, boosters: { ...SAVE.boosters, ...(args[1] || {}) } });
+        case 'save': return arrangeFixture(args[0] || {}); // any save fields, as a pre-arranged profile
         case 'tip': showTip(args[0]); return true;
         case 'win': onWin(PLAY.state, PLAY.level); return true;
         case 'lose': onLose(PLAY.state, PLAY.level); return true;

@@ -25,6 +25,8 @@ const LOW_MOVES_CUE = [3, 1]; // a soft tick when the moves left first drop to e
 const LOW_MOVES_MUSIC = 5; // the music lifts (a little faster, brighter) when this many moves or fewer are left
 
 export function levelById(id) { return LEVELS.find((l) => l.id === id); }
+// The Daily Challenge runs outside the journey (the save calls that kind of run 'soak'): it never touches the Continue slot.
+const saveMode = (s) => (s.mode === 'soak' || s.mode === 'daily' ? 'soak' : 'journey');
 
 export function startLevel(level, opts = {}) {
   PLAY.level = level; PLAY.world = level.world || 1;
@@ -70,7 +72,8 @@ function buildHud() {
   const L = PLAY.level, look = WORLD_LOOK[PLAY.world];
   $('hud-world').textContent = look.short || look.name;
   $('hud-world').title = `World ${PLAY.world}`;
-  const nm = `${L.n}. ${L.name}`;
+  if (L.mode === 'daily') dailyHud(L);
+  const nm = L.mode === 'daily' ? L.name : `${L.n}. ${L.name}`;
   $('hud-name').textContent = nm;
   $('hud-name').style.fontSize = nm.length > 22 ? '0.95rem' : nm.length > 17 ? '1.08rem' : '';
   const ul = $('hud-goals');
@@ -85,6 +88,14 @@ function buildHud() {
     ul.appendChild(li);
   }
   for (const b of document.querySelectorAll('.booster')) b.querySelector('.b-icon').style.backgroundImage = `url(${boosterIcon(b.dataset.booster)})`;
+}
+
+// Daily Challenge: today's best and the best ever, in the world line (the all-time part drops out on a narrow phone HUD).
+export function dailyHud(L = PLAY.level) {
+  const el = $('hud-world'), today = SAVE.daily?.days?.[L.dayKey]?.best || 0, ever = SAVE.soakBest || 0;
+  const n = (v) => v.toLocaleString('en-US');
+  el.innerHTML = `<span>${today ? `Daily · best ${n(today)}` : 'Daily challenge'}</span>${ever ? `<span class="hw-ever"> · ever ${n(ever)}</span>` : ''}`;
+  el.title = `Daily challenge: best today ${n(today)}, best ever ${n(ever)}`;
 }
 
 const iconCache = {};
@@ -159,7 +170,7 @@ export const isBusy = () => !!PLAY.anim;
 
 export function doSwap(a, b) {
   if (!PLAY.active || PLAY.anim || !PLAY.state || PLAY.state.phase !== 'play') return { valid: false, reason: 'busy' };
-  const mode = PLAY.state.mode === 'soak' ? 'soak' : 'journey';
+  const mode = saveMode(PLAY.state);
   const action = prepareSaveAction({ mode });
   if (!action.ok) return { valid: false, reason: action.reason };
   clearHint();
@@ -174,7 +185,7 @@ export function doSwap(a, b) {
 
 export function doBooster(name, cell, dir) {
   if (!PLAY.active || PLAY.anim || !PLAY.state) return { valid: false, reason: 'busy' };
-  const action = prepareSaveAction({ mode: PLAY.state.mode === 'soak' ? 'soak' : 'journey', booster: name, localAvailable: PLAY.state.boosters[name] || 0 });
+  const action = prepareSaveAction({ mode: saveMode(PLAY.state), booster: name, localAvailable: PLAY.state.boosters[name] || 0 });
   if (!action.ok) return { valid: false, reason: action.reason };
   const pre = cloneState(PLAY.state);
   const r = apply(PLAY.state, { type: 'booster', name, cell, dir });
