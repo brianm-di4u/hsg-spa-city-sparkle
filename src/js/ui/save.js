@@ -12,6 +12,9 @@ const META = ['resourceId', 'resetEpoch', 'currentGeneration'];
 const TYPES = ['hammer', 'line', 'shuffle', 'plus5'];
 const SETTING_KEYS = ['sound', 'music', 'ambience', 'volume', 'motion', 'steam', 'hints', 'badges'];
 export const freshSave = () => ({ v: 1, settings: { sound: true, music: true, ambience: true, volume: 0.5, motion: 'auto', steam: true, hints: true, badges: false }, progress: {}, boosters: { hammer: 1, line: 1, shuffle: 1, plus5: 1 }, lore: [], tutorialSeen: [], current: null, soakDay: null, soakBest: 0, daily: freshDaily() });
+// Settings as read from a save: the defaults under what the save holds. A save from before the Ambience switch gets it
+// where its Sound effects switch is, so a player who had the effects off hears no new sound.
+const readSettings = (saved) => { const st = { ...freshSave().settings, ...(saved || {}) }; if (!saved || typeof saved.ambience !== 'boolean') st.ambience = st.sound !== false; return st; };
 const stamp = (d) => ({ resourceId: d.resourceId, resetEpoch: d.resetEpoch });
 const currentGroup = (d) => ({ ...stamp(d), currentGeneration: d.currentGeneration, current: clone(d.current ?? null) });
 const same = (a, b) => canonical(a) === canonical(b);
@@ -25,7 +28,7 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
   const fail = (reason) => ({ ok: false, reason });
   function unsaved() { projection.storageOk = false; if (!unsavedNotice) { unsavedNotice = true; effects.onUnsaved(); } return fail('storage-unavailable'); }
   function project(data, ok) {
-    data = { ...freshSave(), ...data, settings: { ...freshSave().settings, ...(data.settings || {}) } };
+    data = { ...freshSave(), ...data, settings: readSettings(data.settings) };
     const settings = projection.settings;
     for (const k of Object.keys(projection)) if (k !== 'storageOk') delete projection[k];
     Object.assign(projection, clone(data));
@@ -39,7 +42,7 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
     if (!obj(d) || d.v !== 1 || ['settings', 'progress', 'boosters'].some((k) => own(d, k) && !obj(d[k]))) throw Object.assign(Error('Unsupported save'), { raw });
     const count = META.filter((k) => own(d, k)).length;
     if (count && (count !== META.length || META.some((k) => typeof d[k] !== 'string' || !d[k]))) throw Object.assign(Error('Partial save identity'), { raw });
-    const data = { ...freshSave(), ...d, settings: { ...freshSave().settings, ...(d.settings || {}) }, boosters: { ...freshSave().boosters, ...(d.boosters || {}) } };
+    const data = { ...freshSave(), ...d, settings: readSettings(d.settings), boosters: { ...freshSave().boosters, ...(d.boosters || {}) } };
     data.daily = cleanDaily(data.daily); if (!Number.isFinite(data.soakBest) || data.soakBest < 0) data.soakBest = 0; if (typeof data.soakDay !== 'string') data.soakDay = null;
     delete data.storageOk;
     last = { kind: count ? 'identified' : 'legacy', raw, data, payload: d }; return clone(last);

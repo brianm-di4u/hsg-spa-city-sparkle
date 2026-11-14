@@ -220,12 +220,16 @@ tests.push(
       await waitAudio(t, (a) => a.ambience < 0.02 && a.music > 0.3);
       await openSettings(t);
       await t.page.locator('#modal [data-toggle="sound"]').click();
-      await waitAudio(t, (a) => a.music < 0.02 && a.ambience < 0.02);
-      t.equal((await t.state()).settings.sound, false, 'the master Sound switch silences music and ambience too');
+      await t.page.waitForTimeout(500);
+      t.equal((await t.state()).settings.sound, false, 'Sound effects is off');
+      t.expect(await bus(t, 'music') > 0.3, 'Sound effects off leaves the music playing, as it did before the ambience was added');
+      await t.page.locator('#modal [data-toggle="ambience"]').click();
+      await waitAudio(t, (a) => a.ambience > 0.3 && a.music > 0.3);
+      t.equal((await t.state()).settings.ambience, true, 'and the ambience can be on with the effects off: three separate switches');
     },
   },
   {
-    name: 'S5-01 a save from before this wave loads with music and ambience on, and a save that had sound off stays silent',
+    name: 'S5-01 a save from before this wave: effects on gains the ambience, effects off gains no new sound and keeps its music, both off stays silent',
     initScript: trackAudio,
     async run(t) {
       const old = { v: 1, settings: { sound: true, music: true, volume: 0.5, motion: 'auto', steam: true, hints: true, badges: false }, progress: { 'w1-01': { stars: 2, best: 1500 } }, boosters: { hammer: 1, line: 1, shuffle: 1, plus5: 1 }, lore: [], tutorialSeen: [], current: null, soakDay: null, soakBest: 0 };
@@ -242,11 +246,21 @@ tests.push(
       await t.reload();
       await t.waitIdle();
       s = await t.state();
-      t.equal(s.settings.sound, false, 'sound off is kept');
+      t.equal(s.settings.sound, false, 'Sound effects off is kept');
+      t.equal(s.settings.ambience, false, 'the effects were off, so the new ambience starts off too');
+      t.equal(s.settings.music, true, 'and the music setting is as it was');
+      await unlock(t);
+      await waitAudio(t, (a) => a.music > 0.3);
+      await t.page.waitForTimeout(600);   // the buses glide to their levels
+      t.equal(await bus(t, 'ambience'), 0, 'the ambience bus is silent');
+      t.expect(await bus(t, 'music') > 0.3, 'the music this save had on still plays');
+      await t.page.evaluate(([k, v]) => localStorage.setItem(k, JSON.stringify(v)), [KEY, { ...old, settings: { ...old.settings, sound: false, music: false } }]);
+      await t.reload();
+      await t.waitIdle();
       await unlock(t);
       await t.page.waitForTimeout(600);
-      t.equal(await bus(t, 'music'), 0, 'the music bus is silent');
-      t.equal(await bus(t, 'ambience'), 0, 'the ambience bus is silent');
+      t.equal(await bus(t, 'music'), 0, 'effects and music both off: the music bus is silent');
+      t.equal(await bus(t, 'ambience'), 0, 'and so is the ambience bus');
       t.equal(s.progress['w1-01'].best, 1500, 'best score untouched');
     },
   },

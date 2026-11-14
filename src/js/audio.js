@@ -33,9 +33,10 @@ export function applyLevels() {
   AUDIO.master.gain.cancelScheduledValues(AUDIO.ctx.currentTime);
   AUDIO.master.gain.value = AUDIO.volume * MASTER_SCALE;
   AUDIO.sfxGain.gain.value = AUDIO.sound ? 1 : 0;
-  // Music and ambience obey the master Sound switch as well as their own, so a save that had sound off stays silent.
-  AUDIO.kit.music.level(AUDIO.sound && AUDIO.music ? MUSIC_LEVEL : 0);
-  AUDIO.kit.amb.level(AUDIO.sound && AUDIO.ambience ? AMBIENCE_LEVEL : 0);
+  // Sound effects, Music and Ambience are three separate switches. Music never depended on the effects switch: a
+  // player who turns the effects off keeps the music, as before the ambience was added.
+  AUDIO.kit.music.level(AUDIO.music ? MUSIC_LEVEL : 0);
+  AUDIO.kit.amb.level(AUDIO.ambience ? AMBIENCE_LEVEL : 0);
 }
 
 // Cue building. A cue is built inside a small context (CUE): the audio context, where it goes, one draw of
