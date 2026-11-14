@@ -2,7 +2,10 @@
 // Monte Carlo difficulty check: every level played by the casual-player bot (tools/bots.mjs) (default 200 seeds) and the random bot
 // (50 seeds) across worker threads. Writes tools/balance-report.json and prints a table against each
 // level's target band (`band` in data/levels/*.txt). PRD §13, AC24.
-//   node tools/balance.mjs [--seeds 200] [--random 50] [--only w1-01,w2] [--workers 8] [--fix-stars]
+//   node tools/balance.mjs [--seeds 200] [--random 50] [--only w1-01,w2] [--workers 8] [--fix-stars] [--fit-stars baseline.json]
+// Stars are counted after the Encore (S3-01), so the bots play the Encore out and `split` is the share of won games
+// that earned 1, 2 and 3 stars. --fit-stars <baseline.json> rewrites the 2- and 3-star thresholds of every level so the
+// bots' split matches the split recorded in that earlier report (the one measured before stars counted the Encore).
 // --fix-stars rewrites the `stars` line of any level whose 3-star rate is outside 5-40% (or 1-star above the
 // 25th percentile of winning scores) to the 10th / 50th / 85th percentiles of the bot's winning scores.
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
@@ -53,6 +56,7 @@ for (const l of levels) {
   const row = {
     band: l.band, win, randomWin: rwin, star3: pct(g, (x) => x.stars === 3), star2: pct(g, (x) => x.stars >= 2),
     scoreP25: q(wins.map((x) => x.score), 0.25), scoreP50: q(g.map((x) => x.score), 0.5), scoreP90: q(g.map((x) => x.score), 0.9),
+    split: wins.length ? [1, 2, 3].map((n) => wins.filter((x) => (n === 3 ? x.stars >= 3 : x.stars === n)).length / wins.length) : [0, 0, 0],
     leftP50: q(wins.map((x) => x.left || 0), 0.5), winQ: [q(wins.map((x) => x.score), 0.1), q(wins.map((x) => x.score), 0.5), q(wins.map((x) => x.score), 0.85)], reshuffles: g.reduce((a, x) => a + x.reshuffles, 0) / g.length,
     recolorRate: g.reduce((a, x) => a + x.recolors, 0) / Math.max(1, g.reduce((a, x) => a + x.moves, 0)), capped: g.reduce((a, x) => a + x.capped, 0),
   };
@@ -63,6 +67,30 @@ for (const l of levels) {
   report.levels[l.id] = row;
   const f = (x) => (x * 100).toFixed(0).padStart(4) + '%';
   console.log(`${l.id.padEnd(7)} ${String(l.band ? l.band.map((x) => (x * 100).toFixed(0)).join('-') : '-').padEnd(10)} ${f(win)}   ${f(rwin)}  ${f(row.star3)}  ${String(row.scoreP50).padStart(8)}  ${String(row.leftP50).padStart(4)}  ${row.reshuffles.toFixed(2)}  ${(row.recolorRate * 100).toFixed(1)}  ${row.capped}  ${row.verdict}`);
+}
+if (args.includes('--fit-stars')) {
+  const base = JSON.parse(fs.readFileSync(path.resolve(arg('--fit-stars', '')), 'utf8'));
+  const dir = path.join(here, '..', 'data', 'levels');
+  const round = (v) => Math.max(500, Math.round(v / 500) * 500);
+  let fitted = 0;
+  for (const f of fs.readdirSync(dir).filter((x) => /^w\d+\.txt$/.test(x))) {
+    const lines = fs.readFileSync(path.join(dir, f), 'utf8').split('\n');
+    let cur = null;
+    for (let i = 0; i < lines.length; i++) {
+      const m = /^== (\S+)/.exec(lines[i]);
+      if (m) { cur = levels.find((l) => l.id === m[1]); continue; }
+      if (!cur || !lines[i].startsWith('stars ')) continue;
+      const b = base.levels[cur.id], totals = results[cur.id].casual.filter((x) => x.won).map((x) => x.total).sort((x, y) => x - y);
+      if (!b || !b.split || totals.length < 20) continue;
+      const at = (p) => totals[Math.min(totals.length - 1, Math.max(0, Math.floor(p * totals.length)))];
+      const t1 = cur.stars[0], t2 = Math.max(t1 + 500, round(at(b.split[0]))), t3 = Math.max(t2 + 500, round(at(b.split[0] + b.split[1])));
+      lines[i] = `stars ${t1} ${t2} ${t3}`;
+      fitted++;
+      console.log(`stars ${cur.id}: ${cur.stars.join('/')} -> ${t1}/${t2}/${t3}`);
+    }
+    fs.writeFileSync(path.join(dir, f), lines.join('\n'));
+  }
+  console.log(`${fitted} star line(s) fitted; run node tools/build-levels.mjs and re-run balance`);
 }
 if (args.includes('--fix-stars')) {
   const dir = path.join(here, '..', 'data', 'levels');

@@ -298,6 +298,8 @@ export function resolveEncore(s, opts = {}) {
   s.score = before;
   s.movesLeft = 0;
   s.phase = 'won';
+  // Stars are counted on the goal score plus the Encore. The stars won when the goals were met are the minimum.
+  s.starsWon = Math.max(s.starsWon, starsFor(s, before + s.encoreScore));
   tl.push('end', { result: 'won', stars: s.starsWon, encoreScore: s.encoreScore });
   return { valid: true, timeline: tl.out() };
 }

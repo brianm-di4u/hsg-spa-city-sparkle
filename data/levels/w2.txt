@@ -4,7 +4,7 @@
 moves 17
 goal stone all
 goal collect d 32
-stars 19000 25500 35500
+stars 19000 33000 48500
 weights abcde
 band 0.75 0.95
 tags intro:tufa
@@ -32,7 +32,7 @@ block
 moves 30
 goal stone all
 goal collect d 25
-stars 29500 48000 80000
+stars 29500 65500 96500
 weights abcde
 band 0.75 0.95
 cells
@@ -60,7 +60,7 @@ block
 moves 16
 goal crust all
 goal collect a 32
-stars 23500 34500 50000
+stars 23500 46000 67500
 weights abcde
 band 0.75 0.95
 tags intro:crust
@@ -87,7 +87,7 @@ under
 == w2-04 | Grand Promenade
 moves 26
 goal crust all
-stars 40000 58500 83500
+stars 40000 76500 103000
 weights abcde
 band 0.75 0.95
 cells
@@ -115,7 +115,7 @@ under
 moves 18
 goal stone all
 goal crust all
-stars 26000 43000 62500
+stars 26000 52500 77000
 weights abcde
 band 0.55 0.75
 cells
@@ -152,7 +152,7 @@ under
 == w2-06 | Ral Spring
 moves 24
 goal crust all
-stars 44500 62500 92000
+stars 44500 81000 116500
 weights abcde
 band 0.75 0.95
 cells
@@ -180,7 +180,7 @@ under
 moves 17
 goal stone all
 goal collect b 30
-stars 18500 25000 32500
+stars 18500 30500 43500
 weights abcde
 band 0.75 0.95
 cells
@@ -208,7 +208,7 @@ block
 moves 25
 goal crust all
 goal stone all
-stars 20500 35000 65000
+stars 20500 54500 92500
 weights abcde
 band 0.75 0.95
 cells
@@ -245,7 +245,7 @@ under
 == w2-09 | Gulpha Gorge
 moves 34
 goal crust all
-stars 34000 51000 68000
+stars 34000 74000 96000
 weights abcde
 band 0.75 0.95
 cells
@@ -273,7 +273,7 @@ under
 moves 24
 goal stone all
 goal crust all
-stars 32000 49500 72500
+stars 32000 60500 85500
 weights abcde
 band 0.55 0.75
 cells

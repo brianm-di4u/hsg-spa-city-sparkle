@@ -5,7 +5,7 @@ moves 29
 goal crust all
 goal lock all
 goal stone all
-stars 77500 112500 131000
+stars 77500 131000 151000
 weights abcde
 band 0.30 0.55
 cells
@@ -53,7 +53,7 @@ ll.....ll
 moves 24
 goal crust all
 goal tokens all
-stars 32500 49500 69000
+stars 32500 57000 83000
 weights abcde
 tokens 3 max 1 every 3
 band 0.30 0.55
@@ -89,7 +89,7 @@ eeeeeeee
 moves 21
 goal tokens all
 goal score 47500
-stars 48500 52500 65500
+stars 48500 61000 80500
 weights abcde
 tokens 4 max 2 every 2
 band 0.30 0.55
@@ -129,7 +129,7 @@ moves 21
 goal lock all
 goal moss all
 goal collect a 56
-stars 37000 47500 62000
+stars 37000 54000 72500
 weights abcde
 band 0.30 0.55
 cells
@@ -168,7 +168,7 @@ moves 23
 goal stone all
 goal crust all
 goal moss all
-stars 38000 50000 65500
+stars 38000 52000 71500
 weights abcde
 band 0.15 0.35
 cells
@@ -206,7 +206,7 @@ under
 moves 21
 goal crust all
 goal collect a 24
-stars 45000 72000 92000
+stars 45000 79500 105000
 weights abcde
 band 0.30 0.55
 cells
@@ -246,7 +246,7 @@ goal moss all
 goal stone all
 goal lock all
 goal collect d 58
-stars 40000 50000 63500
+stars 40000 55500 71000
 weights abcde
 band 0.30 0.55
 cells
@@ -284,7 +284,7 @@ top
 moves 22
 goal tokens all
 goal crust all
-stars 29000 45500 62000
+stars 29000 55500 74000
 weights abcde
 tokens 3 max 1 every 2
 band 0.30 0.55
@@ -324,7 +324,7 @@ moves 31
 goal lock all
 goal stone all
 goal crust all
-stars 16500 30500 35500
+stars 16500 39000 46000
 weights abcdef
 band 0.30 0.55
 cells
@@ -375,7 +375,7 @@ goal tokens all
 goal crust all
 goal lock all
 goal collect b 111
-stars 88500 109500 126500
+stars 88500 116000 131500
 weights abcde
 tokens 2 max 1 every 3
 band 0.15 0.35

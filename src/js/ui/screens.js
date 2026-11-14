@@ -280,9 +280,9 @@ export function onWin(s, L) {
   closeTip();
   setScene('win');
   if (s.mode === 'soak') return;
-  const stars = s.starsWon;
+  const stars = s.starsWon, total = s.score + (s.encoreScore || 0); // stars are counted on the score plus the Encore
   const card = loreFor(L);
-  const receipt = saveTerminal({ levelId: L.id, stars, score: s.score, loreId: card && card.id,
+  const receipt = saveTerminal({ levelId: L.id, stars, score: total, loreId: card && card.id,
     rewardType: ['hammer', 'line', 'shuffle', 'plus5'][LEVELS.indexOf(L) % 4],
     worldLevels: LEVELS.filter((l) => l.world === L.world).map((l) => l.id) }, { levelId: L.id, state: cloneState(s) });
   const rewards = receipt.outcome?.levelReward ? [BOOSTER_NAMES[receipt.outcome.levelReward]] : [];
@@ -294,8 +294,8 @@ export function onWin(s, L) {
     <p class="fine" style="text-align:center">World ${L.world} · Level ${L.n}</p>
     <h2 style="text-align:center">${esc(L.name)}</h2>
     <div class="stars-big burst" aria-label="${stars} of 3 stars">${[1, 2, 3].map((n) => `<i class="${n <= stars ? 'on pop' : ''}" style="animation-delay:${n * 0.18}s"></i>`).join('')}</div>
-    <p class="result-score" data-to="${s.score}">${s.score.toLocaleString('en-US')}</p>
-    <p class="result-sub">${s.encoreScore ? `+ ${s.encoreScore.toLocaleString('en-US')} Encore bonus` : 'points'}${rewards.length ? ` · new booster: ${rewards.join(', ')}` : ''}</p>
+    <p class="result-score" data-to="${total}">${total.toLocaleString('en-US')}</p>
+    <p class="result-sub">${s.encoreScore ? `${s.score.toLocaleString('en-US')} + ${s.encoreScore.toLocaleString('en-US')} Encore bonus: stars count both` : 'points'}${rewards.length ? ` · new booster: ${rewards.join(', ')}` : ''}</p>
     ${card ? `<div class="lore${paint('card-frame') ? ' framed' : ''}" style="${paint('card-frame') ? `--card-frame: url(${paint('card-frame')})` : ''}" aria-label="Lore card"><span class="tag">Real history</span><h4>${esc(card.title)}</h4><p>${esc(card.text)}</p><p class="src">Source: ${esc(card.source)}</p></div>` : ''}
     <div class="actions">${next && !worldComplete ? '<button class="btn" data-act="next" data-focus>Next level</button>' : ''}${worldComplete ? '<button class="btn" data-act="world" data-focus>Postcard restored!</button>' : ''}<button class="btn alt small" data-act="replay">Replay</button><button class="btn alt small" data-act="map">Map</button></div>`, { label: 'Level cleared' });
   stars && [1, 2, 3].slice(0, stars).forEach((n) => setTimeout(() => sfx('star', n), 200 + n * 180));
@@ -371,7 +371,7 @@ export function showPause() {
 
 // --- help ----------------------------------------------------------------------------------------
 const HELP = [
-  ['basics', 'Basics', `<ul class="help-list"><li>Swap two neighbouring pieces to line up <b>three or more</b> of a kind.</li><li>Matched pieces clear and new ones drop in. New matches chain at a rising multiplier, up to <b>×8</b>.</li><li>Meet every goal before the moves run out. Leftover moves become the <b>Encore</b>.</li><li>Stars come from your score when the goals are met.</li></ul><p class="fine">The six pieces: ${PIECES.map((p) => p.name).join(', ')}.</p>`],
+  ['basics', 'Basics', `<ul class="help-list"><li>Swap two neighbouring pieces to line up <b>three or more</b> of a kind.</li><li>Matched pieces clear and new ones drop in. New matches chain at a rising multiplier, up to <b>×8</b>.</li><li>Meet every goal before the moves run out. Leftover moves become the <b>Encore</b>.</li><li>Stars come from your score when the goals are met, plus the Encore bonus.</li></ul><p class="fine">The six pieces: ${PIECES.map((p) => p.name).join(', ')}.</p>`],
   ['specials', 'Specials', `<div class="help-pieces" data-pieces="p0h,p2b,crystal"></div><ul class="help-list"><li><b>Cascade</b>: match 4 in a line. It sweeps its row or column (it follows the direction you swapped). <b>Swipe it</b> any way, or match it, to fire it.</li><li><b>Hot Stone</b>: match an L, T or + shape. <b>Swipe it</b> or match it: it bursts the cells around it, then gives one aftershock.</li><li><b>Spring Crystal</b>: match 5 in a line. Swap it with a piece to clear every piece of that kind.</li></ul><p class="fine">The names are game flavour: the town has a real Hot Water Cascade, but no geysers or hot stones.</p>`],
   ['combos', 'Combos', `<ul class="help-list"><li>Cascade + Cascade: a row and a column.</li><li>Cascade + Hot Stone: three rows and three columns.</li><li>Hot Stone + Hot Stone: a huge burst.</li><li>Crystal + Cascade or Hot Stone: every piece of that kind becomes that special and fires.</li><li>Crystal + Crystal: clears the whole board.</li></ul>`],
   ['blockers', 'Blockers', `<ul class="help-list"><li><b>Tufa</b> (1-3 layers): break it with matches beside it or with specials.</li><li><b>Mineral crust</b> under pieces: clear the piece above it.</li><li><b>Padlocked safe</b>: the piece can match but can't move.</li><li><b>Algae</b>: clear it with nearby matches, or it spreads after any move that doesn't touch it.</li><li><b>Steam fog</b>: hides a piece until a match beside it lifts the fog.</li></ul>`],

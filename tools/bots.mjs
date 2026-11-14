@@ -7,7 +7,7 @@
 //                checked against each level's band (tools/balance.mjs).
 import { newGame } from '../src/js/engine/game.js';
 import { legalMoves } from '../src/js/engine/moves.js';
-import { resolveSwap } from '../src/js/engine/resolve.js';
+import { resolveSwap, resolveEncore } from '../src/js/engine/resolve.js';
 import { evaluateMoves } from '../src/js/engine/ai.js';
 import { hash32 } from '../src/js/engine/rng.js';
 
@@ -33,7 +33,9 @@ export function playLevel(level, seed, strategy = 'greedy', opts = {}) {
     if (!r.valid) throw new Error(`${level.id} seed ${seed}: bot chose an invalid move`);
   }
   const won = s.phase === 'won' || s.phase === 'encore';
-  return { won, moves: s.movesUsed, left: s.movesLeft, score: s.score, stars: won ? s.starsWon : 0,
+  const left = s.movesLeft, goalScore = s.score;
+  if (s.phase === 'encore') resolveEncore(s, { fast: true }); // the Encore is part of a win: stars are counted after it
+  return { won, moves: s.movesUsed, left, score: goalScore, total: goalScore + s.encoreScore, stars: won ? s.starsWon : 0,
     reshuffles: s.stats.reshuffles, recolors: s.stats.recolors, capped: s.stats.capped, cascade: s.cascadeMax,
     progress: s.goals.map((g) => (g.type === 'moss' ? (g.start ? 1 - g.have / g.start : 1) : Math.min(1, g.have / (g.need || 1)))) };
 }

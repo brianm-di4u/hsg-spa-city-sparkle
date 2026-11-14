@@ -4,7 +4,7 @@
 moves 19
 goal moss all
 goal collect c 62
-stars 43000 54500 67000
+stars 43000 62500 80000
 weights abcde
 band 0.40 0.65
 tags intro:moss
@@ -32,7 +32,7 @@ m...m...m
 moves 20
 goal moss all
 goal collect d 43
-stars 25000 35500 45500
+stars 25000 47000 65500
 weights abcde
 band 0.40 0.65
 cells
@@ -61,7 +61,7 @@ moves 21
 goal moss all
 goal crust all
 goal collect d 87
-stars 60000 82000 96000
+stars 60000 92000 112500
 weights abcde
 band 0.40 0.65
 cells
@@ -100,7 +100,7 @@ moves 20
 goal stone all
 goal moss all
 goal collect e 60
-stars 41500 53000 67500
+stars 41500 59000 82000
 weights abcde
 band 0.40 0.65
 cells
@@ -129,7 +129,7 @@ moves 23
 goal moss all
 goal lock all
 goal collect a 64
-stars 45000 53500 69500
+stars 45000 61500 80500
 weights abcde
 band 0.20 0.45
 cells
@@ -168,7 +168,7 @@ moves 18
 goal tokens all
 goal moss all
 goal collect b 28
-stars 28500 42000 58000
+stars 28500 50500 68000
 weights abcde
 tokens 3 max 1 every 3
 band 0.40 0.65
@@ -208,7 +208,7 @@ moves 17
 goal crust all
 goal moss all
 goal collect c 57
-stars 46500 62500 81500
+stars 46500 68000 89500
 weights abcde
 band 0.40 0.65
 cells
@@ -247,7 +247,7 @@ moves 19
 goal moss all
 goal stone all
 goal collect d 66
-stars 43000 56000 69500
+stars 43000 59500 80500
 weights abcde
 band 0.40 0.65
 cells
@@ -276,7 +276,7 @@ moves 19
 goal moss all
 goal tokens all
 goal collect e 41
-stars 27000 37000 55500
+stars 27000 46000 71000
 weights abcde
 tokens 2 max 1 every 3
 band 0.40 0.65
@@ -313,7 +313,7 @@ moves 23
 goal moss all
 goal crust all
 goal stone all
-stars 21500 29000 36000
+stars 21500 37500 46000
 weights abcdef
 band 0.20 0.45
 cells

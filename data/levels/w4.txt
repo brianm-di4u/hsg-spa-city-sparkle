@@ -4,7 +4,7 @@
 moves 18
 goal tokens all
 goal collect a 41
-stars 26500 34500 46000
+stars 26500 43000 60500
 weights abcde
 tokens 2 max 1 every 3
 band 0.50 0.75
@@ -33,7 +33,7 @@ eeeeeeee
 moves 21
 goal tokens all
 goal collect b 25
-stars 21500 40000 66000
+stars 21500 52000 81000
 weights abcde
 tokens 3 max 1 every 3
 band 0.50 0.75
@@ -60,7 +60,7 @@ eeeeeeeee
 moves 20
 goal tokens all
 goal collect c 12
-stars 20500 36000 63500
+stars 20500 46500 78500
 weights abcde
 tokens 3 max 1 every 2
 band 0.50 0.75
@@ -99,7 +99,7 @@ e.......e
 moves 21
 goal tokens all
 goal crust all
-stars 30500 41500 61000
+stars 30500 47500 71500
 weights abcde
 tokens 3 max 2 every 3
 band 0.50 0.75
@@ -138,7 +138,7 @@ eeeeeeeee
 moves 20
 goal tokens all
 goal lock all
-stars 28500 47500 63000
+stars 28500 54000 75000
 weights abcde
 tokens 4 max 2 every 3
 band 0.30 0.55
@@ -177,7 +177,7 @@ e.......e
 moves 19
 goal score 55500
 goal stone all
-stars 56500 65500 79500
+stars 56500 80500 102000
 weights abcde
 band 0.50 0.75
 cells
@@ -204,7 +204,7 @@ block
 == w4-07 | Jaycee Field
 moves 22
 goal tokens all
-stars 33000 46500 67500
+stars 33000 60500 83500
 weights abcde
 tokens 4 max 1 every 2
 band 0.50 0.75
@@ -243,7 +243,7 @@ eeeeeeeee
 moves 18
 goal crust all
 goal stone all
-stars 30500 50000 69000
+stars 30500 66500 86500
 weights abcde
 band 0.50 0.75
 cells
@@ -278,7 +278,7 @@ under
 moves 21
 goal tokens all
 goal collect d 30
-stars 24500 50500 65500
+stars 24500 63000 74500
 weights abcde
 tokens 4 max 2 every 3
 band 0.50 0.75
@@ -308,7 +308,7 @@ moves 26
 goal tokens all
 goal lock all
 goal crust all
-stars 15000 34500 39500
+stars 15000 43000 50000
 weights abcdef
 tokens 2 max 1 every 3
 band 0.30 0.55

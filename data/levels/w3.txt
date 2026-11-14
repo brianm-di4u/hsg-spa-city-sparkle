@@ -4,7 +4,7 @@
 moves 17
 goal lock all
 goal collect e 24
-stars 23000 33500 56000
+stars 23000 43000 66000
 weights abcde
 band 0.60 0.85
 tags intro:lock
@@ -32,7 +32,7 @@ l......l
 moves 19
 goal lock all
 goal collect a 35
-stars 20000 32500 47500
+stars 20000 43000 67500
 weights abcde
 band 0.60 0.85
 cells
@@ -61,7 +61,7 @@ moves 16
 goal lock all
 goal stone all
 goal collect b 28
-stars 23500 39000 58500
+stars 23500 50500 70500
 weights abcde
 band 0.60 0.85
 cells
@@ -95,7 +95,7 @@ top
 == w3-04 | Ohio Club
 moves 17
 goal score 37500
-stars 38000 40000 53000
+stars 38000 48500 74000
 weights abcde
 band 0.60 0.85
 tags intro:fog
@@ -125,7 +125,7 @@ top
 moves 17
 goal lock all
 goal crust all
-stars 30500 45000 56000
+stars 30500 51500 64500
 weights abcde
 band 0.40 0.65
 cells
@@ -163,7 +163,7 @@ top
 moves 16
 goal crust all
 goal collect e 36
-stars 29500 39500 56000
+stars 29500 46500 65500
 weights abcde
 band 0.60 0.85
 cells
@@ -201,7 +201,7 @@ top
 moves 17
 goal lock all
 goal collect c 42
-stars 26000 38500 52000
+stars 26000 47000 74500
 weights abcde
 band 0.60 0.85
 cells
@@ -229,7 +229,7 @@ top
 moves 32
 goal stone all
 goal lock all
-stars 38000 52500 86500
+stars 38000 73000 111000
 weights abcde
 band 0.60 0.85
 cells
@@ -267,7 +267,7 @@ top
 moves 29
 goal crust all
 goal lock all
-stars 28000 45500 62500
+stars 28000 62500 86000
 weights abcde
 band 0.60 0.85
 cells
@@ -305,7 +305,7 @@ l.l.l.l.l
 moves 26
 goal lock all
 goal crust all
-stars 35000 50000 58000
+stars 35000 56500 67000
 weights abcdef
 band 0.40 0.65
 cells

@@ -3,7 +3,7 @@
 == w1-01 | Magnolia Promenade
 moves 16
 goal score 11500
-stars 11500 12500 16500
+stars 11500 19500 32000
 weights abcde
 band 0.90 1.00
 tags intro:basics
@@ -20,7 +20,7 @@ cells
 == w1-02 | Superior
 moves 17
 goal collect a 26
-stars 12000 20500 34500
+stars 12000 32500 55000
 weights abcde
 band 0.90 1.00
 tags intro:cascade
@@ -39,7 +39,7 @@ cells
 moves 17
 goal collect b 26
 goal score 5500
-stars 14000 21500 33500
+stars 14000 34000 56000
 weights abcde
 band 0.90 1.00
 tags intro:stone
@@ -57,7 +57,7 @@ cells
 == w1-04 | Maurice
 moves 15
 goal collect c 22
-stars 10000 15000 22000
+stars 10000 23500 33500
 weights abcde
 band 0.90 1.00
 tags intro:crystal
@@ -75,7 +75,7 @@ cells
 == w1-05 | Main Entrance
 moves 15
 goal score 21500
-stars 21500 23500 29500
+stars 21500 29500 46000
 weights abcde
 band 0.70 0.80
 cells
@@ -93,7 +93,7 @@ cells
 moves 15
 goal collect d 25
 goal collect e 25
-stars 16500 24000 35000
+stars 16500 33500 53500
 weights abcde
 band 0.90 1.00
 tags intro:combo
@@ -112,7 +112,7 @@ cells
 == w1-07 | Quapaw
 moves 15
 goal score 17500
-stars 18000 20500 31000
+stars 18000 35000 54000
 weights abcde
 band 0.90 1.00
 cells
@@ -130,7 +130,7 @@ cells
 moves 19
 goal collect a 28
 goal collect c 28
-stars 16000 23000 29500
+stars 16000 33000 43000
 weights abcde
 band 0.90 1.00
 tags intro:boosters
@@ -150,7 +150,7 @@ cells
 moves 18
 goal collect b 35
 goal score 14000
-stars 20000 29500 42000
+stars 20000 45500 65500
 weights abcde
 band 0.90 1.00
 cells
@@ -167,7 +167,7 @@ cells
 moves 23
 goal collect e 20
 goal collect f 20
-stars 9000 12500 17000
+stars 9000 18500 24000
 weights abcdef
 band 0.70 0.80
 cells
