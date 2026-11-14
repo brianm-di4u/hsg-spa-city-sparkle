@@ -81,3 +81,135 @@ tests.push({
   },
 });
 
+// =================================================================================================================
+// S4-03: slow motion on the still screens
+// =================================================================================================================
+const atmos = (t, sel) => t.page.evaluate((q) => {
+  const root = document.querySelector(q);
+  if (!root) return null;
+  const kids = [...root.querySelectorAll('i')];
+  return {
+    n: kids.length,
+    kinds: [...new Set(kids.map((k) => k.className))],
+    animated: kids.every((k) => getComputedStyle(k).animationName !== 'none' && parseFloat(getComputedStyle(k).animationDuration) > 1),
+    shown: getComputedStyle(root).display !== 'none',
+    inert: getComputedStyle(root).pointerEvents === 'none',
+  };
+}, sel);
+
+tests.push({
+  name: 'S4-03 the title drifts: clouds, steam and glints move behind the menu, which stays clickable',
+  async run(t) {
+    await t.game('scene', 'title');
+    await t.waitIdle();
+    const a = await atmos(t, '#screen .atmos-title');
+    t.expect(a && a.n >= 15, `a layer of ${a && a.n} elements`);
+    t.expect(['at-cl', 'at-st', 'at-gl'].every((k) => a.kinds.includes(k)), 'clouds, steam and glints');
+    t.expect(a.animated, 'every element is animated, slowly');
+    t.expect(a.inert, 'the layer does not take taps');
+    const top = await t.page.evaluate(() => { const b = document.querySelector('#screen [data-act="play"]').getBoundingClientRect(); const el = document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2); return el.closest('[data-act="play"]') !== null; });
+    t.expect(top, 'the Play button is on top');
+    await t.page.waitForTimeout(1500);
+    await t.shot('S4-03-title', { wait: false });
+    await t.page.locator('#screen [data-act="play"]').click();
+    await t.waitIdle();
+    t.equal((await t.state()).scene, 'map', 'and it works');
+  },
+});
+tests.push({
+  name: 'S4-03 reduced motion and the steam setting switch the motion off',
+  async run(t) {
+    await t.game('scene', 'title');
+    await t.waitIdle();
+    const vis = () => t.page.evaluate(() => ({ layer: getComputedStyle(document.querySelector('#screen .atmos-title')).display, steam: getComputedStyle(document.querySelector('#screen .at-st')).display }));
+    let v = await vis();
+    t.equal(v.layer, 'block', 'on by default');
+    t.equal(v.steam, 'block', 'steam too');
+    await t.game('act', 'save', { settings: { ...(await t.state()).settings, steam: false } });
+    await t.game('scene', 'title');
+    v = await vis();
+    t.equal(v.steam, 'none', 'steam off with the Ambient steam setting');
+    t.equal(v.layer, 'block', 'clouds stay');
+    await t.game('act', 'save', { settings: { ...(await t.state()).settings, steam: true, motion: 'reduced' } });
+    await t.game('scene', 'title');
+    v = await vis();
+    t.equal(v.layer, 'none', 'all of it off under reduced motion');
+  },
+});
+tests.push({
+  name: 'S4-03 reduced motion from the system turns it off too',
+  reducedMotion: true,
+  async run(t) {
+    await t.game('scene', 'title');
+    await t.waitIdle();
+    t.equal(await t.page.evaluate(() => getComputedStyle(document.querySelector('#screen .atmos-title')).display), 'none', 'the title layer is hidden');
+  },
+});
+tests.push({
+  name: 'S4-03 the map moves in each world: steam, mist, lamps, petals, glints, blossom',
+  async run(t) {
+    await t.game('act', 'progress', W1);
+    await t.game('scene', 'map');
+    await t.waitIdle();
+    const want = { 1: ['at-st'], 2: ['at-st', 'at-cl'], 3: ['at-lp', 'at-ff'], 4: ['at-pt'], 5: ['at-gl'], 6: ['at-pt', 'at-ff'] };
+    for (let w = 1; w <= 6; w++) {
+      const a = await atmos(t, `#screen .atmos-w${w}`);
+      t.expect(a && want[w].every((k) => a.kinds.includes(k)) && a.animated && a.inert, `world ${w}: ${a && a.kinds.join(' ')}`);
+    }
+    const tappable = await t.page.evaluate(() => { const n = document.querySelector('.node.current') || document.querySelector('.node'); const r = n.getBoundingClientRect(); const el = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return !!(el && el.closest('.node')); });
+    t.expect(tappable, 'the level nodes stay on top and tappable');
+    await t.page.waitForTimeout(800);
+    await t.shot('S4-03-map', { wait: false });
+  },
+});
+tests.push({
+  name: 'S4-03 the world-complete card and the results card have slow motion behind them',
+  async run(t) {
+    for (const w of [3, 4]) {
+      await t.game('scene', 'world', String(w));
+      await t.waitIdle();
+      const a = await atmos(t, '#modal .atmos');
+      t.expect(a && a.n > 0 && a.inert, `world ${w} complete has a layer of ${a && a.n}`);
+      const cardOnTop = await t.page.evaluate(() => { const c = document.querySelector('#modal .card').getBoundingClientRect(); const el = document.elementFromPoint(c.x + c.width / 2, c.y + 20); return !!el.closest('.card'); });
+      t.expect(cardOnTop, 'the card is above it');
+    }
+    await t.game('scene', 'world', '4');
+    await t.page.waitForTimeout(600);
+    await t.shot('S4-03-world-complete', { wait: false });
+    await t.game('scene', 'game', 'w4-02');
+    await t.game('scene', 'win');
+    await t.waitIdle();
+    const w = await atmos(t, '#modal .atmos');
+    t.expect(w && w.n > 0 && w.shown, 'the results card has it too');
+    await t.page.waitForTimeout(600);
+    await t.shot('S4-03-results', { wait: false });
+  },
+});
+tests.push({
+  name: 'S4-03 in a level, Central Avenue has fireflies, Oaklawn petals, the lakes glints, Garvan blossom, and Bathhouse Row none',
+  async run(t) {
+    const counts = {};
+    for (const [lv, w] of [['w1-02', 1], ['w3-02', 3], ['w4-02', 4], ['w5-02', 5], ['w6-02', 6]]) {
+      await t.game('newGame', { level: lv, seed: 6, tips: false });
+      await t.waitIdle();
+      await t.page.waitForTimeout(1600);
+      counts[w] = (await t.state()).motes;
+    }
+    t.equal(counts[1], 0, 'world 1: steam only');
+    for (const w of [3, 4, 5, 6]) t.expect(counts[w] > 0, `world ${w}: ${counts[w]} motes`);
+    await t.game('newGame', { level: 'w4-02', seed: 6, tips: false });
+    await t.waitIdle();
+    await t.page.waitForTimeout(1500);
+    await t.shot('S4-03-level-petals', { wait: false });
+  },
+});
+tests.push({
+  name: 'S4-03 reduced motion removes the level motes',
+  reducedMotion: true,
+  async run(t) {
+    await t.game('newGame', { level: 'w3-02', seed: 6, tips: false });
+    await t.waitIdle();
+    await t.page.waitForTimeout(1200);
+    t.equal((await t.state()).motes, 0, 'no motes');
+  },
+});

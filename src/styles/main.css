@@ -280,3 +280,25 @@ body.landscape .tip .della { position: absolute; left: 100%; bottom: 0; margin-l
 
 @media (prefers-reduced-motion: reduce) { .node.current, .hud-moves.low .hud-moves-n, .stars-big.burst::before, .sparkles i { animation: none; } }
 body.reduced *, body.reduced *::before, body.reduced *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+
+/* ---------- slow motion over the still screens (ui/atmos.js) ---------- */
+.atmos { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.atmos i { position: absolute; left: var(--x); top: var(--y); width: var(--sz); height: var(--sz); margin: calc(var(--sz) / -2) 0 0 calc(var(--sz) / -2);
+  animation: 1s linear infinite both; animation-duration: var(--d); animation-delay: var(--dl); will-change: transform, opacity; }
+.screen.title .title-wrap { z-index: 1; }
+.at-cl { height: calc(var(--sz) * .42) !important; border-radius: 50%; background: radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, .75), rgba(255, 255, 255, 0) 70%); animation-name: atm-cloud !important; }
+.atmos-w2 .at-cl { animation-name: atm-sway !important; animation-direction: alternate !important; animation-timing-function: ease-in-out !important; }
+.at-st { border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, .5), rgba(255, 255, 255, 0) 68%); animation-name: atm-steam !important; --rise: 30vh; }
+.at-lp { border-radius: 50%; background: radial-gradient(circle, rgba(255, 214, 130, .75), rgba(255, 190, 90, 0) 68%); animation-name: atm-flicker !important; }
+.at-pt { height: calc(var(--sz) * .62) !important; border-radius: 80% 20% 80% 20%; background: var(--petal, #F08DB0); opacity: .85; animation-name: atm-petal !important; }
+.at-ff { border-radius: 50%; background: radial-gradient(circle, #F4FFA8, rgba(200, 255, 120, 0) 70%); box-shadow: 0 0 10px 3px rgba(230, 255, 140, .55); animation-name: atm-firefly !important; }
+.at-gl { background: #FFFFFF; clip-path: polygon(50% 0, 58% 42%, 100% 50%, 58% 58%, 50% 100%, 42% 58%, 0 50%, 42% 42%); filter: drop-shadow(0 0 3px rgba(255, 255, 255, .9)); animation-name: atm-glint !important; }
+@keyframes atm-cloud { from { transform: translateX(-45vw); } to { transform: translateX(150vw); } }
+@keyframes atm-sway { from { transform: translateX(-36px); } to { transform: translateX(36px); } }
+@keyframes atm-steam { 0% { transform: translateY(0) scale(.6); opacity: 0; } 20% { opacity: .75; } 100% { transform: translateY(calc(var(--rise) * -1)) scale(1.6); opacity: 0; } }
+@keyframes atm-flicker { 0%, 100% { opacity: .55; } 8% { opacity: .3; } 12% { opacity: .65; } 30% { opacity: .5; } 36% { opacity: .22; } 41% { opacity: .62; } 70% { opacity: .48; } 85% { opacity: .6; } }
+@keyframes atm-petal { 0% { transform: translate(0, -6vh) rotate(0); opacity: 0; } 12% { opacity: .85; } 50% { transform: translate(var(--sw), 22vh) rotate(160deg); } 88% { opacity: .85; } 100% { transform: translate(calc(var(--sw) * -.6), 44vh) rotate(320deg); opacity: 0; } }
+@keyframes atm-firefly { 0%, 100% { transform: translate(0, 0); opacity: 0; } 20% { opacity: 1; } 50% { transform: translate(var(--sw), -16px); opacity: .3; } 75% { transform: translate(calc(var(--sw) * .4), 10px); opacity: 1; } }
+@keyframes atm-glint { 0%, 100% { transform: scale(0) rotate(0); opacity: 0; } 50% { transform: scale(1) rotate(45deg); opacity: .95; } }
+body.reduced .atmos, body.no-steam .at-st { display: none; }
+.modal .atmos { z-index: 0; }

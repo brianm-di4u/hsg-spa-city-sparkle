@@ -3,7 +3,11 @@
 import { VIEW, WORLD_LOOK } from './stage.js';
 import { hrand } from './player.js';
 
-const BD = { sprite: null, key: '', wisps: [] };
+const BD = { sprite: null, key: '', wisps: [], motes: [] };
+// One kind of mote per world drifts behind the board: fireflies on Central Avenue, redbud petals on Oaklawn,
+// glints on the lakes, blossom in Garvan Gardens. Worlds 1 and 2 keep their steam only.
+const MOTES = { 3: { kind: 'ff', n: 9 }, 4: { kind: 'pt', n: 10 }, 5: { kind: 'gl', n: 9 }, 6: { kind: 'pt', n: 8 } };
+const PETAL_TINT = { 4: 0xf08db0, 6: 0xffe3ec };
 
 function proceduralSky(world, W, H) {
   const look = WORLD_LOOK[world] || WORLD_LOOK[1];
@@ -85,5 +89,33 @@ export function drawAmbient() {
     s.width = s.height = size;
     s.alpha = 0.22 * Math.sin(ph * Math.PI);
   });
-  return N > 0;
+  return drawMotes(L, W, H, t) || N > 0;
 }
+
+function drawMotes(L, W, H, t) {
+  const spec = VIEW.reduced ? null : MOTES[VIEW.world];
+  const M = spec ? spec.n : 0;
+  while (BD.motes.length < M) { const s = new PIXI.Sprite(VIEW.tex.puff); s.anchor.set(0.5); L.addChild(s); BD.motes.push(s); }
+  BD.motes.forEach((s, j) => {
+    if (j >= M) { s.visible = false; return; }
+    s.visible = true;
+    if (spec.kind === 'ff') {
+      s.texture = VIEW.tex.puff; s.blendMode = 'add'; s.tint = 0xe8ff8a; s.rotation = 0;
+      s.position.set(W * hrand(j, 11) + Math.sin(t * 0.4 + j * 2) * 40, H * (0.3 + 0.65 * hrand(j, 12)) + Math.cos(t * 0.3 + j) * 30);
+      s.width = s.height = 26; s.alpha = 0.7 * Math.max(0, Math.sin(t * 0.9 + j * 1.7)) ** 2;
+    } else if (spec.kind === 'pt') {
+      const period = 11 + hrand(j, 13) * 7, ph = ((t / period) + hrand(j, 14)) % 1;
+      s.texture = VIEW.tex.puff; s.blendMode = 'normal'; s.tint = PETAL_TINT[VIEW.world]; s.rotation = t * 0.8 + j;
+      s.position.set(W * hrand(j, 15) + Math.sin(t * 0.7 + j) * 36 + ph * 70, H * (-0.05 + ph * 1.1));
+      s.width = 24; s.height = 15; s.alpha = 0.8 * Math.sin(ph * Math.PI) ** 0.5;
+    } else {
+      const period = 2.6 + hrand(j, 16) * 2.4, ph = ((t / period) + hrand(j, 17)) % 1, g = Math.sin(ph * Math.PI);
+      s.texture = VIEW.tex.glint || VIEW.tex.puff; s.blendMode = 'add'; s.tint = 0xffffff; s.rotation = 0.4;
+      s.position.set(W * (0.05 + 0.9 * hrand(j, 18)), H * (0.45 + 0.5 * hrand(j, 19)));
+      s.width = s.height = 26 * g; s.alpha = g;
+    }
+  });
+  return M > 0;
+}
+
+export const visibleMotes = () => BD.motes.filter((s) => s.visible && s.alpha > 0.02).length;

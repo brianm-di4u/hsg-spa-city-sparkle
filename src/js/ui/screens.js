@@ -7,6 +7,7 @@ import { goalIcon, PIECES, ICON_IMAGES } from '../view/vector-art.js';
 import { VIEW, WORLD_LOOK, requestRender } from '../view/stage.js';
 import { sfx, setMood, holdMusic, releaseMusic, AUDIO, applyLevels, unlockAudio } from '../audio.js';
 import { TIPS } from './tips.js';
+import { atmosphere } from './atmos.js';
 import { dailyLevel, dayKey, addDays, streakNow, cleanDaily } from './daily.js';
 import { ensurePack } from '../art.js';
 
@@ -90,7 +91,7 @@ export function showTitle() {
   const bg = paint(land ? 'title-l' : 'title-p') || (land && paint('bg1-l')) || paint('title-p');
   screenEl().className = 'screen title';
   screenEl().style.backgroundImage = bg ? `url(${bg})` : 'radial-gradient(ellipse at 50% 30%, #3E8C8C, #1F5F6B 55%, #123E47)';
-  screenEl().innerHTML = `
+  screenEl().innerHTML = `${atmosphere('title')}
     <div class="title-wrap">
       <h1 class="logo">Spa City<br>Sparkle<small>HOT SPRINGS · ARKANSAS</small></h1>
       <p class="tagline">Swap and match your way down Bathhouse Row and beyond.</p>
@@ -149,7 +150,7 @@ export function showMap(focusId) {
   for (let w = 6; w >= 1; w--) {
     const look = WORLD_LOOK[w], top = (6 - w) * MAP_WORLD_H;
     const img = paint(`map${w}`);
-    html += `<div class="map-world" style="position:absolute;left:0;right:0;top:${top - (w < 6 ? 140 : 0)}px;height:${MAP_WORLD_H + (w < 6 ? 140 : 0)}px;background:${img ? `url(${img}) center/cover` : `linear-gradient(180deg, ${look.sky[1]}, ${look.sky[0]})`}"></div>`;
+    html += `<div class="map-world" style="position:absolute;left:0;right:0;top:${top - (w < 6 ? 140 : 0)}px;height:${MAP_WORLD_H + (w < 6 ? 140 : 0)}px;background:${img ? `url(${img}) center/cover` : `linear-gradient(180deg, ${look.sky[1]}, ${look.sky[0]})`}">${atmosphere('world', w)}</div>`;
   }
   // path dots
   html += '<svg class="map-path" width="100%" height="100%" viewBox="0 0 100 ' + 6 * MAP_WORLD_H + '" preserveAspectRatio="none" aria-hidden="true"><polyline fill="none" stroke="#FFF6DE" stroke-opacity=".75" stroke-width="1.2" stroke-dasharray="1.5 2.5" vector-effect="non-scaling-stroke" style="stroke-width:5px" points="';
@@ -305,11 +306,11 @@ export function onWin(s, L) {
     <div class="actions">${next && !worldComplete ? '<button class="btn" data-act="next" data-focus>Next level</button>' : ''}${worldComplete ? '<button class="btn" data-act="world" data-focus>Postcard restored!</button>' : ''}<button class="btn alt small" data-act="replay">Replay</button><button class="btn alt small" data-act="map">Map</button></div>`, { label: 'Level cleared' });
   stars && [1, 2, 3].slice(0, stars).forEach((n) => setTimeout(() => sfx('star', n), 200 + n * 180));
   if (rewards.length) setTimeout(() => { if (UI.scene === 'win') sfx('earned'); }, 200 + (stars + 1) * 180 + 250);
-  celebrate(m);
+  celebrate(m, L.world);
   bindActs(m, { next: () => showIntro(next), replay: () => enterLevel(L), map: () => showMap(L.id), world: () => showWorldComplete(L.world) });
 }
 // Sparkles drift up around the results card; the score counts up from zero (instantly under reduced motion).
-function celebrate(m) {
+function celebrate(m, world = 1) {
   const fx = document.createElement('div');
   fx.className = 'sparkles'; fx.setAttribute('aria-hidden', 'true');
   let html = '';
@@ -319,6 +320,7 @@ function celebrate(m) {
   }
   fx.innerHTML = html;
   m.insertBefore(fx, m.firstChild);
+  m.insertAdjacentHTML('afterbegin', atmosphere('world', world)); // the world's own slow motion behind the card
   const el = m.querySelector('.result-score');
   if (!el || VIEW.reduced) return;
   const to = +el.dataset.to, t0 = performance.now();
@@ -363,6 +365,7 @@ export function showWorldComplete(w) {
     <div class="help-demo" style="aspect-ratio:3/2;${pc ? `background:url(${pc}) center/cover` : `background:linear-gradient(135deg, ${look.sky[0]}, ${look.sky[1]})`}"></div>
     <p class="fine" style="text-align:center">+1 of every booster</p>
     <div class="actions">${w < 6 ? '<button class="btn" data-act="map" data-focus>On to the next world</button>' : '<button class="btn" data-act="map" data-focus>Back to the map</button>'}</div>`, { label: `World ${w} complete` });
+  m.insertAdjacentHTML('afterbegin', atmosphere('world', w));
   bindActs(m, { map: () => showMap() });
 }
 
@@ -415,6 +418,7 @@ export function applySettings() {
   const sysReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   VIEW.reduced = st.motion === 'reduced' || (st.motion === 'auto' && sysReduced);
   VIEW.steam = st.steam;
+  document.body.classList.toggle('no-steam', !st.steam);
   VIEW.badges = !!st.badges;
   document.body.classList.toggle('reduced', VIEW.reduced);
   document.body.classList.toggle('badges', st.badges);
@@ -540,7 +544,7 @@ function onDailyWin(s, L) {
     <p class="daily-line" style="text-align:center"><b>${plural(o.streak != null ? o.streak : streakNow(d, L.dayKey), 'day')}</b> in a row · best ever ${n(SAVE.soakBest || total)}</p>
     <div class="actions"><button class="btn" data-act="again" data-focus>Play again</button><button class="btn alt small" data-act="back">Home</button></div>`, { label: 'Daily cleared' });
   stars && [1, 2, 3].slice(0, stars).forEach((k) => setTimeout(() => sfx('star', k), 200 + k * 180));
-  celebrate(m);
+  celebrate(m, L.world);
   bindActs(m, { again: () => startDaily(), back: () => showTitle() });
 }
 

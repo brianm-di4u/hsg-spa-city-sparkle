@@ -5,6 +5,7 @@ import { SAVE, arrangeSaveFixture, adoptCurrent } from './save.js';
 import { VIEW, requestRender } from '../view/stage.js';
 import { dailyLevel } from './daily.js';
 import { BOARD } from '../view/board-view.js';
+import { visibleMotes } from '../view/backdrop.js';
 import { boardFromAscii, cloneState, hashState } from '../engine/grid.js';
 import { legalMoves } from '../engine/moves.js';
 import { AUDIO, audioList, audioRender, audioState, cueRender, sfx } from '../audio.js';
@@ -34,7 +35,7 @@ function summary() {
     boosters: s ? { ...s.boosters } : {}, saveBoosters: { ...SAVE.boosters }, progress: JSON.parse(JSON.stringify(SAVE.progress)), settings: { ...SAVE.settings },
     lore: SAVE.lore.slice(), daily: JSON.parse(JSON.stringify(SAVE.daily)), soakBest: SAVE.soakBest, soakDay: SAVE.soakDay, tutorialSeen: SAVE.tutorialSeen.slice(), storageOk: SAVE.storageOk, current: SAVE.current ? SAVE.current.levelId : null,
     lastTimeline: PLAY.lastResult, anim: { playing: !!PLAY.anim, frozen: VIEW.frozenMs }, hash: s ? hashState(s) : null,
-    selected: PLAY.selected, cursor: PLAY.cursor, hint: BOARD.hint, hintArrow: hintArrow(), armed: PLAY.armed, art: VIEW.artSource,
+    selected: PLAY.selected, cursor: PLAY.cursor, hint: BOARD.hint, hintArrow: hintArrow(), motes: visibleMotes(), armed: PLAY.armed, art: VIEW.artSource,
     layout: { ...VIEW.layout }, reduced: VIEW.reduced, modal: UI.modalOpen, tip: UI.tipOpen, sounds: AUDIO.played.slice(-20),
     stats: s ? { ...s.stats } : null, levels: LEVELS.length,
   };
