@@ -16,16 +16,22 @@ export const VIEW = {
   layers: {}, tex: {}, artSource: 'vector', paintings: {}, artNames: new Set(), vectorWorld: 0, retired: [],
   world: 1, layout: { W: 0, H: 0, cell: 48, bx: 0, by: 0, cols: 9, rows: 9, portrait: true },
   anim: null, frozenMs: null, raf: 0, ambientT: 0, lastFrame: 0,
-  reduced: false, speed: 1, steam: true, badges: false, onFrame: null, idleFrames: 0, wantAmbient: false,
+  renderer: 'webgl', quality: 'auto', reduced: false, speed: 1, steam: true, badges: false, onFrame: null, idleFrames: 0, wantAmbient: false,
 };
 
-export async function initStage(el) {
+// Image quality: 'auto' draws at the screen's own pixel density (at most 2); 'low' draws at 1, a quarter of the pixels on a 2x phone.
+export const resolutionFor = (quality = VIEW.quality) => (quality === 'low' ? 1 : Math.min(window.devicePixelRatio || 1, 2));
+// The board is drawn with WebGL. Pixi tries the others in turn when it cannot make a context (WebGPU, then Canvas2D, which draws the same scene
+// without antialiasing), so a browser with hardware acceleration off still plays; only if every one fails does the caller show the card that says
+// what to turn on. VIEW.renderer is the one that was made. 'canvas' as the first choice is for tests and for ?renderer=canvas.
+export async function initStage(el, preference = 'webgl') {
   VIEW.el = el;
   const app = new PIXI.Application();
   await app.init({
-    preference: 'webgl', backgroundAlpha: 0, antialias: true, autoStart: false, sharedTicker: false,
-    resolution: Math.min(window.devicePixelRatio || 1, 2), autoDensity: true, width: el.clientWidth || 390, height: el.clientHeight || 844,
+    preference, backgroundAlpha: 0, antialias: true, autoStart: false, sharedTicker: false,
+    resolution: resolutionFor(), autoDensity: true, width: el.clientWidth || 390, height: el.clientHeight || 844,
   });
+  VIEW.renderer = app.renderer.name;
   app.ticker.stop();
   el.appendChild(app.canvas);
   app.canvas.setAttribute('aria-hidden', 'true');
@@ -88,7 +94,14 @@ export function computeLayout(cols, rows) {
 export function resizeStage() {
   if (!VIEW.app) return;
   const W = VIEW.el.clientWidth, H = VIEW.el.clientHeight;
-  VIEW.app.renderer.resize(W, H);
+  VIEW.app.renderer.resize(W, H, resolutionFor());
+}
+// Image quality changed (from Settings, or a save being read): redraw at the new density.
+export function setQuality(q) {
+  const next = q === 'low' ? 'low' : 'auto';
+  if (next === VIEW.quality) return;
+  VIEW.quality = next;
+  if (VIEW.app) { resizeStage(); requestRender(); }
 }
 
 // --- frame loop: runs only while something animates (or ambient steam is on) ---------------------

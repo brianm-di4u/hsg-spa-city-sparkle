@@ -217,3 +217,101 @@ tests.push({
     await t.shot('S1-06-hammer-aim');
   },
 });
+
+// --- S6-09: no WebGL still plays (Canvas2D), a card that says what to turn on when nothing draws, and an Image quality setting ---
+const noWebgl = () => { // a browser with hardware acceleration off: no WebGL context can be made
+  const get = HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext = function (type, ...a) { return /webgl/i.test(type) ? null : get.call(this, type, ...a); };
+};
+const noDrawing = () => { // nothing can draw at all (and the page's test hooks are stood in for, since the game never gets as far as making them)
+  HTMLCanvasElement.prototype.getContext = function () { return null; };
+  Object.defineProperty(window, '__game', { get: () => ({}), set() {}, configurable: true });
+};
+async function playOneMove(t) {
+  await t.game('newGame', { level: 'w1-01', seed: 3, tips: false });
+  await t.game('act', 'board', ['a b a c e', 'S2 a d e S1', 'd S3 b d c', 'e d c b e', 'b c e a d'], { moves: 10, goals: [{ type: 'stone', need: 6 }] });
+  await t.waitIdle();
+  const r = await t.game('act', 'swap', [1, 1], [1, 0]);
+  t.equal(r.valid, true, 'the swap is legal and is made');
+  await t.waitIdle(8000);
+  t.equal((await t.state()).movesUsed, 1, 'and it was spent');
+}
+tests.push({
+  name: 'S6-09 with WebGL turned off the game falls back to the Canvas2D renderer and plays',
+  initScript: noWebgl,
+  async run(t) {
+    await t.waitIdle();
+    t.equal((await t.state()).renderer, 'canvas', 'the board is drawn by the Canvas2D renderer');
+    t.equal(await t.page.locator('#screen h2', { hasText: 'WebGL needed' }).count(), 0, 'no WebGL card is shown');
+    await t.shot('S6-09-canvas-title');
+    await playOneMove(t);
+    await t.shot('S6-09-canvas-play');
+  },
+});
+tests.push({
+  name: 'S6-09 ?renderer=canvas asks for Canvas2D first, and with WebGL available the default is still WebGL',
+  viewports: ['desktop'],
+  url: 'index.html?renderer=canvas',
+  async run(t) {
+    await t.waitIdle();
+    t.equal((await t.state()).renderer, 'canvas', 'the query asks for the canvas renderer');
+    await t.page.goto(t.page.url().split('?')[0]);
+    await t.page.waitForFunction(() => window.__game && window.__game.getState().renderer, null, { timeout: 15000 });
+    t.equal((await t.state()).renderer, 'webgl', 'without the query a browser that has WebGL uses it');
+  },
+});
+tests.push({
+  name: 'S6-09 when nothing can draw the card says what to turn on, and has a Reload button',
+  viewports: ['desktop'],
+  initScript: noDrawing,
+  allowConsoleErrors: true,
+  async run(t) {
+    await t.page.waitForSelector('#screen h2');
+    const card = await t.page.locator('#screen .card').innerText();
+    t.expect(/WebGL needed/.test(card), 'the card is titled WebGL needed');
+    t.expect(/hardware acceleration/.test(card) && /reload/i.test(card), 'it says to turn on hardware acceleration and reload');
+    t.equal(await t.page.locator('#screen .card button').count(), 1, 'and has one Reload button');
+  },
+});
+const qualityState = (t) => t.page.evaluate(() => { const s = window.__game.getState(); return { quality: s.quality, resolution: s.resolution, steam: s.steamOn, saved: s.settings.quality }; });
+tests.push({
+  name: 'S6-09 Image quality: Auto draws at the screen density, Low at 1 with no ambient steam, kept across a reload',
+  async run(t) {
+    await t.waitIdle();
+    const dpr = await t.page.evaluate(() => Math.min(window.devicePixelRatio || 1, 2));
+    let q = await qualityState(t);
+    t.equal(q.quality, 'auto', 'a new player starts on Auto');
+    t.equal(q.resolution, dpr, `which draws at ${dpr}x`);
+    t.equal(q.steam, true, 'with the ambient steam on');
+    await t.game('scene', 'settings');
+    await t.page.waitForSelector('[data-quality="low"]');
+    t.equal(await t.page.locator('[data-quality="auto"]').getAttribute('aria-pressed'), 'true', 'Auto is shown as chosen');
+    await t.shot('S6-09-settings-quality');
+    await t.page.locator('[data-quality="low"]').click();
+    await t.page.waitForFunction(() => window.__game.getState().resolution === 1, null, { timeout: 5000 });
+    q = await qualityState(t);
+    t.expect(q.quality === 'low' && q.saved === 'low' && q.steam === false, `Low is saved, draws at 1 and turns the steam off (${JSON.stringify(q)})`);
+    t.equal((await t.state()).settings.steam, true, 'the Ambient steam switch itself is left as the player had it');
+    await t.reload();
+    q = await qualityState(t);
+    t.expect(q.quality === 'low' && q.resolution === 1 && q.steam === false, 'Low is still on after a reload, from the first frame');
+    await playOneMove(t);
+    await t.game('scene', 'settings');
+    await t.page.locator('[data-quality="auto"]').click();
+    await t.page.waitForFunction((d) => window.__game.getState().resolution === d, dpr, { timeout: 5000 });
+    t.equal((await qualityState(t)).steam, true, 'back on Auto the steam is back');
+  },
+});
+tests.push({
+  name: 'S6-09 a damaged quality value in a save draws at Auto, and an old save has Auto',
+  viewports: ['desktop'],
+  async run(t) {
+    const KEY = 'spa-city-sparkle:v1';
+    for (const saved of [{ volume: 0.5 }, { quality: 'ultra' }, { quality: 7 }, { quality: null }]) {
+      await t.page.evaluate(([k, st]) => localStorage.setItem(k, JSON.stringify({ v: 1, settings: st })), [KEY, saved]);
+      await t.reload();
+      const q = await qualityState(t);
+      t.expect(q.quality === 'auto' && q.steam === true, `${JSON.stringify(saved)} draws at Auto (${JSON.stringify(q)})`);
+    }
+  },
+});

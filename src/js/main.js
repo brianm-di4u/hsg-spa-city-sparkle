@@ -28,10 +28,11 @@ async function boot() {
   HOOK.artReady = () => !artBusy();
   if (params.get('art') === '0') disableArt();
   try {
-    await initStage(document.getElementById('stage'));
+    await initStage(document.getElementById('stage'), params.get('renderer') === 'canvas' ? 'canvas' : 'webgl');
   } catch (e) {
     VIEW.failed = true;
-    document.getElementById('screen').innerHTML = '<div class="card" style="margin:20vh auto;max-width:420px"><h2>WebGL needed</h2><p>Spa City Sparkle draws its board with WebGL, which this browser has turned off.</p></div>';
+    document.getElementById('screen').innerHTML = '<div class="card" style="margin:20vh auto;max-width:420px"><h2>WebGL needed</h2><p>Spa City Sparkle draws its board with WebGL, and this browser has it turned off. Turn on hardware acceleration in the browser settings, then reload this page.</p><div class="actions"><button class="btn" data-focus>Reload</button></div></div>';
+    document.querySelector('#screen [data-focus]').addEventListener('click', () => location.reload());
     return;
   }
   buildVectorTextures(1);

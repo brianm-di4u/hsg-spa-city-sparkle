@@ -4,7 +4,7 @@ import { PLAY, startLevel, showGameChrome, levelById, updateHud, goalLabel, layo
 import { SAVE, STAR_STEP, reliefFor, changeSettings, markTutorial, saveDaily, resetSave, saveUnreadable, startFreshSave, configureSaveEffects, reserveCurrent, adoptCurrent, saveTerminal } from './save.js';
 import { cloneState } from '../engine/game.js';
 import { goalIcon, PIECES, ICON_IMAGES } from '../view/vector-art.js';
-import { VIEW, WORLD_LOOK, requestRender } from '../view/stage.js';
+import { VIEW, WORLD_LOOK, requestRender, setQuality } from '../view/stage.js';
 import { sfx, setMood, holdMusic, releaseMusic, AUDIO, applyLevels, unlockAudio } from '../audio.js';
 import { TIPS } from './tips.js';
 import { atmosphere } from './atmos.js';
@@ -482,8 +482,9 @@ export function applySettings() {
   const sysReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   VIEW.reduced = st.motion === 'reduced' || (st.motion === 'auto' && sysReduced);
   VIEW.speed = SPEEDS.includes(st.animSpeed) ? st.animSpeed : 1;
-  VIEW.steam = st.steam;
-  document.body.classList.toggle('no-steam', !st.steam);
+  setQuality(st.quality);
+  VIEW.steam = st.steam && VIEW.quality !== 'low'; // Low image quality draws no ambient steam, whatever the Ambient steam switch says
+  document.body.classList.toggle('no-steam', !VIEW.steam);
   VIEW.badges = !!st.badges;
   document.body.classList.toggle('reduced', VIEW.reduced);
   document.body.classList.toggle('badges', st.badges);
@@ -501,6 +502,8 @@ export function showSettings(back) {
     <div class="set-row"><label for="vol-sfx">Effects volume</label><input id="vol-sfx" type="range" min="0" max="1" step="0.05" value="${st.sfxVolume}"></div>
     <div class="set-row"><label id="l-motion">Motion</label><div class="seg" role="group" aria-labelledby="l-motion">${['auto', 'reduced', 'full'].map((v) => `<button class="chip-btn" data-motion="${v}" aria-pressed="${st.motion === v}">${v[0].toUpperCase() + v.slice(1)}</button>`).join('')}</div></div>
     <div class="set-row"><label id="l-speed">Move speed</label><div class="seg" role="group" aria-labelledby="l-speed">${SPEEDS.map((v) => `<button class="chip-btn" data-speed="${v}" aria-pressed="${VIEW.speed === v}" aria-label="${v} times">${v}×</button>`).join('')}</div></div>
+    <div class="set-row"><label id="l-quality">Image quality</label><div class="seg" role="group" aria-labelledby="l-quality">${[['auto', 'Auto'], ['low', 'Low']].map(([v, name]) => `<button class="chip-btn" data-quality="${v}" aria-pressed="${VIEW.quality === v}">${name}</button>`).join('')}</div></div>
+    <p class="fine" id="quality-note">Low draws at a lower resolution and turns the ambient steam off, for a slow phone.</p>
     ${canVibrate() ? toggle('vibration', 'Vibration') : ''}
     ${toggle('steam', 'Ambient steam')}${toggle('hints', 'Hints after 5 s')}${toggle('badges', 'Colour-blind badges')}
     <div class="set-row"><label>Progress</label><button class="chip-btn" data-act="reset">Reset…</button></div>
@@ -513,6 +516,9 @@ export function showSettings(back) {
   }));
   m.querySelectorAll('[data-motion]').forEach((b) => b.addEventListener('click', () => {
     changeSettings({ motion: b.dataset.motion }); m.querySelectorAll('[data-motion]').forEach((x) => x.setAttribute('aria-pressed', st.motion === x.dataset.motion)); applySettings();
+  }));
+  m.querySelectorAll('[data-quality]').forEach((b) => b.addEventListener('click', () => {
+    changeSettings({ quality: b.dataset.quality }); applySettings(); m.querySelectorAll('[data-quality]').forEach((x) => x.setAttribute('aria-pressed', VIEW.quality === x.dataset.quality));
   }));
   m.querySelectorAll('[data-speed]').forEach((b) => b.addEventListener('click', () => {
     changeSettings({ animSpeed: +b.dataset.speed }); applySettings(); m.querySelectorAll('[data-speed]').forEach((x) => x.setAttribute('aria-pressed', VIEW.speed === +x.dataset.speed));
