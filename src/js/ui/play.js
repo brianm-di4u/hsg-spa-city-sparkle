@@ -463,14 +463,21 @@ function useArmed(i) {
   else if (name === 'line') doBooster('line', i, PLAY.lineDir);
 }
 
+// Number keys work the boosters in tray order; a focused button keeps its own Enter and Space (Tab to Hammer, press Enter).
+const BOOSTER_KEYS = { 1: 'hammer', 2: 'line', 3: 'shuffle', 4: 'plus5' };
+const onButton = () => { const el = document.activeElement; return !!(el && el !== document.body && el.matches && el.matches('button, a[href], input, select, textarea')); };
+
 export function handleKey(e) {
   if (!PLAY.active || !PLAY.state) return false;
   const s = PLAY.state;
+  if ((e.key === 'Enter' || e.key === ' ') && onButton()) return false;
+  if (BOOSTER_KEYS[e.key] && !e.ctrlKey && !e.metaKey && !e.altKey) { armBooster(BOOSTER_KEYS[e.key]); return true; }
   const dirs = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
   if (PLAY.anim && (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter')) { skipAnim(); return true; }
   if (PLAY.anim && !dirs[e.key]) return false;
   if (dirs[e.key]) {
     clearHint();
+    if (onButton()) document.activeElement.blur(); // the arrows move to the board: Enter then picks a piece again
     if (PLAY.cursor < 0) PLAY.cursor = PLAY.selected >= 0 ? PLAY.selected : firstCell(s);
     const [dx, dy] = dirs[e.key];
     const x = PLAY.cursor % s.w, y = (PLAY.cursor / s.w) | 0, nx = x + dx, ny = y + dy;

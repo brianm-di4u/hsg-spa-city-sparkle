@@ -119,3 +119,68 @@ tests.push({
   },
 });
 
+// --- P-N02: boosters and Pause work from the keyboard --------------------------------------------------------------
+tests.push({
+  name: 'P-N02 Enter and Space press the focused booster and the Pause button',
+  async run(t) {
+    await inLevel(t);
+    await t.page.focus('.booster[data-booster="hammer"]');
+    await t.page.keyboard.press('Enter');
+    t.equal((await t.state()).armed, 'hammer', 'Enter on the focused Hammer arms it');
+    await t.page.keyboard.press('Space');
+    t.equal((await t.state()).armed, null, 'Space on it again puts it down');
+    await t.page.focus('#btn-pause');
+    await t.page.keyboard.press('Space');
+    t.equal((await t.state()).scene, 'pause', 'Space on the focused Pause button opens Pause');
+    await t.page.locator('#modal [data-act="resume"]').click();
+    await t.page.focus('#btn-pause');
+    await t.page.keyboard.press('Enter');
+    t.equal((await t.state()).scene, 'pause', 'Enter on it does too');
+  },
+});
+tests.push({
+  name: 'P-N02 number keys 1 to 4 work the boosters and the arrows hand Enter back to the board',
+  async run(t) {
+    await inLevel(t);
+    await t.page.keyboard.press('1');
+    t.equal((await t.state()).armed, 'hammer', '1 arms the Hammer');
+    await t.page.keyboard.press('2');
+    t.equal((await t.state()).armed, 'line', '2 switches to the Line');
+    await t.page.keyboard.press('Escape');
+    t.equal((await t.state()).armed, null, 'Esc puts it down');
+    await t.page.keyboard.press('1');
+    await t.page.keyboard.press('ArrowRight');
+    await t.page.keyboard.press('Enter');
+    await t.waitIdle(8000);
+    const s = await t.state();
+    t.equal(s.boosters.hammer, 0, 'the Hammer was used on the cursor cell from the keyboard alone');
+    t.equal(s.armed, null, 'and is put down');
+    await t.page.keyboard.press('3');
+    await t.waitIdle(8000);
+    t.equal((await t.state()).boosters.shuffle, 0, '3 shuffles at once');
+    // a focused button keeps its Enter, but an arrow key moves on to the board: Enter then picks a piece
+    await t.page.focus('.booster[data-booster="line"]');
+    await t.page.keyboard.press('ArrowLeft');
+    await t.page.keyboard.press('Enter');
+    t.expect((await t.state()).selected >= 0, 'Enter picks the piece under the cursor after an arrow key');
+    t.equal(await t.page.evaluate(() => document.activeElement === document.body || !document.activeElement.classList.contains('booster')), true, 'the booster no longer holds focus');
+    if (t.viewport === 'desktop') {
+      const key = await t.page.locator('.booster[data-booster="line"] .b-key').evaluate((e) => ({ text: e.textContent, shown: getComputedStyle(e).display !== 'none' }));
+      t.equal(key.text + ':' + key.shown, '2:true', 'the Line button shows its key on a desktop');
+    }
+    await t.shot('P-N02-booster-keys');
+  },
+});
+tests.push({
+  name: 'P-N02 a modifier with a number is left to the browser, and the keys do nothing on a card',
+  viewports: ['desktop'],
+  async run(t) {
+    await inLevel(t);
+    await t.page.keyboard.press('Control+1');
+    t.equal((await t.state()).armed, null, 'Ctrl+1 arms nothing');
+    await t.page.locator('#btn-pause').click();
+    await t.page.keyboard.press('1');
+    t.equal((await t.state()).armed, null, 'a number key on the Paused card arms nothing');
+  },
+});
+
