@@ -130,3 +130,70 @@ tests.push({
     t.expect(built[3] - built[1] >= 6, 'a three-star results card builds a fuller phrase than a one-star one');
   },
 });
+
+// --- S1-11: a swap that does nothing says why, a few times a level --------------------------------------------------------------
+async function rulesBoard(t) {
+  await t.game('newGame', { level: 'w1-01', seed: 3, tips: false });
+  await t.game('act', 'board', RULES, NEVER);
+  await t.waitIdle();
+  await clearToast(t);
+}
+const CAUSES = [
+  ['no match', [0, 2], [1, 2], 'nomatch', /No match there/],
+  ['a padlock', [0, 0], [1, 0], 'blocked', /Padlocked/],
+  ['steam', [1, 3], [2, 3], 'blocked', /Steam/],
+  ['tufa', [0, 4], [1, 4], 'blocked', /Tufa/],
+  ['a bath token', [2, 4], [3, 4], 'blocked', /token/],
+];
+tests.push({
+  name: 'S1-11 each refused swap says why, in a line, and a good swap says nothing',
+  async run(t) {
+    for (const [what, a, b, reason, words] of CAUSES) {
+      await rulesBoard(t);
+      const r = await t.game('act', 'swap', a, b);
+      t.equal(r.reason, reason, `${what}: the engine refuses it as ${reason}`);
+      const text = await toastText(t);
+      t.expect(words.test(text), `${what}: the toast says why (${text})`);
+      t.expect(text.split(/\s+/).length <= 12, `${what}: the line is short (${text.split(/\s+/).length} words)`);
+      const box = await t.page.locator('#toast').boundingBox();
+      t.expect(box && box.x >= 0 && box.x + box.width <= t.vp.width, `${what}: the toast sits inside the screen`);
+      if (what === 'a padlock') await t.shot('S1-11-padlock-toast');
+    }
+    await t.game('newGame', { level: 'w1-01', seed: 3, tips: false });
+    await t.game('act', 'board', ['a b a c e', 'S2 a d e S1', 'd S3 b d c', 'e d c b e', 'b c e a d'], NEVER);
+    await t.waitIdle();
+    await clearToast(t);
+    t.equal((await t.game('act', 'swap', [1, 1], [1, 0])).valid, true, 'a swap that matches');
+    t.equal(await toastText(t), '', 'says nothing');
+  },
+});
+tests.push({
+  name: 'S1-11 a tap on a piece that cannot move says why',
+  async run(t) {
+    await rulesBoard(t);
+    const at = await geometry(t);
+    await pointer(t, at(0, 0));
+    await t.page.waitForFunction(() => /Padlocked/.test(document.querySelector('#toast.show')?.textContent || ''), null, { timeout: 5000 });
+    t.equal((await t.state()).selected, -1, 'the padlocked piece is not picked up');
+  },
+});
+tests.push({
+  name: 'S1-11 the explaining stops after three a level, waits between them, and starts again on the next level',
+  viewports: ['desktop'],
+  async run(t) {
+    await rulesBoard(t);
+    const say = async (a, b) => { await t.game('act', 'swap', a, b); await t.waitIdle(); const x = await toastText(t); await clearToast(t); return x; };
+    t.expect(/No match/.test(await say([0, 2], [1, 2])), 'the first refusal is explained');
+    t.equal(await say([0, 0], [1, 0]), '', 'a second one straight after is not (the gap between notes)');
+    // the gap is 2.5 s; waiting for it is waiting for a condition that depends only on the clock
+    const wait = () => t.page.waitForTimeout(2700);
+    await wait();
+    t.expect(/Padlocked/.test(await say([0, 0], [1, 0])), 'after the gap the second is explained');
+    await wait();
+    t.expect(/Steam/.test(await say([1, 3], [2, 3])), 'and the third');
+    await wait();
+    t.equal(await say([0, 2], [1, 2]), '', 'the fourth in a level is not: a veteran is not nagged');
+    await rulesBoard(t);
+    t.expect(/Padlocked/.test(await say([0, 0], [1, 0])), 'the next level explains again');
+  },
+});
