@@ -371,12 +371,12 @@ export function onLose(s, L) {
   const left = s.goals.filter((g) => !(g.type === 'moss' ? g.have === 0 : g.have >= g.need));
   const frac = s.goals.length ? s.goals.reduce((a, g) => a + (g.type === 'moss' ? (g.start ? 1 - g.have / g.start : 0) : g.type === 'score' ? Math.min(1, s.score / g.need) : Math.min(1, g.have / Math.max(1, g.need))), 0) / s.goals.length : 0;
   const remain = (g) => (g.type === 'moss' ? g.have : g.type === 'score' ? Math.max(0, g.need - s.score) : Math.max(0, g.need - g.have));
-  const pills = left.map((g) => `<span class="goal"><span class="ic" data-icon="${g.type === 'collect' ? g.kind : g.type === 'tokens' ? 'token' : g.type}"></span><span class="n">${g.type === 'score' ? remain(g).toLocaleString('en-US') : remain(g)}</span></span>`).join('');
+  const pills = left.map((g) => `<span class="goal"><span class="ic" data-icon="${g.type === 'collect' ? g.kind : g.type === 'tokens' ? 'token' : g.type}"></span><span class="n">${g.type === 'score' ? remain(g).toLocaleString('en-US') + ' pts' : remain(g)}</span></span>`).join('');
   const m = openModal(`
     <h2 style="text-align:center">${s.stuck ? 'No moves left' : 'Out of moves'}</h2>
     <p style="text-align:center">${s.stuck ? (s.moss.some(Boolean) ? 'The algae took over the board!' : 'No swaps are possible.') : frac >= 0.5 ? 'So close! Still to do:' : 'Still to do:'}</p>
     <div class="goals-big" aria-label="${esc(left.map((g) => goalLabel(g, remain(g))).join('; '))}">${pills}</div>
-    <div class="actions lose-actions">${plus ? `<button class="btn" data-act="plus" data-focus>+5 moves (${SAVE.boosters.plus5} left)</button>` : ''}<button class="btn${plus ? ' alt' : ''}" data-act="retry" ${plus ? '' : 'data-focus'}>Retry</button><button class="btn alt small" data-act="map">${daily ? 'Home' : 'Map'}</button></div>`, { label: 'Out of moves' });
+    <div class="actions lose-actions">${plus ? `<button class="btn" data-act="plus" data-focus>+5 moves (${SAVE.boosters.plus5} left)</button>` : ''}<button class="btn${plus ? ' alt' : ''}" data-act="retry" ${plus ? '' : 'data-focus'}>Retry</button><button class="btn alt small" data-act="map">${daily ? 'Home' : 'Map'}</button></div>${daily ? '' : '<p class="fine" style="text-align:center">Earn boosters with three-star wins and finished worlds.</p>'}`, { label: 'Out of moves' });
   fillIcons(m);
   bindActs(m, {
     plus: () => { closeModal(); setScene('game'); doBooster('plus5'); },

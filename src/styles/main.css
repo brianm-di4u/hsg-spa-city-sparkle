@@ -240,7 +240,7 @@ body.landscape #tray { left: 24px; bottom: 24px; width: 260px; flex-wrap: wrap; 
 .dc.today { box-shadow: 0 0 0 2px var(--cobalt); }
 .actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
 .actions .btn.small { padding: .4em .9em; }
-.lose-actions { flex-wrap: nowrap; }
+.lose-actions { flex-wrap: wrap; }
 .lose-actions .btn { padding-left: .9em; padding-right: .9em; white-space: nowrap; }
 .help-pieces { display: flex; justify-content: space-around; gap: 6px; margin: 4px 0 8px; }
 .help-pieces figure { margin: 0; display: flex; flex-direction: column; align-items: center; }
@@ -249,6 +249,7 @@ body.landscape #tray { left: 24px; bottom: 24px; width: 260px; flex-wrap: wrap; 
 .map-head { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; color: #FFF6DE; line-height: 1.15; text-align: center; }
 .map-title { font-family: var(--font-display); font-weight: 400; font-size: 1.05rem; line-height: 1.1; max-width: 100%; color: #FFF6DE; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
 .map-sub { font-size: .75rem; color: #E9D9AE; white-space: nowrap; }
+@media (max-width: 420px) { .lose-actions [data-act="plus"] { flex: 1 1 100%; } }
 @media (max-width: 599px) { .map-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } }
 .map-pc { flex: none; width: 64px; height: 44px; padding: 0; cursor: pointer; border-radius: 3px; border: 2px solid #FFF6DE; background: #6B7B70 center / cover; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
 .map-head { cursor: pointer; }
