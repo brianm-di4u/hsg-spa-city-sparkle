@@ -1,6 +1,7 @@
 // Council wave 3, batch A: saves, lifecycle and robustness (S2-08, S2-27, S6-11, P-N02, S3-03, S3-06, S4-02).
 // Nothing here depends on chance: every board is seeded and every wait is for a condition.
-
+import assert from 'node:assert/strict';
+import { createSaveStore, freshSave, STAR_STEP } from '../src/js/ui/save.js';
 const KEY = 'spa-city-sparkle:v1';
 const stored = (t) => t.page.evaluate((k) => JSON.parse(localStorage.getItem(k)), KEY);
 async function inLevel(t, level = 'w1-01', seed = 3) {
@@ -184,3 +185,189 @@ tests.push({
   },
 });
 
+// --- S3-03: stars pay out boosters ---------------------------------------------------------------------------------
+const order = ['hammer', 'line', 'shuffle', 'plus5'];
+const names = { hammer: 'Hammer', line: 'Line', shuffle: 'Shuffle', plus5: '+5 Moves' };
+const total = (b) => order.reduce((n, k) => n + b[k], 0);
+async function winAs(t, id) {
+  await t.game('newGame', { level: id, seed: 3, tips: false });
+  await t.waitIdle();
+  const before = (await t.state()).saveBoosters;
+  await t.game('scene', 'win', id);
+  await t.waitIdle();
+  return { before, after: (await t.state()).saveBoosters, sub: await t.page.locator('#modal .result-sub').innerText(), line: await t.page.locator('#modal .fine').last().innerText() };
+}
+tests.push({
+  name: 'S3-03 a booster for every 12 stars: crossing the line pays, not crossing and replays do not',
+  async run(t) {
+    t.equal(STAR_STEP, 12, 'one booster every 12 stars');
+    await t.game('act', 'progress', { 'w1-01': { stars: 3, best: 1 }, 'w1-02': { stars: 3, best: 1 } }, { hammer: 1, line: 1, shuffle: 1, plus5: 1 });
+    // 6 stars, a first three-star win on w1-05 makes 9: only the win's own booster
+    let r = await winAs(t, 'w1-05');
+    t.equal(total(r.after) - total(r.before), 1, 'below the line: the three-star booster only');
+    t.expect(/new booster: Hammer$/.test(r.sub), `card says (${r.sub})`);
+    // 10 stars, a first three-star win on w1-04 makes 13: that booster and a star booster
+    await t.game('act', 'progress', { 'w1-03': { stars: 1, best: 1 } }, { hammer: 4, line: 3, shuffle: 0, plus5: 2 });
+    r = await winAs(t, 'w1-04');
+    t.equal(total(r.after) - total(r.before), 2, 'crossing 12: the win booster and a star booster');
+    t.equal(r.after.plus5 - r.before.plus5, 1, 'w1-04 gives its own kind (+5 moves)');
+    t.equal(r.after.shuffle - r.before.shuffle, 1, 'the star booster is the kind held fewest (Shuffle: none in hand)');
+    t.expect(r.sub.includes('new booster: +5 Moves, Shuffle'), `card lists both (${r.sub})`);
+    t.equal(r.line, '13 stars · next booster at 24', 'the card says how far the next one is');
+    await t.shot('S3-03-star-booster-card');
+    // replaying a three-star level changes no star total and pays nothing
+    const stars = (await t.state()).progress;
+    r = await winAs(t, 'w1-04');
+    t.equal(total(r.after) - total(r.before), 0, 'a replay of a three-star level pays nothing');
+    t.equal(JSON.stringify((await t.state()).progress['w1-04']), JSON.stringify(stars['w1-04']), 'and keeps its record');
+  },
+});
+tests.push({
+  name: 'S3-03 the map says when the next booster comes',
+  async run(t) {
+    await t.game('act', 'progress', { 'w1-01': { stars: 2, best: 1 }, 'w1-02': { stars: 3, best: 1 } });
+    await t.game('scene', 'map');
+    await t.waitIdle();
+    const label = await t.page.locator('.map-top .totals').getAttribute('aria-label');
+    t.equal(label, '5 stars earned. Next booster at 12 stars', 'star total and the next booster');
+  },
+});
+tests.push({
+  name: 'S3-03 the star booster goes through the save store: same kind-held-fewest rule, once per crossing',
+  node: true,
+  run() {
+    const f = nodeFixture();
+    const s = f.tab();
+    const won = (levelId, stars) => ({ levelId, stars, score: 100, moves: 5, rewardType: 'hammer', worldLevels: ['w1-01'] });
+    for (const id of ['a1', 'a2', 'a3']) { s.reserve(); s.terminal(won(id, 3)); }
+    const after9 = f.read();
+    assert.deepEqual(after9.boosters, { hammer: 4, line: 1, shuffle: 1, plus5: 1 }, 'nine stars: only the win boosters');
+    s.reserve();
+    const rec = s.terminal(won('a4', 3));
+    assert.equal(rec.outcome.starReward, 'line', 'twelve stars: the first kind held fewest, in tray order');
+    assert.deepEqual(f.read().boosters, { hammer: 5, line: 2, shuffle: 1, plus5: 1 });
+    s.reserve();
+    const again = s.terminal(won('a4', 3));
+    assert.equal(again.outcome.starReward, null, 'no new stars, no booster');
+    assert.deepEqual(f.read().boosters, { hammer: 5, line: 2, shuffle: 1, plus5: 1 });
+  },
+});
+
+// --- S3-06: what each level has taken is kept, and can be copied ----------------------------------------------------
+tests.push({
+  name: 'S3-06 tries, wins and fewest moves are recorded per level and survive a reload',
+  async run(t) {
+    await inLevel(t, 'w1-01', 5);
+    await swapOnce(t);
+    await swapOnce(t);
+    await t.game('act', 'win');
+    await t.waitIdle();
+    let s = (await t.state()).levelStats;
+    t.equal(JSON.stringify(s['w1-01']), JSON.stringify({ tries: 1, wins: 1, bestMoves: 2 }), 'a win after two moves');
+    await inLevel(t, 'w1-01', 5);
+    await swapOnce(t);
+    await t.game('act', 'win');
+    await t.waitIdle();
+    s = (await t.state()).levelStats;
+    t.equal(JSON.stringify(s['w1-01']), JSON.stringify({ tries: 2, wins: 2, bestMoves: 1 }), 'a quicker win lowers the fewest moves');
+    await inLevel(t, 'w1-01', 5);
+    await swapOnce(t);
+    await swapOnce(t);
+    await swapOnce(t);
+    await t.game('act', 'win');
+    await t.waitIdle();
+    s = (await t.state()).levelStats;
+    t.equal(s['w1-01'].bestMoves, 1, 'a slower win never raises it');
+    await inLevel(t, 'w1-02', 5);
+    await t.game('act', 'lose');
+    await t.waitIdle();
+    s = (await t.state()).levelStats;
+    t.equal(JSON.stringify(s['w1-02']), JSON.stringify({ tries: 1, wins: 0, bestMoves: 0 }), 'a loss is a try and not a win');
+    await t.reload();
+    t.equal(JSON.stringify((await t.state()).levelStats), JSON.stringify(s), 'the record is still there after a reload');
+  },
+});
+tests.push({
+  name: 'S3-06 Copy my stats puts the record on the clipboard; Reset clears it',
+  initScript: () => {
+    window.__clip = null;
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: (x) => { window.__clip = x; return Promise.resolve(); } } });
+  },
+  async run(t) {
+    await inLevel(t, 'w1-01', 5);
+    await swapOnce(t);
+    await t.game('act', 'win');
+    await t.waitIdle();
+    await t.game('scene', 'settings');
+    await t.page.locator('#modal [data-act="copystats"]').click();
+    await t.page.waitForFunction(() => window.__clip !== null);
+    const copied = JSON.parse(await t.page.evaluate(() => window.__clip));
+    t.equal(copied.game, 'Spa City Sparkle', 'names the game');
+    t.equal(copied.levels['w1-01'].tries, 1, 'tries');
+    t.equal(copied.levels['w1-01'].wins, 1, 'wins');
+    t.equal(copied.levels['w1-01'].bestMoves, 1, 'fewest moves');
+    t.equal(copied.levels['w1-01'].moves, 16, 'the level\'s own move budget, for working out moves left');
+    t.expect('best' in copied.levels['w1-01'] && 'stars' in copied.levels['w1-01'], 'best score and stars come with it');
+    await t.page.waitForFunction(() => document.getElementById('toast').textContent === 'Stats copied');
+    await t.shot('S3-06-settings-copy');
+    await t.page.locator('#modal [data-act="reset"]').click();
+    await t.page.locator('#modal [data-act="erase"]').click();
+    await t.page.waitForFunction(() => document.querySelector('#modal [data-act="copystats"]'));
+    t.equal(JSON.stringify((await t.state()).levelStats), '{}', 'Reset clears the record with the progress');
+  },
+});
+tests.push({
+  name: 'S3-06 a save from before the record loads, and damaged records are dropped',
+  initScript: () => {
+    if (localStorage.getItem('spa-city-sparkle:v1') === null) {
+      localStorage.setItem('spa-city-sparkle:v1', JSON.stringify({ v: 1, progress: { 'w1-01': { stars: 2, best: 900 } }, boosters: { hammer: 2, line: 1, shuffle: 1, plus5: 1 }, stats: { 'w1-01': { tries: -3, wins: 'x', bestMoves: 2.5 }, 'w1-02': 'junk', 'w1-03': { tries: 4, wins: 1, bestMoves: 9 } } }));
+    }
+  },
+  async run(t) {
+    const s = await t.state();
+    t.equal(s.progress['w1-01'].stars, 2, 'progress is kept');
+    t.equal(s.saveBoosters.hammer, 2, 'boosters are kept');
+    t.equal(JSON.stringify(s.levelStats), JSON.stringify({ 'w1-01': { tries: 0, wins: 0, bestMoves: 0 }, 'w1-03': { tries: 4, wins: 1, bestMoves: 9 } }), 'junk entries dropped, good ones kept');
+  },
+});
+tests.push({
+  name: 'S3-06 a loss with a booster still owed is counted once, with the cost, in one write',
+  node: true,
+  run() {
+    const f = nodeFixture();
+    const s = f.tab();
+    s.reserve();
+    const p = s.prepare({ booster: 'hammer', localAvailable: 1 });
+    assert.equal(p.ok, true);
+    s.computed(p, cur(1), 'hammer');
+    const r = s.terminal(null, cur(2), 'w1-01');
+    assert.equal(r.ok, true);
+    const d = f.read();
+    assert.deepEqual(d.stats, { 'w1-01': { tries: 1, wins: 0, bestMoves: 0 } }, 'one try, no win');
+    assert.equal(d.boosters.hammer, 0, 'the cost went in the same write');
+    assert.equal(d.current, null, 'the Continue slot is cleared');
+    s.reserve();
+    s.terminal(null, cur(0), 'w1-01');
+    assert.equal(f.read().stats['w1-01'].tries, 2, 'the next loss adds one more');
+  },
+});
+tests.push({
+  name: 'S3-06 a win is tried once and a fresh profile starts empty',
+  node: true,
+  run() {
+    assert.deepEqual(freshSave().stats, {}, 'a fresh save has an empty record');
+    const f = nodeFixture();
+    const s = f.tab();
+    s.reserve();
+    s.terminal({ levelId: 'w1-01', stars: 1, score: 10, moves: 7, rewardType: 'hammer', worldLevels: ['w1-01'] });
+    assert.deepEqual(f.read().stats, { 'w1-01': { tries: 1, wins: 1, bestMoves: 7 } });
+  },
+});
+
+// --- fixtures for the node tests --------------------------------------------------------------------------------------
+const cur = (n = 0) => ({ levelId: 'w1-01', state: { v: 1, w: 2, h: 2, tile: [{ id: 1, k: 0 }, null, null, null], mask: [1, 1, 1, 1], rng: { spawn: 17, misc: 23 }, nextId: 2, movesUsed: n, movesLeft: 20 - n, score: n * 10, goals: [{ type: 'score', need: 100, have: n * 10 }], boosters: { hammer: Math.max(0, 1 - n), line: 1, shuffle: 1, plus5: 1 }, phase: 'play' } });
+function nodeFixture() {
+  let raw = JSON.stringify(freshSave()), n = 0;
+  const storage = { getItem: () => raw, setItem: (k, v) => { raw = v; } };
+  return { read: () => JSON.parse(raw), tab() { const s = createSaveStore({ storage: () => storage, newToken: () => 'fixture-' + (++n) }); s.load(); return s; } };
+}

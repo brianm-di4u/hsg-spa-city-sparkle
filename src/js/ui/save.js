@@ -10,15 +10,28 @@ const canonical = (v) => JSON.stringify(ordered(v));
 const token = () => globalThis.crypto?.randomUUID?.() || ('save-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2));
 const META = ['resourceId', 'resetEpoch', 'currentGeneration'];
 const TYPES = ['hammer', 'line', 'shuffle', 'plus5'];
+// Every STAR_STEP stars earned in the journey pay one booster, of the kind the player holds fewest of, on top of the
+// one a first three-star win gives. Was 15 in the first try (about 4 extra over a casual bot's pass of all 60 levels); 12 gives about 5.
+export const STAR_STEP = 12;
+const starsOf = (progress) => Object.values(progress).reduce((n, p) => n + (p && p.stars || 0), 0);
 const SETTING_KEYS = ['sound', 'music', 'ambience', 'volume', 'motion', 'steam', 'hints', 'badges'];
-export const freshSave = () => ({ v: 1, settings: { sound: true, music: true, ambience: true, volume: 0.5, motion: 'auto', steam: true, hints: true, badges: false }, progress: {}, boosters: { hammer: 1, line: 1, shuffle: 1, plus5: 1 }, lore: [], tutorialSeen: [], current: null, soakDay: null, soakBest: 0, daily: freshDaily() });
+export const freshSave = () => ({ v: 1, settings: { sound: true, music: true, ambience: true, volume: 0.5, motion: 'auto', steam: true, hints: true, badges: false }, progress: {}, stats: {}, boosters: { hammer: 1, line: 1, shuffle: 1, plus5: 1 }, lore: [], tutorialSeen: [], current: null, soakDay: null, soakBest: 0, daily: freshDaily() });
 // Settings as read from a save: the defaults under what the save holds. A save from before the Ambience switch gets it
 // where its Sound effects switch is, so a player who had the effects off hears no new sound.
 const readSettings = (saved) => { const st = { ...freshSave().settings, ...(saved || {}) }; if (!saved || typeof saved.ambience !== 'boolean') st.ambience = st.sound !== false; return st; };
+// Per-level play record for tuning: stats[levelId] = { tries: runs finished (won or lost), wins, bestMoves: fewest moves a win took }.
+// Small whole numbers; anything else in a damaged save is dropped.
+const int = (v) => (Number.isInteger(v) && v >= 0 ? v : 0);
+export const cleanStats = (v) => Object.fromEntries(Object.entries(obj(v) ? v : {}).filter(([, e]) => obj(e)).map(([id, e]) => [id, { tries: int(e.tries), wins: int(e.wins), bestMoves: int(e.bestMoves) }]));
+const tally = (next, id, won, moves) => {
+  const e = (next.stats[id] ||= { tries: 0, wins: 0, bestMoves: 0 });
+  e.tries++;
+  if (won) { e.wins++; if (moves > 0 && (!e.bestMoves || moves < e.bestMoves)) e.bestMoves = moves; }
+};
 const stamp = (d) => ({ resourceId: d.resourceId, resetEpoch: d.resetEpoch });
 const currentGroup = (d) => ({ ...stamp(d), currentGeneration: d.currentGeneration, current: clone(d.current ?? null) });
 const same = (a, b) => canonical(a) === canonical(b);
-const affectedReset = (d) => ({ ...currentGroup(d), progress: d.progress, boosters: d.boosters, lore: d.lore, tutorialSeen: d.tutorialSeen, soakBest: d.soakBest, soakDay: d.soakDay, daily: d.daily });
+const affectedReset = (d) => ({ ...currentGroup(d), progress: d.progress, stats: d.stats, boosters: d.boosters, lore: d.lore, tutorialSeen: d.tutorialSeen, soakBest: d.soakBest, soakDay: d.soakDay, daily: d.daily });
 
 export function createSaveStore({ storage = () => globalThis.localStorage, newToken = token, projection = freshSave() } = {}) {
   let last = null, active = null, serial = 0, conflictKey = null, unsavedNotice = false, corrupt = null; // corrupt: raw text of a stored value that cannot be read
@@ -43,7 +56,7 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
     const count = META.filter((k) => own(d, k)).length;
     if (count && (count !== META.length || META.some((k) => typeof d[k] !== 'string' || !d[k]))) throw Object.assign(Error('Partial save identity'), { raw });
     const data = { ...freshSave(), ...d, settings: readSettings(d.settings), boosters: { ...freshSave().boosters, ...(d.boosters || {}) } };
-    data.daily = cleanDaily(data.daily); if (!Number.isFinite(data.soakBest) || data.soakBest < 0) data.soakBest = 0; if (typeof data.soakDay !== 'string') data.soakDay = null;
+    data.stats = cleanStats(data.stats); data.daily = cleanDaily(data.daily); if (!Number.isFinite(data.soakBest) || data.soakBest < 0) data.soakBest = 0; if (typeof data.soakDay !== 'string') data.soakDay = null;
     delete data.storageOk;
     last = { kind: count ? 'identified' : 'legacy', raw, data, payload: d }; return clone(last);
   }
@@ -72,11 +85,18 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
     const beforeWorld = r.worldLevels.every((id) => !!next.progress[id]);
     const levelReward = r.stars === 3 && !(prev && prev.stars === 3) ? r.rewardType : null;
     if (levelReward) next.boosters[levelReward] = (next.boosters[levelReward] || 0) + 1;
+    const starsBefore = starsOf(next.progress);
+    next.stats = cleanStats(next.stats); tally(next, r.levelId, true, r.moves);
     next.progress[r.levelId] = { ...(prev || {}), stars: Math.max(r.stars, prev?.stars || 0), best: Math.max(r.score, prev?.best || 0) };
     if (r.loreId && !next.lore.includes(r.loreId)) next.lore.push(r.loreId);
+    let starReward = null;
+    if (Math.floor(starsOf(next.progress) / STAR_STEP) > Math.floor(starsBefore / STAR_STEP)) {
+      starReward = TYPES.reduce((low, k) => ((next.boosters[k] || 0) < (next.boosters[low] || 0) ? k : low), TYPES[0]);
+      next.boosters[starReward] = (next.boosters[starReward] || 0) + 1;
+    }
     const worldComplete = !beforeWorld && r.worldLevels.every((id) => !!next.progress[id]);
     if (worldComplete) for (const k of TYPES) next.boosters[k] = (next.boosters[k] || 0) + 1;
-    return { levelReward, worldComplete };
+    return { levelReward, starReward, worldComplete };
   }
   function globals(data) {
     const next = clone(data), wins = [], tutorials = [], outcomes = {}, clearedRuns = [];
@@ -134,13 +154,13 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
     const o = read(); if (!o) return fail('storage-unavailable');
     if (!observationMatches(o, p.observed) || !same(affectedReset(o.data), p.affected)) return conflict('reset-resource-changed');
     const next = identify(o, p.ids);
-    next.progress = {}; next.boosters = freshSave().boosters; next.lore = []; next.tutorialSeen = []; next.current = null; next.soakBest = 0; next.soakDay = null; next.daily = freshDaily();
+    next.progress = {}; next.stats = {}; next.boosters = freshSave().boosters; next.lore = []; next.tutorialSeen = []; next.current = null; next.soakBest = 0; next.soakDay = null; next.daily = freshDaily();
     next.resetEpoch = p.epoch; next.currentGeneration = p.generation;
     return publish(globals(next), () => {
       pending.reset = null; pending.reservation = null; pending.bundle = null; pending.wins.clear(); pending.tutorials.clear(); active = null; conflictKey = null;
     });
   }
-  function memoryBundle(b) { const built = globals(projection); if (b.mode !== 'soak') { built.next.current = b.terminal ? null : clone(b.current); if (b.terminal) built.next.currentGeneration = b.terminalGeneration; } if (b.result) built.outcomes[b.resultId] = resultInto(built.next, b.result); project(built.next, false); return { ...unsaved(), outcomes: built.outcomes }; }
+  function memoryBundle(b) { const built = globals(projection); if (b.mode !== 'soak') { built.next.current = b.terminal ? null : clone(b.current); if (b.terminal) built.next.currentGeneration = b.terminalGeneration; } if (b.lost) { built.next.stats = cleanStats(built.next.stats); tally(built.next, b.lost, false); } if (b.result) built.outcomes[b.resultId] = resultInto(built.next, b.result); project(built.next, false); return { ...unsaved(), outcomes: built.outcomes }; }
   function flushBundle() {
     const b = pending.bundle; if (!b || !b.ready) return { ok: true };
     if (pending.reset) { const r = flushReset(); if (!r.ok) return r; }
@@ -151,6 +171,7 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
     for (const k of TYPES) { const owed = [...b.debits.values()].filter((d) => d.type === k).reduce((n, d) => n + d.count, 0); if ((built.next.boosters[k] || 0) < owed) return conflict('booster-balance-changed'); built.next.boosters[k] -= owed; }
     if (b.result) built.outcomes[b.resultId] = resultInto(built.next, b.result);
     if (b.mode !== 'soak') { built.next.current = b.terminal ? null : clone(b.current); if (b.terminal) built.next.currentGeneration = b.terminalGeneration; }
+    if (b.lost) { built.next.stats = cleanStats(built.next.stats); tally(built.next, b.lost, false); }
     return publish(built, (saved) => { if (active?.run === b.run && b.mode !== 'soak') active.base = currentGroup(saved); pending.bundle = null; conflictKey = null; });
   }
   function flushGlobals() {
@@ -214,13 +235,13 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
       const b = pending.bundle; if (b.run !== grant.run) return conflict('pending-action-owner-changed');
       const first = !b.actionIds.has(action.id);
       if (first) { b.actionIds.add(action.id); if (debit) b.debits.set(action.id, { type: debit, count: 1 }); }
-      b.current = clone(current); b.ready = false; b.terminal = false; b.result = null; b.resultId = null;
+      b.current = clone(current); b.ready = false; b.terminal = false; b.result = null; b.resultId = null; b.lost = null;
       if (debit && first) projection.boosters[debit] = (projection.boosters[debit] || 0) - 1;
       return { ok: true };
     },
     settle() { if (pending.bundle) pending.bundle.ready = true; return flushBundle(); },
-    terminal(result = null, current = null) {
-      if (pending.bundle && (!result || pending.bundle.debits.size)) { const b = pending.bundle; if (current) b.current = clone(current); b.terminal = true; b.result = result && clone(result); b.resultId = result && (b.run + ':win:' + result.levelId + ':' + result.score + ':' + result.stars); b.ready = true; const receipt = flushBundle(); return { ...receipt, outcome: receipt.outcomes?.[b.resultId] }; }
+    terminal(result = null, current = null, lost = null) {
+      if (pending.bundle && (!result || pending.bundle.debits.size)) { const b = pending.bundle; if (current) b.current = clone(current); b.terminal = true; b.lost = lost; b.result = result && clone(result); b.resultId = result && (b.run + ':win:' + result.levelId + ':' + result.score + ':' + result.stars); b.ready = true; const receipt = flushBundle(); return { ...receipt, outcome: receipt.outcomes?.[b.resultId] }; }
       if (result && pending.bundle) pending.bundle = null; // No unpaid cost: new earned record can merge without clearing a foreign slot.
       let memoryReservation = false;
       if (pending.reservation) { const r = retryReservation(); if (!r.ok && r.reason !== 'storage-unavailable') return r; memoryReservation = !r.ok; }
@@ -237,6 +258,7 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
       const o = read(); if (!o) return unsaved();
       if (!same(currentGroup(o.data), active.base)) return conflict('terminal-clear-conflict');
       const next = clone(o.data); next.current = null; next.currentGeneration = newToken();
+      if (lost) { next.stats = cleanStats(next.stats); tally(next, lost, false); }
       return publish(globals(next), (saved) => { active.base = currentGroup(saved); });
     },
     tutorial(tip) { if (!active) { if (!projection.tutorialSeen.includes(tip)) projection.tutorialSeen.push(tip); return fail('no-resource-authority'); } const id = active.run + ':tip:' + tip; pending.tutorials.set(id, { tip, stamp: clone(active.stamp) }); return flushGlobals(); },
@@ -256,7 +278,7 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
       if (Object.keys(pending.settings).length) store.settings({}); else project(o.data, true);
       effects.onChange(); return { ok: true };
     },
-    reset() { let o = read(); if (!o && corrupt !== null && discardUnreadable().ok) o = read(); pending.reset = { observed: o || (last && clone(last)), affected: clone(affectedReset(o?.data || projection)), ids: birth(), epoch: newToken(), generation: newToken() }; const receipt = flushReset(); if (!receipt.ok && receipt.reason === 'storage-unavailable') project({ ...clone(projection), progress: {}, boosters: freshSave().boosters, lore: [], tutorialSeen: [], current: null, soakBest: 0, soakDay: null, daily: freshDaily(), resetEpoch: pending.reset.epoch, currentGeneration: pending.reset.generation }, false); return receipt; },
+    reset() { let o = read(); if (!o && corrupt !== null && discardUnreadable().ok) o = read(); pending.reset = { observed: o || (last && clone(last)), affected: clone(affectedReset(o?.data || projection)), ids: birth(), epoch: newToken(), generation: newToken() }; const receipt = flushReset(); if (!receipt.ok && receipt.reason === 'storage-unavailable') project({ ...clone(projection), progress: {}, stats: {}, boosters: freshSave().boosters, lore: [], tutorialSeen: [], current: null, soakBest: 0, soakDay: null, daily: freshDaily(), resetEpoch: pending.reset.epoch, currentGeneration: pending.reset.generation }, false); return receipt; },
     retryReset: flushReset,
     retry: flushBundle,
     // Separate installer: called only by explicit fixture arrangement, never by a normal mutation.
@@ -279,7 +301,7 @@ export const adoptCurrent = () => STORE.adopt();
 export const prepareSaveAction = (request) => STORE.prepare(request);
 export const recordComputedAction = (action, current, debit) => STORE.computed(action, current, debit);
 export const saveSettledAction = () => STORE.settle();
-export const saveTerminal = (result, current) => STORE.terminal(result, current);
+export const saveTerminal = (result, current, lost) => STORE.terminal(result, current, lost);
 export const markTutorial = (tip) => STORE.tutorial(tip);
 export const saveDaily = (result) => STORE.daily(result);
 export const resetSave = () => STORE.reset();

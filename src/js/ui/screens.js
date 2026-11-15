@@ -1,7 +1,7 @@
 // DOM screens and dialogs: title, world map, level intro, results, world complete, pause, help,
 // settings, about, Free Soak and tutorial tips. Game logic stays in play.js and the engine.
 import { PLAY, startLevel, showGameChrome, levelById, updateHud, goalLabel, layoutAndBuild, doBooster, showHint } from './play.js';
-import { SAVE, changeSettings, markTutorial, saveDaily, resetSave, saveUnreadable, startFreshSave, configureSaveEffects, reserveCurrent, adoptCurrent, saveTerminal } from './save.js';
+import { SAVE, STAR_STEP, changeSettings, markTutorial, saveDaily, resetSave, saveUnreadable, startFreshSave, configureSaveEffects, reserveCurrent, adoptCurrent, saveTerminal } from './save.js';
 import { cloneState } from '../engine/game.js';
 import { goalIcon, PIECES, ICON_IMAGES } from '../view/vector-art.js';
 import { VIEW, WORLD_LOOK, requestRender } from '../view/stage.js';
@@ -18,6 +18,7 @@ const modalEl = () => $('modal');
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 export const worldOf = (id) => +id.slice(1).split('-')[0];
 const totalStars = () => Object.values(SAVE.progress).reduce((a, p) => a + (p.stars || 0), 0);
+const nextBoosterAt = () => (Math.floor(totalStars() / STAR_STEP) + 1) * STAR_STEP;
 export function isUnlocked(level) {
   const idx = LEVELS.indexOf(level);
   return idx <= 0 || !!SAVE.progress[LEVELS[idx - 1].id];
@@ -145,7 +146,7 @@ export function showMap(focusId) {
   el.className = 'screen map';
   el.style.backgroundImage = '';
   const current = LEVELS.find((l) => !SAVE.progress[l.id] && isUnlocked(l)) || LEVELS[LEVELS.length - 1];
-  let html = `<div class="map-top"><button class="round" data-act="home" aria-label="Back to title">${ico('home')}</button><span class="map-pc" id="map-pc" aria-hidden="true"></span><div class="map-head"><b class="map-title" id="map-world"></b><span class="map-sub" id="map-sub"></span></div><span class="totals" aria-label="Stars earned">${ico('star')} ${totalStars()}</span><button class="round" data-act="help" aria-label="How to play">?</button><button class="round" data-act="settings" aria-label="Settings">${ico('gear')}</button></div>`;
+  let html = `<div class="map-top"><button class="round" data-act="home" aria-label="Back to title">${ico('home')}</button><span class="map-pc" id="map-pc" aria-hidden="true"></span><div class="map-head"><b class="map-title" id="map-world"></b><span class="map-sub" id="map-sub"></span></div><span class="totals" aria-label="${totalStars()} stars earned. Next booster at ${nextBoosterAt()} stars" title="Next booster at ${nextBoosterAt()} stars">${ico('star')} ${totalStars()}</span><button class="round" data-act="help" aria-label="How to play">?</button><button class="round" data-act="settings" aria-label="Settings">${ico('gear')}</button></div>`;
   html += `<div class="map-canvas" style="height:${6 * MAP_WORLD_H}px">`;
   for (let w = 6; w >= 1; w--) {
     const look = WORLD_LOOK[w], top = (6 - w) * MAP_WORLD_H;
@@ -175,6 +176,7 @@ export function showMap(focusId) {
     const w = Math.max(1, Math.min(6, 6 - Math.floor(mid / MAP_WORLD_H)));
     const look = WORLD_LOOK[w], done = LEVELS.filter((l) => l.world === w && SAVE.progress[l.id]).length;
     const a = document.getElementById('map-world'), b = document.getElementById('map-sub');
+
     const narrow = window.innerWidth < 600, label = narrow ? look.short : `World ${w}: ${look.name}`;
     if (a && a.textContent !== label) {
       a.textContent = label; a.title = `World ${w}: ${look.name}`; b.textContent = narrow ? `World ${w} · ${done}/10 restored` : `postcard ${done}/10 restored`;
@@ -288,10 +290,10 @@ export function onWin(s, L) {
   if (s.mode === 'soak') return;
   const stars = s.starsWon, total = s.score + (s.encoreScore || 0); // stars are counted on the score plus the Encore
   const card = loreFor(L);
-  const receipt = saveTerminal({ levelId: L.id, stars, score: total, loreId: card && card.id,
+  const receipt = saveTerminal({ levelId: L.id, stars, score: total, moves: s.movesUsed, loreId: card && card.id,
     rewardType: ['hammer', 'line', 'shuffle', 'plus5'][LEVELS.indexOf(L) % 4],
     worldLevels: LEVELS.filter((l) => l.world === L.world).map((l) => l.id) }, { levelId: L.id, state: cloneState(s) });
-  const rewards = receipt.outcome?.levelReward ? [BOOSTER_NAMES[receipt.outcome.levelReward]] : [];
+  const rewards = [receipt.outcome?.levelReward, receipt.outcome?.starReward].filter(Boolean).map((k) => BOOSTER_NAMES[k]);
   const worldComplete = !!receipt.outcome?.worldComplete;
   sfx('win'); setMood('results', L.world);
   const idx = LEVELS.indexOf(L), next = LEVELS[idx + 1];
@@ -302,6 +304,7 @@ export function onWin(s, L) {
     <div class="stars-big burst" aria-label="${stars} of 3 stars">${[1, 2, 3].map((n) => `<i class="${n <= stars ? 'on pop' : ''}" style="animation-delay:${n * 0.18}s"></i>`).join('')}</div>
     <p class="result-score" data-to="${total}">${total.toLocaleString('en-US')}</p>
     <p class="result-sub">${s.encoreScore ? `${s.score.toLocaleString('en-US')} + ${s.encoreScore.toLocaleString('en-US')} Encore bonus: stars count both` : 'points'}${rewards.length ? ` · new booster: ${rewards.join(', ')}` : ''}</p>
+    <p class="fine" style="text-align:center">${totalStars()} stars · next booster at ${nextBoosterAt()}</p>
     ${card ? `<div class="lore${paint('card-frame') ? ' framed' : ''}" style="${paint('card-frame') ? `--card-frame: url(${paint('card-frame')})` : ''}" aria-label="Lore card"><span class="tag">Real history</span><h4>${esc(card.title)}</h4><p>${esc(card.text)}</p><p class="src">Source: ${esc(card.source)}</p></div>` : ''}
     <div class="actions">${next && !worldComplete ? '<button class="btn" data-act="next" data-focus>Next level</button>' : ''}${worldComplete ? '<button class="btn" data-act="world" data-focus>Postcard restored!</button>' : ''}<button class="btn alt small" data-act="replay">Replay</button><button class="btn alt small" data-act="map">Map</button></div>`, { label: 'Level cleared' });
   stars && [1, 2, 3].slice(0, stars).forEach((n) => setTimeout(() => sfx('star', n), 200 + n * 180));
@@ -335,7 +338,7 @@ function celebrate(m, world = 1) {
 export function onLose(s, L) {
   const daily = L.mode === 'daily';
   if (daily) saveDaily({ key: L.dayKey, score: s.score, stars: 0, won: false });
-  else if (s.mode !== 'soak') saveTerminal(null, { levelId: L.id, state: cloneState(s) });
+  else if (s.mode !== 'soak') saveTerminal(null, { levelId: L.id, state: cloneState(s) }, L.id);
   closeTip();
   setScene('lose');
   sfx('lose'); setMood('results', L.world);
@@ -443,6 +446,7 @@ export function showSettings(back) {
     <div class="set-row"><label id="l-motion">Motion</label><div class="seg" role="group" aria-labelledby="l-motion">${['auto', 'reduced', 'full'].map((v) => `<button class="chip-btn" data-motion="${v}" aria-pressed="${st.motion === v}">${v[0].toUpperCase() + v.slice(1)}</button>`).join('')}</div></div>
     ${toggle('steam', 'Ambient steam')}${toggle('hints', 'Hints after 5 s')}${toggle('badges', 'Colour-blind badges')}
     <div class="set-row"><label>Progress</label><button class="chip-btn" data-act="reset">Reset…</button></div>
+    <div class="set-row"><label>Play record</label><button class="chip-btn" data-act="copystats">Copy my stats</button></div>
     ${SAVE.storageOk ? '' : saveUnreadable() ? (back === 'game' ? '<p class="fine">Your saved progress could not be read, so this visit is not being saved. Reset… starts fresh and keeps a copy of the old save.</p>' : '<div class="set-row" id="fresh-row"><label>Saved progress could not be read</label><button class="chip-btn" data-act="fresh">Start fresh (your old save is kept)</button></div>') : '<p class="fine">Storage is unavailable: progress lasts for this visit only.</p>'}
     <div class="actions"><button class="btn small" data-act="close" data-focus>Done</button></div>`, { label: 'Settings' });
   m.querySelectorAll('[data-toggle]').forEach((b) => b.addEventListener('click', () => {
@@ -456,8 +460,23 @@ export function showSettings(back) {
   bindActs(m, {
     fresh: () => { const r = startFreshSave(); toast(r.ok ? 'Started fresh. Your old save is kept.' : 'Could not start fresh. Storage is unavailable.'); if (r.ok) m.querySelector('#fresh-row')?.remove(); },
     reset: () => confirmReset(prev, back),
+    copystats: copyStats,
     close: () => (back === 'game' ? (setScene('game'), showPause()) : (closeModal(), prev === 'map' ? showMap() : setScene(prev === 'settings' ? 'title' : prev))),
   });
+}
+
+// What each level has taken so far, as JSON on the clipboard, so playtesters can send their numbers for tuning.
+function statsJson() {
+  const levels = {};
+  for (const l of LEVELS) {
+    const p = SAVE.progress[l.id], e = SAVE.stats[l.id];
+    if (p || e) levels[l.id] = { moves: l.moves, stars: p ? p.stars : 0, best: p ? p.best : 0, tries: e ? e.tries : 0, wins: e ? e.wins : 0, bestMoves: e ? e.bestMoves : 0 };
+  }
+  return JSON.stringify({ game: 'Spa City Sparkle', stats: 1, stars: totalStars(), levels });
+}
+function copyStats() {
+  const done = () => toast('Stats copied'), failed = () => toast('Could not copy your stats');
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(statsJson()).then(done, failed); else failed();
 }
 
 // Reset asks in the game's own card; Keep is the default and what Esc picks.
