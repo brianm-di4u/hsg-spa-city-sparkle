@@ -376,7 +376,15 @@ export function showPause() {
   const L = PLAY.level, daily = L.mode === 'daily';
   const m = openModal(`<h2>Paused</h2><p class="fine">${esc(L.name)}</p>
     <div class="menu" style="margin:12px auto 0"><button class="btn" data-act="resume" data-focus>Resume</button><button class="btn alt" data-act="restart">Restart level</button><button class="btn alt" data-act="help">How to play</button><button class="btn alt" data-act="settings">Settings</button><button class="btn alt" data-act="map">${daily ? 'Quit to title' : 'Save &amp; quit to map'}</button></div>`, { label: 'Paused' });
-  bindActs(m, { resume: () => { closeModal(); setScene('game'); releaseMusic('pause'); }, restart: () => (daily ? startDaily() : enterLevel(L)), help: () => showHelp('game'), settings: () => showSettings('game'), map: () => (daily ? showTitle() : showMap(L.id)) });
+  bindActs(m, { resume: () => { closeModal(); setScene('game'); releaseMusic('pause'); }, restart: () => (PLAY.state && PLAY.state.movesUsed > 0 ? confirmRestart(L, daily) : daily ? startDaily() : enterLevel(L)), help: () => showHelp('game'), settings: () => showSettings('game'), map: () => (daily ? showTitle() : showMap(L.id)) });
+}
+
+// Restart throws the board away, so once a move has been made it asks first; Keep playing is the default and what Esc picks.
+function confirmRestart(L, daily) {
+  const used = PLAY.state.movesUsed;
+  const m = openModal(`<h2>Restart this level?</h2><p>Your ${used === 1 ? 'move' : used + ' moves'} so far will be lost. Boosters you used stay spent.</p>
+    <div class="actions"><button class="btn small" data-act="back" data-focus>Keep playing</button><button class="btn alt small" data-act="restart">Restart</button></div>`, { label: 'Confirm restart' });
+  bindActs(m, { back: () => { setScene('game'); showPause(); }, restart: () => (daily ? startDaily() : enterLevel(L)) });
 }
 
 // --- help ----------------------------------------------------------------------------------------
@@ -549,7 +557,7 @@ function onDailyWin(s, L) {
 }
 
 export function wireUi() {
-  configureSaveEffects({ onChange: applySettings, onUnsaved: () => toast('Progress is not saved yet. Keep this tab open; storage is unavailable.', 4200), onConflict: (reason) => toast(reason.includes(' ') ? reason : 'Saved progress or booster balance changed in another tab. Choose Continue or a new level deliberately.', 3200) });
+  configureSaveEffects({ onChange: applySettings, onUnsaved: () => toast('Not saved: storage is unavailable. Keep this tab open.', 4200), onConflict: (reason) => toast(reason.includes(' ') ? reason : 'Your progress changed in another tab. Choose Continue or a new level.', 3200) });
   PLAY.ui = { onWin, onLose, toast, announce };
   $('btn-pause').addEventListener('click', () => { sfx('click'); showPause(); });
   window.addEventListener('resize', () => {

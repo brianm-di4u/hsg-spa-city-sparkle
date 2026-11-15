@@ -28,7 +28,7 @@ export const tests=[
 }},
 {name:'fixture failed onLose clear then actual plus5 keeps resumed board and visible unsaved notice',async run(t){
  await game(t);await t.page.evaluate(()=>{const old=Storage.prototype.setItem;window.__restoreFixtureStorage=()=>{Storage.prototype.setItem=old;};Storage.prototype.setItem=function(k,v){if(k==='spa-city-sparkle:v1')throw Error('fixture blocked settlement');return old.call(this,k,v);};});
- const legal=await t.game('act','legal');await t.game('act','swap',...legal[0]);await t.waitIdle(8000);t.equal(await t.page.locator('#toast').textContent(),'Progress is not saved yet. Keep this tab open; storage is unavailable.','actual existing toast shows unsaved status');
+ const legal=await t.game('act','legal');await t.game('act','swap',...legal[0]);await t.waitIdle(8000);t.equal(await t.page.locator('#toast').textContent(),'Not saved: storage is unavailable. Keep this tab open.','actual existing toast shows unsaved status');
  await t.game('scene','lose');await t.page.locator('[data-act="plus"]').click();await t.waitIdle(8000);const resumed=await t.game('engineState');t.equal(resumed.phase,'play','engine resumed by actual plus5 button');await t.page.evaluate(()=>window.__restoreFixtureStorage());const next=await t.game('act','legal');await t.game('act','swap',...next[0]);await t.waitIdle(8000);const after=await saved(t.page);t.equal(after.current.state,await t.game('engineState'),'resumed exact board persists instead of stale terminal clear');t.equal(after.boosters.plus5,0,'one plus5 debit');await t.shot('save-lose-plus5-recovered');
 }},
 
