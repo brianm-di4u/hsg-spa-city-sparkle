@@ -8,7 +8,7 @@ import { BOARD } from '../view/board-view.js';
 import { visibleMotes } from '../view/backdrop.js';
 import { boardFromAscii, cloneState, hashState } from '../engine/grid.js';
 import { legalMoves } from '../engine/moves.js';
-import { AUDIO, audioList, audioRender, audioState, cueRender, sfx } from '../audio.js';
+import { AUDIO, audioList, audioRender, audioState, cueRender, mixRender, sfx } from '../audio.js';
 
 export const HOOK = { seed: 1, artReady: () => true };
 
@@ -54,8 +54,9 @@ export function installHooks() {
     seed(n) { HOOK.seed = n; return n; },
     audioList: () => audioList(),
     audioState: () => audioState(),
-    audioRender: (name, seconds, wantWav) => audioRender(name, seconds, wantWav),
-    cueRender: (name, arg, opt, seconds, wantWav, seed) => cueRender(name, arg, opt, seconds, wantWav, seed),
+    audioRender: (name, seconds, wantWav, levels) => audioRender(name, seconds, wantWav, levels),
+    cueRender: (name, arg, opt, seconds, wantWav, seed, levels) => cueRender(name, arg, opt, seconds, wantWav, seed, levels),
+    mixRender: (spec) => mixRender(spec),
     cue: (name, arg, opt) => { sfx(name, arg, opt); return true; },
     getState: () => summary(),
     dailyPick(key) { const p = dailyLevel(LEVELS, key || todayKey()); return { key: p.key, from: p.from, name: p.level.name, moves: p.level.moves, seed: p.seed, stars: p.level.stars }; },

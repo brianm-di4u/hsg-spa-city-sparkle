@@ -122,3 +122,47 @@ tests.push({
     t.equal(seen.size, 6, 'six different ribbons');
   },
 });
+
+// --- CL-01: nothing may clip with every volume control at its maximum ---------------------------------------------------------
+// The busiest moment is the loudest piece at full intensity, a bed and the three loudest cues of one move struck 40 ms apart, measured at the speakers through the master volume and the limiter. Everything is seeded, so the answer is the same every run.
+const MAX = { volume: 1 };
+// The cues one move can sound together (play.js beatSounds and cuesAfterMove); the win, lose and world phrases come after the move, not with it.
+const ONE_MOVE = ['swap', 'bounce', 'match', 'combo', 'goal', 'crystal', 'stone', 'cascade', 'special', 'tufa', 'lock', 'moss', 'fog', 'token', 'spread', 'reshuffle', 'starline', 'low'];
+tests.push({
+  name: 'CL-01 the render hooks take a volume, and a louder volume renders louder',
+  viewports: ['desktop'],
+  async run(t) {
+    const [d, f] = [await t.game('cueRender', 'win', 3, {}, 3, false, 1), await t.game('cueRender', 'win', 3, {}, 3, false, 1, MAX)];
+    t.expect(f.peak > d.peak * 1.05, `win at the maximum volume peaks ${f.peak}, above its default ${d.peak}`);
+    const [m0, m1] = [await t.game('audioRender', 'garvan', 8, false), await t.game('audioRender', 'garvan', 8, false, MAX)];
+    t.expect(m1.peak > m0.peak * 1.05, `a piece at the maximum volume peaks ${m1.peak}, above its default ${m0.peak}`);
+    const before = await t.game('audioState');
+    t.equal(before.master === null || typeof before.master === 'number', true, 'the live audio is untouched');
+  },
+});
+tests.push({
+  name: 'CL-01 the busiest moment stays under 0.95 with every volume control at its maximum',
+  viewports: ['desktop'],
+  async run(t) {
+    const list = await t.game('audioList');
+    const pieces = [];
+    for (const name of list.music) pieces.push([name, (await t.game('audioRender', name, 12, false, MAX)).peak]);
+    pieces.sort((a, b) => b[1] - a[1]);
+    const loudest = pieces[0][0];
+    const loud = [];
+    for (const name of list.cues) loud.push([name, (await t.game('cueRender', name, 3, {}, 2.5, false, 1, MAX)).peak]);
+    loud.sort((a, b) => b[1] - a[1]);
+    const move = loud.filter(([n]) => ONE_MOVE.includes(n)), top = move.slice(0, 6).map(([n]) => n);
+    t.log(`loudest piece ${loudest} (${pieces[0][1]}); loudest cues of a move ${move.slice(0, 3).map(([n, p]) => `${n} ${p}`).join(', ')}; loudest of all ${loud[0][0]} ${loud[0][1]}`);
+    for (const cue of loud) t.expect(cue[1] < 0.95, `${cue[0]} alone at full volume peaks ${cue[1]}, under 0.95`);
+    const bed = list.ambience.includes('rain') ? 'rain' : list.ambience[0];
+    const peaksBy = [];
+    for (let n = 1; n <= top.length; n++) peaksBy.push((await t.game('mixRender', { piece: loudest, bed, seconds: 4, levels: MAX, cues: top.slice(0, n).map((name, k) => ({ name, arg: 3, at: 1 + k * 0.04, seed: 1 + k })) })).peak);
+    t.log(`peak with 1 to ${top.length} of those cues: ${peaksBy.join(', ')}`);
+    const mix = await t.game('mixRender', { piece: loudest, bed, seconds: 6, levels: MAX, cues: top.slice(0, 3).map((name, k) => ({ name, arg: 3, at: 1 + k * 0.04, seed: 1 + k })) });
+    t.log(`busiest moment: peak ${mix.peak} (${mix.peakDb} dBFS)`);
+    t.expect(mix.peak < 0.95, `the piece, a bed and the three loudest cues of one move together peak ${mix.peak}, under 0.95`);
+    const solo = await t.game('mixRender', { piece: loudest, bed, seconds: 6, levels: MAX, cues: [{ name: loud[0][0], arg: 3, at: 2, seed: 1 }] });
+    t.expect(solo.peak < 0.95, `the loudest cue of all (${loud[0][0]}) over the piece and bed peaks ${solo.peak}, under 0.95`);
+  },
+});

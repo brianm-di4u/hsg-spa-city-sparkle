@@ -49,7 +49,7 @@ const jitter = (rnd) => ({ f: 2 ** ((rnd() < 0.5 ? -1 : 1) * (10 + 20 * rnd()) /
 const seeded = (seed) => { let x = seed >>> 0; return () => { x = (x + 0x6D2B79F5) >>> 0; let t = x; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
 const pick = (xs) => xs[(CUE.rnd() * xs.length) | 0];
 function tone(freq, dur, { type = 'sine', gain = 0.2, at = 0, attack = 0.005, slide = 0 } = {}) {
-  const ctx = CUE.ctx, t = ctx.currentTime + at, f = freq * CUE.j.f, v = gain * CUE.j.g * CUE.trim;
+  const ctx = CUE.ctx, t = ctx.currentTime + CUE.at + at, f = freq * CUE.j.f, v = gain * CUE.j.g * CUE.trim;
   const o = ctx.createOscillator(), g = ctx.createGain();
   o.type = type; o.frequency.setValueAtTime(f, t);
   if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f * slide), t + dur);
@@ -58,7 +58,7 @@ function tone(freq, dur, { type = 'sine', gain = 0.2, at = 0, attack = 0.005, sl
 }
 // Every noise burst fills its own buffer from this cue's draw plus a counter, so no two swooshes are sample-identical.
 function noise(dur, { gain = 0.15, at = 0, freq = 1200, q = 0.8, type = 'bandpass', sweep = 0 } = {}) {
-  const ctx = CUE.ctx, t = ctx.currentTime + at, fq = freq * CUE.j.f;
+  const ctx = CUE.ctx, t = ctx.currentTime + CUE.at + at, fq = freq * CUE.j.f;
   const n = Math.floor(ctx.sampleRate * dur), buf = ctx.createBuffer(1, n, ctx.sampleRate), d = buf.getChannelData(0);
   let seed = (Math.floor(CUE.j.o * 0x3fffffff) + (CUE.n = (CUE.n || 0) + 1) * 7919) & 0x7fffffff;
   for (let i = 0; i < n; i++) { seed = (seed * 1103515245 + 12345) & 0x7fffffff; d[i] = (seed / 0x3fffffff - 1) * (1 - i / n); }
@@ -78,7 +78,7 @@ const CUE_TRIM = { select: 25, swap: 23, bounce: 24, match: 10.6, cascade: 13.6,
 export const CUE_NAMES = Object.keys(CUE_TRIM);
 const pannerFor = (ctx, dest, pan) => { if (!pan || !ctx.createStereoPanner) return dest; const p = ctx.createStereoPanner(); p.pan.value = Math.max(-0.7, Math.min(0.7, pan)); p.connect(dest); return p; };
 
-// The cues. arg climbs a chain, a count or a star; opt.pan puts it where it happened (-0.7 left to 0.7 right) and opt.size is how many pieces cleared.
+// The cues. arg climbs a chain, a count or a star; opt.pan puts it where it happened (-0.7 left to 0.7 right), opt.size is how many pieces cleared and opt.at delays it by that many seconds and opt.level (default 1) scales it.
 function buildCue(name, arg, opt) {
   const size = opt.size || 0;
   switch (name) {
@@ -133,7 +133,7 @@ function buildCue(name, arg, opt) {
 function runCue(name, arg, opt, ctx, dest, rnd) {
   if (!(name in CUE_TRIM)) return;
   const prev = CUE;
-  CUE = { ctx, dest: pannerFor(ctx, dest, opt.pan), rnd, j: jitter(rnd), trim: CUE_TRIM[name] };
+  CUE = { ctx, dest: pannerFor(ctx, dest, opt.pan), rnd, j: jitter(rnd), trim: CUE_TRIM[name] * (opt.level ?? 1), at: opt.at || 0 };
   try { buildCue(name, arg, opt); } finally { CUE = prev; }
 }
 // The big cues pull the music down for a moment so they are heard over it.
@@ -198,11 +198,14 @@ export function audioState() {
   return { ctx: AUDIO.ctx ? AUDIO.ctx.state : null, master: AUDIO.master ? +AUDIO.master.gain.value.toFixed(3) : null, mood: AUDIO.mood, held: !!(k && k.held), holds: [...AUDIO.holds], music: k ? +k.buses.music.gain.value.toFixed(3) : null, ambience: k ? +k.buses.ambience.gain.value.toFixed(3) : null, intensity: k ? k.intensity : null, playing: k ? { music: !!k.music.score, ambience: !!k.amb.scene } : null };
 }
 export const audioList = () => ({ music: Object.keys(SCORES), ambience: Object.keys(SCENES), cues: CUE_NAMES });
-export function audioRender(name, seconds = 30, wantWav = false) {
+// What a render is heard through: the master volume (the shipped default unless a test asks for another, for example the slider at
+// its maximum) and the limiter. Every hook below builds it the same way, so a measurement is what the speakers get.
+const offlineMaster = (ctx, out, lv = {}) => { const master = ctx.createGain(); master.gain.value = safeVolume(lv.volume ?? 0.5) * MASTER_SCALE; master.connect(limiter(ctx)).connect(out); return master; };
+export function audioRender(name, seconds = 30, wantWav = false, levels = {}) {
   const score = SCORES[name], scene = SCENES[name];
   if (!score && !scene) return Promise.reject(new Error('unknown audio: ' + name));
   return measureAudio((ctx, out) => {
-    const master = ctx.createGain(); master.gain.value = 0.5 * MASTER_SCALE; master.connect(limiter(ctx)).connect(out);
+    const master = offlineMaster(ctx, out, levels);
     const kit = makeAudioKit(ctx, master, { seed: 0x5EED1 });
     kit.music.level(MUSIC_LEVEL); kit.amb.level(AMBIENCE_LEVEL);
     if (score) kit.music.play(score, { fade: 0.05, at: 0 }); else kit.amb.play(scene, { fade: 0.05, at: 0 });
@@ -212,10 +215,24 @@ export function audioRender(name, seconds = 30, wantWav = false) {
 }
 // One cue on its own offline context at the shipping level (default volume, master and limiter). seed picks the random
 // variation, so a test can render the same cue twice with different draws. Never touches the live audio.
-export function cueRender(name, arg = 0, opt = {}, seconds = 2.5, wantWav = false, seed = 1) {
+export function cueRender(name, arg = 0, opt = {}, seconds = 2.5, wantWav = false, seed = 1, levels = {}) {
   if (!CUE_NAMES.includes(name)) return Promise.reject(new Error('unknown cue: ' + name));
   return measureAudio((ctx, out) => {
-    const master = ctx.createGain(); master.gain.value = 0.5 * MASTER_SCALE; master.connect(limiter(ctx)).connect(out);
-    runCue(name, arg, opt, ctx, master, seeded(seed));
+    runCue(name, arg, opt, ctx, offlineMaster(ctx, out, levels), seeded(seed));
   }, seconds, { wav: wantWav });
+}
+// The busiest moment: a piece at full intensity, a bed and a run of cues struck together, as one render. spec = { piece, bed, cues: [{ name, arg, opt, at, seed }],
+// seconds, levels }. The big cues' ducking of the music is left out, which is the louder, safer case to measure.
+export function mixRender(spec) {
+  const { piece, bed, cues = [], seconds = 6, levels = {} } = spec;
+  return measureAudio((ctx, out) => {
+    const master = offlineMaster(ctx, out, levels), sfxBus = ctx.createGain();
+    sfxBus.gain.value = 1; sfxBus.connect(master);
+    const kit = makeAudioKit(ctx, master, { seed: 0x5EED1 });
+    kit.music.level(MUSIC_LEVEL); kit.amb.level(AMBIENCE_LEVEL); kit.music.intensity(1);
+    if (piece) kit.music.play(SCORES[piece], { fade: 0.05, at: 0 });
+    if (bed) kit.amb.play(SCENES[bed], { fade: 0.05, at: 0 });
+    kit.scheduleUntil(seconds);
+    for (const c of cues) runCue(c.name, c.arg || 0, { ...(c.opt || {}), at: c.at || 0 }, ctx, sfxBus, seeded(c.seed || 1));
+  }, seconds, {});
 }
