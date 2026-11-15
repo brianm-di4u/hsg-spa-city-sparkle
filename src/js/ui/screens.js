@@ -128,7 +128,8 @@ function bindActs(root, acts) {
 // --- world map -----------------------------------------------------------------------------------
 // Each world's map panel keeps the painting's portrait shape: wider screens get taller sections.
 let MAP_WORLD_H = 820;
-const mapWidth = () => Math.min(820, window.innerWidth);
+const MAP_MAX_W = 1000; // was 820: a wide window keeps more of the painted map and less of the blur
+const mapWidth = () => Math.min(MAP_MAX_W, window.innerWidth);
 export function nodePos(level) {
   const j = level.n - 1, w = level.world;
   const step = (MAP_WORLD_H - 230) / 9;
@@ -160,7 +161,7 @@ export function showMap(focusId, opts = {}) {
   for (const l of LEVELS) {
     const [x, y] = nodePos(l), pr = SAVE.progress[l.id], open = isUnlocked(l);
     const stars = pr ? ico('star').repeat(pr.stars) + ico('star', 'off').repeat(3 - pr.stars) : '';
-    html += `<button class="node${open ? '' : ' locked'}${l === current ? ' current' : ''}" style="left:${x}%;top:${y}px" data-level="${l.id}" ${open ? '' : 'aria-disabled="true"'} aria-label="Level ${l.world}-${l.n}, ${esc(l.name)}${pr ? `, ${pr.stars} stars` : open ? ', not played' : ', locked'}">${l.n}${stars ? `<span class="stars">${stars}</span>` : ''}</button>`;
+    html += `<button class="node${open ? '' : ' locked'}${l === current ? ' current' : ''}" style="left:${x}%;top:${y}px" data-level="${l.id}" data-w="${l.world}" ${open ? '' : 'aria-disabled="true"'} aria-label="Level ${l.world}-${l.n}, ${esc(l.name)}${pr ? `, ${pr.stars} stars` : open ? ', not played' : ', locked'}">${l.n}<span class="nname" aria-hidden="true">${esc(l.name)}</span>${stars ? `<span class="stars">${stars}</span>` : ''}</button>`;
   }
   html += '</div>';
   el.innerHTML = html;

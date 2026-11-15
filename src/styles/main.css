@@ -81,7 +81,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* world map */
 .screen.map { background: radial-gradient(ellipse at 50% 40%, #3F6E4B, #1B3B2C 70%, #10261C); overflow-y: auto; overflow-x: hidden; touch-action: pan-y; }
 .map-world { -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 140px); mask-image: linear-gradient(to bottom, transparent 0, #000 140px); }
-.map-canvas { position: relative; z-index: 1; margin: 0 auto; width: min(820px, 100vw); box-shadow: 0 0 60px rgba(0,0,0,.5); }
+.map-canvas { position: relative; z-index: 1; margin: 0 auto; width: min(1000px, 100vw); box-shadow: 0 0 60px rgba(0,0,0,.5); }
 .screen.map::before { content: ""; position: fixed; inset: -40px; z-index: 0; background: var(--map-bg, none) center / cover no-repeat; filter: blur(22px) brightness(.5) saturate(1.1); pointer-events: none; }
 .map-path { position: absolute; inset: 0; pointer-events: none; }
 .node { position: absolute; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; border: 3px solid #FFF6DE; font-family: var(--font-display); font-size: 1.05rem;
@@ -89,6 +89,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .node.locked { filter: grayscale(.9) brightness(.85); cursor: default; }
 .node.current { animation: bob 1.6s ease-in-out infinite; box-shadow: 0 0 0 5px rgba(255,246,222,.55), 0 3px 0 #6A420E, 0 8px 16px rgba(0,0,0,.45); }
 .node .stars { position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: .72rem; line-height: 1; padding: 2px 5px 3px; border-radius: 8px; background: #3A2208; color: #FFD54A; letter-spacing: 0; }
+/* each world's stops have their own look: brass coin, tufa stone, neon disc, ballpark pennant, dock cleat, azalea bud */
+.node[data-w="2"] { color: #2E2A22; border-color: #F1EADB; border-radius: 46% 54% 50% 50% / 54% 46% 54% 46%; background-color: #BDB39C; background-image: radial-gradient(circle at 35% 30%, #E4DCC8, #B9AE96 55%, #8C8269); box-shadow: 0 3px 0 #4F4837, 0 6px 12px rgba(0,0,0,.4); }
+.node[data-w="3"] { color: #FFE9F3; border-color: #FF8FC4; background-color: #2B1D4A; background-image: radial-gradient(circle at 50% 40%, #4B2C7A, #2B1D4A 65%, #170F2C); text-shadow: 0 0 6px #FF6FB5; box-shadow: 0 0 0 2px #1A1230, 0 0 14px #FF4FA3, 0 6px 12px rgba(0,0,0,.45); }
+.node[data-w="4"] { color: #FFF6E0; border-color: #FFF6E0; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background-color: #B8402E; background-image: radial-gradient(circle at 35% 30%, #E8745C, #B8402E 60%, #7E2518); box-shadow: 0 3px 0 #561508, 0 6px 12px rgba(0,0,0,.4); }
+.node[data-w="5"] { color: #F6F3EC; border-color: #D8E4EC; border-radius: 22%; background-color: #4B6E86; background-image: radial-gradient(circle at 35% 30%, #86A9BF, #4B6E86 60%, #2D4759); box-shadow: 0 3px 0 #1B2E3B, 0 6px 12px rgba(0,0,0,.4); }
+.node[data-w="6"] { color: #5A1030; border-color: #FFF0F5; background-color: #F2A0C0; background-image: radial-gradient(circle at 35% 30%, #FFD7E6, #F08DB4 55%, #C4608A); box-shadow: 0 3px 0 #7C2B50, 0 6px 12px rgba(0,0,0,.4); }
+.node .nname { display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; padding: 3px 9px 4px; border-radius: 10px; background: #3A2208; color: #FFF6DE; font-family: var(--font-ui); font-size: .8rem; line-height: 1.1; box-shadow: inset 0 0 0 1.5px #D9A23A; pointer-events: none; text-shadow: none; }
+.node.current .nname, .node:not(.locked):hover .nname, .node:not(.locked):focus-visible .nname { display: block; }
+.node:not(.locked):hover, .node:focus-visible { z-index: 2; }
 @keyframes bob { 50% { transform: translateY(-5px); } }
 .world-banner { position: absolute; left: 50%; transform: translateX(-50%); width: min(92%, 420px); display: flex; align-items: center; gap: 12px; padding: 10px 14px; }
 .world-banner .pc { width: 84px; height: 56px; flex: none; border-radius: 4px; background: #9AA center/cover; box-shadow: 0 2px 6px rgba(0,0,0,.35); border: 3px solid #FFF; }
