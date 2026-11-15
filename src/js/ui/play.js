@@ -1,6 +1,6 @@
 // In-level controller: input → engine action → timeline playback → HUD, sounds, end-of-level flow.
 import { newGame, apply, cloneState } from '../engine/game.js';
-import { swappableAt } from '../engine/grid.js';
+import { swappableAt, TOKEN } from '../engine/grid.js';
 import { goalDone, starsFor } from '../engine/goals.js';
 import { bestMove } from '../engine/ai.js';
 import { isSpecialTile } from '../engine/specials.js';
@@ -34,7 +34,7 @@ export function startLevel(level, opts = {}) {
   if (!opts.state) PLAY.state.boosters = { ...SAVE.boosters };
   if (opts.relief && PLAY.state.movesLeft != null) PLAY.state.movesLeft += opts.relief; // see RELIEF_AFTER in save.js
   PLAY.selected = -1; PLAY.cursor = -1; PLAY.armed = null; PLAY.anim = null; PLAY.down = null; PLAY.active = true;
-  PLAY.shownScore = PLAY.state.score;
+  PLAY.shownScore = PLAY.state.score; PLAY.explained = 0; PLAY.explainedAt = -Infinity;
   VIEW.world = PLAY.world;
   layoutAndBuild();
   // the world's painted backdrop arrives as its own pack; rebuild once it lands
@@ -177,10 +177,11 @@ export function doSwap(a, b, pulled = 0) {
   clearHint();
   const pre = cloneState(PLAY.state);
   const r = apply(PLAY.state, { type: 'swap', a, b });
-  if (r.reason === 'blocked') return r;
+  if (r.reason === 'blocked') { explainRefusal(whyStuck(PLAY.state, a) || whyStuck(PLAY.state, b)); return r; }
   PLAY.selected = -1; BOARD.sel = -1;
   if (r.valid && mode !== 'soak') { recordComputedAction(action, { levelId: PLAY.level.id, state: cloneState(PLAY.state) }); commitMove(); }
   play(pre, r, () => afterMove(r));
+  if (r.reason === 'nomatch') explainRefusal('nomatch');
   if (pulled && PLAY.anim) PLAY.anim.dragFrac = pulled;
   return r;
 }
@@ -203,6 +204,34 @@ export function doBooster(name, cell, dir) {
 // A move counts the moment it is made: the save already holds the board it leaves behind, so reloading during the
 // animation cannot take it back. A move that ends the level (Encore, win, loss) is saved by the end-of-level flow instead.
 function commitMove() { if (PLAY.state.phase === 'play') saveSettledAction(); }
+
+// Why a swap or a tap did nothing, in a line a new player can act on. Said for the first few refusals of a level only (REFUSAL_NOTES),
+// and not twice within REFUSAL_GAP_MS, so someone who knows the rules is not nagged.
+const REFUSAL_NOTES = 3, REFUSAL_GAP_MS = 2500;
+const REFUSALS = {
+  nomatch: 'No match there. Line up three of a kind.',
+  lock: 'Padlocked: match it to open the safe.',
+  fog: 'Steam hides that piece. Match beside it to clear it.',
+  token: 'Bath tokens cannot be swapped. Clear the pieces below.',
+  stone: 'Tufa is in the way. Match beside it to wear it down.',
+  moss: 'Algae is in the way. Match beside it to clear it.',
+};
+function whyStuck(s, i) {
+  if (!s.mask[i]) return null;
+  if (s.stone[i]) return 'stone';
+  if (s.moss[i]) return 'moss';
+  const t = s.tile[i];
+  if (!t) return null;
+  if (s.lock[i]) return 'lock';
+  if (s.fog[i]) return 'fog';
+  return t.k === TOKEN ? 'token' : null;
+}
+function explainRefusal(why) {
+  const now = performance.now();
+  if (!why || !PLAY.ui || PLAY.explained >= REFUSAL_NOTES || now - PLAY.explainedAt < REFUSAL_GAP_MS) return;
+  PLAY.explained++; PLAY.explainedAt = now;
+  PLAY.ui.toast(REFUSALS[why], 1900);
+}
 
 function play(pre, r, done) {
   PLAY.lastPre = pre; PLAY.lastTimeline = r.timeline;
@@ -440,7 +469,7 @@ export function bindInput(canvas) {
     const s = PLAY.state;
     if (PLAY.selected >= 0 && PLAY.selected !== d.i && adjacent(s, PLAY.selected, d.i)) { const a = PLAY.selected; setSelected(-1); doSwap(a, d.i); return; }
     if (PLAY.selected === d.i) { setSelected(-1); return; }
-    if (swappableAt(s, d.i)) { setSelected(d.i); sfx('select', 0, { pan: panOf(d.i) }); }
+    if (swappableAt(s, d.i)) { setSelected(d.i); sfx('select', 0, { pan: panOf(d.i) }); } else explainRefusal(whyStuck(s, d.i));
     scheduleHint();
   };
   canvas.addEventListener('pointerup', up);
