@@ -1,7 +1,7 @@
 // DOM screens and dialogs: title, world map, level intro, results, world complete, pause, help,
 // settings, about, Free Soak and tutorial tips. Game logic stays in play.js and the engine.
 import { PLAY, startLevel, showGameChrome, levelById, updateHud, goalLabel, layoutAndBuild, doBooster, showHint } from './play.js';
-import { SAVE, STAR_STEP, changeSettings, markTutorial, saveDaily, resetSave, saveUnreadable, startFreshSave, configureSaveEffects, reserveCurrent, adoptCurrent, saveTerminal } from './save.js';
+import { SAVE, STAR_STEP, reliefFor, changeSettings, markTutorial, saveDaily, resetSave, saveUnreadable, startFreshSave, configureSaveEffects, reserveCurrent, adoptCurrent, saveTerminal } from './save.js';
 import { cloneState } from '../engine/game.js';
 import { goalIcon, PIECES, ICON_IMAGES } from '../view/vector-art.js';
 import { VIEW, WORLD_LOOK, requestRender } from '../view/stage.js';
@@ -236,13 +236,14 @@ export function showIntro(L) {
   const node = document.querySelector(`.node[data-level="${L.id}"]`), map = document.querySelector('.screen.map');
   if (node && map) { map.scrollTop = Math.max(0, node.offsetTop - map.clientHeight * 0.55); map.dispatchEvent(new Event('scroll')); }
   setScene('intro'); setMood('intro', L.world); sfx('intro');
-  const look = WORLD_LOOK[L.world], pr = SAVE.progress[L.id];
+  const look = WORLD_LOOK[L.world], pr = SAVE.progress[L.id], relief = reliefFor(L.id);
   const m = openModal(`
     <div class="stamp">W${L.world}<br>No. ${L.n}</div>
     <p class="fine">World ${L.world} · ${esc(look.name)}</p>
     <h2>${esc(L.name)}</h2>
     <p>${L.goals.map((g) => GOAL_TEXT[g.type]).join(' · ')}${L.moves ? ` in <b>${L.moves} moves</b>` : ''}.</p>
     <div class="goals-big">${goalChips(L.goals)}</div>
+    ${relief ? `<p class="relief"><b>Della lends you a hand:</b> ${relief} extra move${relief === 1 ? '' : 's'} this time.</p>` : ''}
     <p class="fine">Stars at ${L.stars.map((x) => x.toLocaleString('en-US')).join(' · ')} points${pr ? ` · best ${pr.best.toLocaleString('en-US')}` : ''}</p>
     <div class="actions"><button class="btn" data-act="go" data-focus>Play</button><button class="btn alt small" data-act="back">Map</button><button class="round" data-act="help" aria-label="How to play">?</button></div>`, { label: `Level ${L.world}-${L.n} ${L.name}` });
   fillIcons(m);
@@ -258,6 +259,7 @@ export function enterLevel(L, opts = {}) {
   } else {
     const reserved = reserveCurrent();
     if (!reserved.ok && reserved.reason !== 'storage-unavailable') return false;
+    if (!L.dayKey && !opts.state) opts = { ...opts, relief: reliefFor(L.id) };
   }
   closeModal();
   screenEl().innerHTML = ''; screenEl().className = 'screen';

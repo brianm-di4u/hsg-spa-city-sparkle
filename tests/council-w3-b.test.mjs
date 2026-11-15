@@ -3,6 +3,7 @@
 // Nothing here depends on chance: every board is seeded and every wait is for a condition.
 import assert from 'node:assert/strict';
 import { schedule, FAILED_SWAP_MS } from '../src/js/view/player.js';
+import { RELIEF_AFTER, RELIEF_MOVES } from '../src/js/ui/save.js';
 
 const KEY = 'spa-city-sparkle:v1';
 const stored = (t) => t.page.evaluate((k) => JSON.parse(localStorage.getItem(k)), KEY);
@@ -283,5 +284,68 @@ tests.push({
     await tap(at(b));
     await t.page.waitForFunction(() => window.__game.getState().movesUsed === 1, null, { timeout: 5000 });
     await t.waitIdle(8000);
+  },
+});
+
+// --- S2-19: a level lost three times without a win starts with a few extra moves ---------------------------------------
+const record = (tries, wins = 0) => ({ stats: { 'w1-03': { tries, wins, bestMoves: 0 } } });
+async function startFor(t, id, patch) {
+  await t.game('act', 'save', patch);
+  await t.game('scene', 'intro', id);
+  await t.waitIdle();
+  const intro = await t.page.locator('#modal').innerText();
+  await t.game('newGame', { level: id, seed: 3, tips: false });
+  await t.waitIdle();
+  return { intro, s: await t.state() };
+}
+tests.push({
+  name: 'S2-19 after three losses of a level, the card says Della lends a hand and the level starts with extra moves',
+  async run(t) {
+    const base = (await startFor(t, 'w1-03', record(0))).s.movesLeft;
+    for (const tries of [1, 2]) {
+      const r = await startFor(t, 'w1-03', record(tries));
+      t.equal(r.s.movesLeft, base, `${tries} losses: no relief yet`);
+      t.expect(!/lends you a hand/.test(r.intro), `${tries} losses: the card does not mention it`);
+    }
+    const r = await startFor(t, 'w1-03', record(RELIEF_AFTER));
+    t.equal(r.s.movesLeft, base + RELIEF_MOVES, `${RELIEF_AFTER} losses: ${RELIEF_MOVES} extra moves`);
+    t.expect(/Della lends you a hand/.test(r.intro) && r.intro.includes(`${RELIEF_MOVES} extra moves`), 'the intro card says so');
+    t.equal((await t.state()).levelStats['w1-03'].tries, RELIEF_AFTER, 'the record of tries is untouched by the start');
+    await t.game('scene', 'intro', 'w1-03');
+    await t.waitIdle();
+    await t.shot('S2-19-relief-card');
+  },
+});
+tests.push({
+  name: 'S2-19 a level already cleared gets no relief, and neither does the Daily Challenge',
+  async run(t) {
+    const cleared = await startFor(t, 'w1-03', { ...record(5, 1), progress: { 'w1-03': { stars: 1, best: 1 } } });
+    const plain = await startFor(t, 'w1-03', { ...record(0), progress: {} });
+    t.equal(cleared.s.movesLeft, plain.s.movesLeft, 'a cleared level has its own moves');
+    t.expect(!/lends you a hand/.test(cleared.intro), 'and no card line');
+    const day = await t.game('dailyPick', '2026-11-14');
+    const lost = Object.fromEntries(Array.from({ length: 60 }, (_, i) => [`w${Math.floor(i / 10) + 1}-${String((i % 10) + 1).padStart(2, '0')}`, { tries: 9, wins: 0, bestMoves: 0 }]));
+    await t.game('act', 'save', { stats: lost, progress: {} }); // every level has been lost nine times, so any level the Daily picks would qualify
+    await t.game('dailyDate', '2026-11-14');
+    await t.game('scene', 'soak');
+    await t.waitIdle();
+    t.equal((await t.state()).movesLeft, day.moves, 'the Daily Challenge starts with exactly its own moves');
+  },
+});
+tests.push({
+  name: 'S2-19 a resumed level keeps the moves it had: relief is given once, at the start',
+  async run(t) {
+    await t.game('act', 'save', record(RELIEF_AFTER));
+    await t.game('newGame', { level: 'w1-03', seed: 3, tips: false });
+    await t.waitIdle();
+    const start = (await t.state()).movesLeft;
+    const legal = await t.game('act', 'legal');
+    await t.game('act', 'swap', ...legal[0]);
+    await t.waitIdle(8000);
+    t.equal((await t.state()).movesLeft, start - 1, 'one move used');
+    await t.reload();
+    await t.page.locator('[data-act="continue"]').click();
+    await t.waitIdle();
+    t.equal((await t.state()).movesLeft, start - 1, 'Continue shows the same moves left, with no second gift');
   },
 });

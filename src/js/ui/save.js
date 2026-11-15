@@ -13,6 +13,10 @@ const TYPES = ['hammer', 'line', 'shuffle', 'plus5'];
 // Every STAR_STEP stars earned in the journey pay one booster, of the kind the player holds fewest of, on top of the
 // one a first three-star win gives. Was 15 in the first try (about 4 extra over a casual bot's pass of all 60 levels); 12 gives about 5.
 export const STAR_STEP = 12;
+// A level never won, after RELIEF_AFTER finished runs, starts with RELIEF_MOVES more moves (Della lends a hand). Worked out from the
+// per-level record, so it needs no field of its own; clearing the level ends it. To switch it off set RELIEF_MOVES to 0.
+export const RELIEF_AFTER = 3, RELIEF_MOVES = 3;
+export const reliefFor = (levelId) => (RELIEF_MOVES > 0 && !SAVE.progress[levelId] && ((SAVE.stats[levelId] || {}).tries || 0) >= RELIEF_AFTER ? RELIEF_MOVES : 0);
 const starsOf = (progress) => Object.values(progress).reduce((n, p) => n + (p && p.stars || 0), 0);
 const SETTING_KEYS = ['sound', 'music', 'ambience', 'volume', 'motion', 'steam', 'hints', 'badges', 'postcardSeen'];
 export const freshSave = () => ({ v: 1, settings: { sound: true, music: true, ambience: true, volume: 0.5, motion: 'auto', steam: true, hints: true, badges: false, postcardSeen: false }, progress: {}, stats: {}, boosters: { hammer: 1, line: 1, shuffle: 1, plus5: 1 }, lore: [], tutorialSeen: [], current: null, soakDay: null, soakBest: 0, daily: freshDaily() });
