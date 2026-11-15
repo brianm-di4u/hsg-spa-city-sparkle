@@ -28,10 +28,12 @@ function ensure() {
 }
 // Resume on any state but 'running': iOS Safari reports 'interrupted' after a call, lock or alarm.
 export function unlockAudio() { const c = ensure(); if (c && c.state !== 'running') try { c.resume().catch(() => {}); } catch (_) { /* resume is best effort */ } }
+// A hand-edited save can hold any volume; a gain of NaN throws, and one above 1 is louder than the slider goes.
+const safeVolume = (v) => (Number.isFinite(+v) && v !== null && v !== '' ? Math.min(1, Math.max(0, +v)) : 0.5);
 export function applyLevels() {
   if (!AUDIO.ctx) return;
   AUDIO.master.gain.cancelScheduledValues(AUDIO.ctx.currentTime);
-  AUDIO.master.gain.value = AUDIO.volume * MASTER_SCALE;
+  AUDIO.master.gain.value = safeVolume(AUDIO.volume) * MASTER_SCALE;
   AUDIO.sfxGain.gain.value = AUDIO.sound ? 1 : 0;
   // Sound effects, Music and Ambience are three separate switches. Music never depended on the effects switch: a
   // player who turns the effects off keeps the music, as before the ambience was added.
@@ -179,7 +181,7 @@ export function resumeAudio() {
 // What a player would hear right now, for tests: the mood, whether it is held, and the two buses' levels.
 export function audioState() {
   const k = AUDIO.kit;
-  return { ctx: AUDIO.ctx ? AUDIO.ctx.state : null, mood: AUDIO.mood, held: !!(k && k.held), holds: [...AUDIO.holds], music: k ? +k.buses.music.gain.value.toFixed(3) : null, ambience: k ? +k.buses.ambience.gain.value.toFixed(3) : null, intensity: k ? k.intensity : null, playing: k ? { music: !!k.music.score, ambience: !!k.amb.scene } : null };
+  return { ctx: AUDIO.ctx ? AUDIO.ctx.state : null, master: AUDIO.master ? +AUDIO.master.gain.value.toFixed(3) : null, mood: AUDIO.mood, held: !!(k && k.held), holds: [...AUDIO.holds], music: k ? +k.buses.music.gain.value.toFixed(3) : null, ambience: k ? +k.buses.ambience.gain.value.toFixed(3) : null, intensity: k ? k.intensity : null, playing: k ? { music: !!k.music.score, ambience: !!k.amb.scene } : null };
 }
 export const audioList = () => ({ music: Object.keys(SCORES), ambience: Object.keys(SCENES), cues: CUE_NAMES });
 export function audioRender(name, seconds = 30, wantWav = false) {

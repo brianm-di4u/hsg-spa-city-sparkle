@@ -50,3 +50,92 @@ tests.push({
   },
 });
 
+
+// --- S5-16: the audio graph is exercised: switches, interruptions, hidden tabs, volume (the skip check waits for S5-03) ---------------------------
+// The audio context is real; the stub only counts what the game builds (oscillators and noise sources) and the resume calls.
+function trackAudio() {
+  window.__node = 0; window.__ctxs = []; window.__resumes = 0; window.__fake = null;
+  const Base = window.AudioContext;
+  const co = Base.prototype.createOscillator, cb = Base.prototype.createBufferSource, rs = Base.prototype.resume;
+  Base.prototype.createOscillator = function () { window.__node++; return co.call(this); };
+  Base.prototype.createBufferSource = function () { window.__node++; return cb.call(this); };
+  Base.prototype.resume = function () { window.__resumes++; window.__fake = null; return rs.call(this); };
+  window.AudioContext = class extends Base {
+    constructor(...a) {
+      super(...a); window.__ctxs.push(this);
+      const real = Object.getOwnPropertyDescriptor(BaseAudioContext.prototype, 'state').get;
+      Object.defineProperty(this, 'state', { configurable: true, get() { return window.__fake || real.call(this); } });
+    }
+  };
+}
+async function unlock(t) {
+  await t.page.mouse.click(5, 5);
+  await t.page.waitForFunction(() => window.__ctxs.length && window.__ctxs[0].state === 'running', null, { timeout: 5000 });
+}
+// Sources the game builds for one cue, counted in a single synchronous step so the music's timer cannot add to it.
+const cueNodes = (t) => t.page.evaluate(() => { const a = window.__node; window.__game.cue('match', 2); return window.__node - a; });
+const setHidden = (t, hidden) => t.page.evaluate((h) => {
+  Object.defineProperty(document, 'hidden', { configurable: true, get: () => h });
+  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => (h ? 'hidden' : 'visible') });
+  document.dispatchEvent(new Event('visibilitychange'));
+}, hidden);
+tests.push({
+  name: 'S5-16 a cue builds sound sources with Sound effects on and none with it off',
+  viewports: ['desktop'],
+  initScript: trackAudio,
+  async run(t) {
+    await t.waitIdle();
+    await unlock(t);
+    t.expect(await cueNodes(t) > 0, 'a match cue builds sources while Sound effects is on');
+    await t.game('scene', 'settings');
+    await t.page.locator('#modal [data-toggle="sound"]').click();
+    t.equal((await t.state()).settings.sound, false, 'Sound effects is off');
+    t.equal(await cueNodes(t), 0, 'a match cue builds nothing with Sound effects off');
+    await t.page.locator('#modal [data-toggle="sound"]').click();
+    t.expect(await cueNodes(t) > 0, 'and it sounds again when switched back on');
+  },
+});
+tests.push({
+  name: 'S5-16 an interrupted audio context is resumed by the next touch, and nothing is built while it is down',
+  viewports: ['desktop'],
+  initScript: trackAudio,
+  async run(t) {
+    await t.waitIdle();
+    await unlock(t);
+    await t.page.evaluate(() => { window.__fake = 'interrupted'; window.__resumes = 0; });
+    t.equal(await cueNodes(t), 0, 'no cue is built while the context is interrupted');
+    await t.page.mouse.click(5, 5);
+    await t.page.waitForFunction(() => window.__resumes > 0, null, { timeout: 5000 });
+    t.expect(await cueNodes(t) > 0, 'cues sound again once the touch has resumed it');
+  },
+});
+tests.push({
+  name: 'S5-16 a hidden tab suspends the audio context and builds no cue; coming back resumes it',
+  viewports: ['desktop'],
+  initScript: trackAudio,
+  async run(t) {
+    await t.waitIdle();
+    await unlock(t);
+    await setHidden(t, true);
+    await t.page.waitForFunction(() => window.__ctxs[0].state === 'suspended', null, { timeout: 5000 });
+    t.equal(await cueNodes(t), 0, 'no cue is built in a hidden tab');
+    await setHidden(t, false);
+    await t.page.waitForFunction(() => window.__ctxs[0].state === 'running', null, { timeout: 5000 });
+    t.expect(await cueNodes(t) > 0, 'cues sound when the tab is back');
+  },
+});
+tests.push({
+  name: 'S5-16 a volume outside the slider, or not a number, never reaches the master gain unclamped',
+  viewports: ['desktop'],
+  initScript: trackAudio,
+  async run(t) {
+    for (const [stored, want] of [[7, 1.2], [-3, 0], ['loud', 0.6], [0.25, 0.3]]) {
+      await t.page.evaluate(([k, v]) => localStorage.setItem(k, JSON.stringify({ v: 1, settings: { volume: v } })), [KEY, stored]);
+      await t.reload();
+      await t.waitIdle();
+      await unlock(t);
+      await t.page.waitForFunction(() => window.__game.audioState().master !== null);
+      t.equal((await t.game('audioState')).master, want, `a saved volume of ${JSON.stringify(stored)} gives a master gain of ${want}`);
+    }
+  },
+});
