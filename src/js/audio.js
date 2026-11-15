@@ -70,15 +70,25 @@ function noise(dur, { gain = 0.15, at = 0, freq = 1200, q = 0.8, type = 'bandpas
 }
 
 const SCALE = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24];
-const note = (base, step) => base * 2 ** (SCALE[Math.min(step, SCALE.length - 1)] / 12);
+// Every pitched cue is played in the key of the music under it. A cue is written in C (major pentatonic steps above a C-based pitch); a cue's tune
+// moves it to the tonic of the piece that is playing (shift, in semitones, from C) and, for a piece in a minor-sounding mode (Dorian), flattens the
+// third and the seventh, so the chimes never land a semitone from the music. A piece with no key (nothing playing yet) is C.
+const C4 = 261.6256;
+const tuneOf = (score) => { const sc = SCORES[score]; if (!sc) return { shift: 0, minor: false }; const pc = sc.key % 12; return { shift: pc > 6 ? pc - 12 : pc, minor: !!(sc.scale && sc.scale[2] === 3) }; };
+const note = (base, step) => {
+  let semis = Math.round(12 * Math.log2(base / C4)) + SCALE[Math.min(step, SCALE.length - 1)];
+  if (CUE.minor && (semis % 12 === 4 || semis % 12 === 11)) semis -= 1;
+  return C4 * 2 ** ((semis + CUE.shift) / 12);
+};
 // A fuller win phrase is scaled down by star count so all three peak inside the cue range (measured with cueRender; a plain win is unchanged).
 const WIN_FIT = [1, 1, 0.82, 0.74];
 // Level trim per cue, measured with cueRender so gameplay cues peak between 0.2 and 0.45 at the default volume (before this they peaked 0.01 to 0.15).
 const CUE_TRIM = { select: 25, swap: 23, bounce: 24, match: 10.6, cascade: 13.6, stone: 7.4, crystal: 6.6, special: 14, tufa: 29, lock: 37, moss: 33, fog: 17, token: 11, spread: 80, reshuffle: 12, win: 5.4, lose: 5.8, star: 19, click: 59, booster: 24, goal: 5.7, low: 7, world: 5.5, earned: 7.3, intro: 5.7, combo: 7.6, starline: 17, encore: 6.1 };
+export { tuneOf };
 export const CUE_NAMES = Object.keys(CUE_TRIM);
 const pannerFor = (ctx, dest, pan) => { if (!pan || !ctx.createStereoPanner) return dest; const p = ctx.createStereoPanner(); p.pan.value = Math.max(-0.7, Math.min(0.7, pan)); p.connect(dest); return p; };
 
-// The cues. arg climbs a chain, a count or a star; opt.pan puts it where it happened (-0.7 left to 0.7 right), opt.size is how many pieces cleared and opt.at delays it by that many seconds and opt.level (default 1) scales it.
+// The cues. arg climbs a chain, a count or a star; opt.pan puts it where it happened (-0.7 left to 0.7 right), opt.size is how many pieces cleared and opt.at delays it by that many seconds, opt.level (default 1) scales it and opt.tune is the key it is played in.
 function buildCue(name, arg, opt) {
   const size = opt.size || 0;
   switch (name) {
@@ -87,20 +97,20 @@ function buildCue(name, arg, opt) {
     case 'bounce': tone(220, 0.12, { type: 'triangle', gain: 0.08, slide: 0.7 }); noise(0.05, { gain: 0.04, freq: 500, type: 'lowpass' }); break;
     case 'match': {
       const f = note(523.25, arg), up = 1 + 0.06 * Math.min(arg, 5);
-      tone(f, 0.35, { gain: 0.12 * up }); tone(f * 2, 0.25, { gain: 0.04, at: 0.01 }); tone(f * 1.5, 0.3, { type: 'triangle', gain: 0.03, at: 0.03 });
+      tone(f, 0.35, { gain: 0.12 * up }); tone(f * 2, 0.25, { gain: 0.04, at: 0.01 }); tone(note(523.25, arg + 3), 0.3, { type: 'triangle', gain: 0.03, at: 0.03 });
       noise(0.03, { gain: 0.05, freq: 3200, q: 1.5 });
-      if (size >= 5) tone(f * 3, 0.3, { gain: 0.025, at: 0.04 });
+      if (size >= 5) tone(f * 4, 0.3, { gain: 0.025, at: 0.04 });
       break;
     }
     case 'cascade': noise(0.55, { gain: 0.16, freq: 600, sweep: 4, q: 0.6 }); tone(330, 0.4, { gain: 0.06, slide: 2 }); noise(0.3, { gain: 0.04, freq: 3000, type: 'highpass', at: 0.05 }); break;
     case 'stone': tone(90, 0.35, { gain: 0.25, slide: 0.5 }); noise(0.3, { gain: 0.12, freq: 300, type: 'lowpass' }); tone(55, 0.4, { gain: 0.1, slide: 0.7 }); break;
     case 'crystal': { const d0 = pick([0, 1, 2]); for (let j = 0; j < 6; j++) tone(note(1046.5, d0 + j), 0.5, { gain: 0.05, at: j * 0.05 }); noise(0.5, { gain: 0.03, freq: 6000, type: 'highpass', at: 0.1 }); break; }
-    case 'special': tone(784, 0.18, { type: 'triangle', gain: 0.07 }); tone(1175, 0.25, { gain: 0.05, at: 0.06 }); noise(0.04, { gain: 0.03, freq: 4000, q: 2 }); break;
+    case 'special': tone(note(784, 0), 0.18, { type: 'triangle', gain: 0.07 }); tone(note(1175, 0), 0.25, { gain: 0.05, at: 0.06 }); noise(0.04, { gain: 0.03, freq: 4000, q: 2 }); break;
     case 'tufa': noise(0.16, { gain: 0.14, freq: pick([450, 560, 700]), q: 1.2 }); tone(200, 0.08, { gain: 0.05, slide: 0.6 }); break;
     case 'lock': tone(180, 0.12, { type: 'square', gain: 0.04 }); noise(0.1, { gain: 0.08, freq: pick([2200, 2500, 2900]), q: 3 }); break;
     case 'moss': noise(0.2, { gain: 0.08, freq: 400, sweep: 0.5 }); tone(120, 0.15, { gain: 0.04, slide: 0.7 }); break;
     case 'fog': noise(0.4, { gain: 0.07, freq: 2000, sweep: 0.3, type: 'highpass' }); noise(0.3, { gain: 0.03, freq: 700, sweep: 0.5, at: 0.05 }); break;
-    case 'token': { const f = note(1175, Math.min(arg, 4)); tone(f, 0.25, { type: 'triangle', gain: 0.07 }); tone(f * 1.335, 0.3, { gain: 0.05, at: 0.08 }); noise(0.03, { gain: 0.03, freq: 6000, type: 'highpass', at: 0.08 }); break; }
+    case 'token': { const f = note(1046.5, Math.min(arg, 4)); tone(f, 0.25, { type: 'triangle', gain: 0.07 }); tone(note(1046.5, Math.min(arg, 4) + 3), 0.3, { gain: 0.05, at: 0.08 }); noise(0.03, { gain: 0.03, freq: 6000, type: 'highpass', at: 0.08 }); break; }
     case 'spread': tone(150, 0.3, { type: 'sawtooth', gain: 0.02, slide: 0.8 }); noise(0.25, { gain: 0.02, freq: 250, type: 'lowpass' }); break;
     case 'reshuffle': for (let j = 0; j < 4; j++) noise(0.1, { gain: 0.05, freq: 1200 + j * 300, at: j * 0.07 }); tone(note(392, pick([0, 1, 2])), 0.25, { gain: 0.03, at: 0.28 }); break;
     case 'win': { // arg is the stars won: one is the plain phrase, two adds a harmony under its last notes, three harmony throughout, a shimmer and a held chord
@@ -117,23 +127,23 @@ function buildCue(name, arg, opt) {
     }
     case 'encore': tone(note(523.25, 5), 0.18, { type: 'triangle', gain: 0.09 }); tone(note(523.25, 7), 0.3, { type: 'triangle', gain: 0.09, at: 0.1 }); tone(note(1046.5, 9), 0.35, { gain: 0.03, at: 0.12 }); noise(0.3, { gain: 0.03, freq: 5000, type: 'highpass', at: 0.08 }); break;
     case 'lose': [4, 2, 0].forEach((s, j) => { tone(note(261.6, s), 0.5, { gain: 0.08, at: j * 0.18 }); tone(note(261.6, s) / 2, 0.5, { type: 'triangle', gain: 0.03, at: j * 0.18 }); }); break;
-    case 'star': tone(note(880, arg * 2), 0.3, { type: 'triangle', gain: 0.07 }); tone(note(880, arg * 2) * 2, 0.35, { gain: 0.03, at: 0.02 }); break;
-    case 'click': { const f = note(660, pick([0, 2, 4])); tone(f, 0.04, { type: 'square', gain: 0.025 }); noise(0.02, { gain: 0.02, freq: 4000, type: 'highpass' }); break; }
+    case 'star': tone(note(523.25, 3 + arg * 2), 0.3, { type: 'triangle', gain: 0.07 }); tone(note(523.25, 3 + arg * 2) * 2, 0.35, { gain: 0.03, at: 0.02 }); break;
+    case 'click': { const f = note(523.25, pick([2, 3, 4])); tone(f, 0.04, { type: 'square', gain: 0.025 }); noise(0.02, { gain: 0.02, freq: 4000, type: 'highpass' }); break; }
     case 'booster': noise(0.3, { gain: 0.1, freq: 800, sweep: 3 }); tone(440, 0.3, { type: 'triangle', gain: 0.04, slide: 2 }); break;
     case 'goal': { const f = note(659.25, 0); tone(f, 0.3, { gain: 0.09 }); tone(f * 2, 0.25, { gain: 0.025 }); tone(note(659.25, 3), 0.5, { gain: 0.1, at: 0.13 }); tone(note(659.25, 3) * 2, 0.4, { gain: 0.03, at: 0.13 }); break; }
-    case 'low': { const hi = arg <= 1, f = hi ? 880 : 587; for (let j = 0; j < (hi ? 2 : 1); j++) { tone(f, 0.09, { type: 'triangle', gain: hi ? 0.07 : 0.26, at: j * 0.12 }); noise(0.025, { gain: hi ? 0.03 : 0.1, freq: 3000, q: 2, at: j * 0.12 }); } break; }
+    case 'low': { const hi = arg <= 1, f = hi ? note(880, 0) : note(587.33, 0); for (let j = 0; j < (hi ? 2 : 1); j++) { tone(f, 0.09, { type: 'triangle', gain: hi ? 0.07 : 0.26, at: j * 0.12 }); noise(0.025, { gain: hi ? 0.03 : 0.1, freq: 3000, q: 2, at: j * 0.12 }); } break; }
     case 'world': { [0, 2, 3, 5, 7].forEach((s, j) => { tone(note(392, s), 0.9, { type: 'triangle', gain: 0.07, at: j * 0.16 }); tone(note(392, s) * 2, 0.8, { gain: 0.025, at: j * 0.16 }); }); tone(note(392, 7) / 2, 1.4, { gain: 0.05, at: 0.8 }); noise(1, { gain: 0.02, freq: 6000, type: 'highpass', at: 0.7 }); break; }
-    case 'earned': for (let j = 0; j < 4; j++) { const f = note(1046.5, j * 2); tone(f, 0.35, { gain: 0.05, at: j * 0.07 }); tone(f * 3, 0.2, { gain: 0.012, at: j * 0.07 }); } break;
-    case 'intro': tone(392, 0.6, { gain: 0.04, attack: 0.25, slide: 1.5 }); tone(note(523.25, 2), 0.6, { gain: 0.05, at: 0.35 }); tone(note(523.25, 2) * 2, 0.4, { gain: 0.012, at: 0.35 }); break;
-    case 'combo': tone(110, 0.35, { type: 'sawtooth', gain: 0.07, slide: 0.5 }); noise(0.5, { gain: 0.12, freq: 500, sweep: 6, q: 0.6 }); [0, 2, 4].forEach((s, j) => tone(note(587.33, s), 0.5, { gain: 0.05, at: 0.12 + j * 0.05 })); break;
-    case 'starline': tone(note(880, arg * 2), 0.25, { type: 'triangle', gain: 0.06 }); tone(note(880, arg * 2) * 1.5, 0.3, { gain: 0.03, at: 0.07 }); break;
+    case 'earned': for (let j = 0; j < 4; j++) { const f = note(1046.5, j * 2); tone(f, 0.35, { gain: 0.05, at: j * 0.07 }); tone(f * 2, 0.2, { gain: 0.012, at: j * 0.07 }); } break;
+    case 'intro': tone(note(392, 0), 0.6, { gain: 0.04, attack: 0.25, slide: 1.5 }); tone(note(523.25, 2), 0.6, { gain: 0.05, at: 0.35 }); tone(note(523.25, 2) * 2, 0.4, { gain: 0.012, at: 0.35 }); break;
+    case 'combo': tone(110, 0.35, { type: 'sawtooth', gain: 0.07, slide: 0.5 }); noise(0.5, { gain: 0.12, freq: 500, sweep: 6, q: 0.6 }); [0, 2, 3].forEach((s, j) => tone(note(523.25, s), 0.5, { gain: 0.05, at: 0.12 + j * 0.05 })); break;
+    case 'starline': tone(note(523.25, 3 + arg * 2), 0.25, { type: 'triangle', gain: 0.06 }); tone(note(523.25, 6 + arg * 2), 0.3, { gain: 0.03, at: 0.07 }); break;
     default: break;
   }
 }
-function runCue(name, arg, opt, ctx, dest, rnd) {
+export function runCue(name, arg, opt, ctx, dest, rnd) {
   if (!(name in CUE_TRIM)) return;
   const prev = CUE;
-  CUE = { ctx, dest: pannerFor(ctx, dest, opt.pan), rnd, j: jitter(rnd), trim: CUE_TRIM[name] * (opt.level ?? 1), at: opt.at || 0 };
+  CUE = { ctx, dest: pannerFor(ctx, dest, opt.pan), rnd, j: jitter(rnd), trim: CUE_TRIM[name] * (opt.level ?? 1), at: opt.at || 0, shift: opt.tune ? opt.tune.shift : 0, minor: !!(opt.tune && opt.tune.minor) };
   try { buildCue(name, arg, opt); } finally { CUE = prev; }
 }
 // Cues struck together (the sounds of one beat, or of every beat a skip folds into one) get quieter as they pile up, so even at the maximum
@@ -147,7 +157,7 @@ export function sfx(name, arg = 0, opt = {}) {
   if (AUDIO.played.length > 50) { AUDIO.played.shift(); AUDIO.calls.shift(); }
   if (!AUDIO.sound || !ensure() || AUDIO.ctx.state !== 'running') return;
   if (DUCKS[name]) AUDIO.kit?.music.duck(...DUCKS[name]);
-  runCue(name, arg, opt, AUDIO.ctx, AUDIO.sfxGain, Math.random);
+  runCue(name, arg, { tune: tuneOf(AUDIO.mood && AUDIO.mood.score), ...opt }, AUDIO.ctx, AUDIO.sfxGain, Math.random);
 }
 
 // Music and ambience. A mood is the piece and the bed that should be playing: the title and the map share a
@@ -221,7 +231,7 @@ export function audioRender(name, seconds = 30, wantWav = false, levels = {}) {
 export function cueRender(name, arg = 0, opt = {}, seconds = 2.5, wantWav = false, seed = 1, levels = {}) {
   if (!CUE_NAMES.includes(name)) return Promise.reject(new Error('unknown cue: ' + name));
   return measureAudio((ctx, out) => {
-    runCue(name, arg, opt, ctx, offlineMaster(ctx, out, levels), seeded(seed));
+    runCue(name, arg, { tune: tuneOf(opt.score), ...opt }, ctx, offlineMaster(ctx, out, levels), seeded(seed));
   }, seconds, { wav: wantWav });
 }
 // The busiest moment: a piece at full intensity, a bed and a run of cues struck together, as one render. spec = { piece, bed, cues: [{ name, arg, opt, at, seed }],

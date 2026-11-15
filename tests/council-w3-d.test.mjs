@@ -437,3 +437,87 @@ tests.push({
     t.equal(await t.game('crowdLevel', 3), 1, 'three cues or fewer are as loud as one');
   },
 });
+
+// --- S5-04: the chimes are in the key of the music under them ---------------------------------------------------------------
+// Node only. A recording context stands in for the audio context and the test reads the pitch of every tone a pitched cue builds, in every
+// piece's key; each must be a note of that piece's mode. Chance: the draws are seeded, so it gives the same answer every run.
+const NON_PITCHED = ['swap', 'bounce', 'stone', 'cascade', 'tufa', 'lock', 'moss', 'fog', 'spread', 'booster'];
+const ARGS = { match: [0, 1, 2, 3, 4, 5], token: [0, 1, 2, 3, 4], win: [1, 2, 3], star: [1, 2, 3], starline: [1, 2, 3], low: [1, 3] };
+function recorder() {
+  const freqs = [], param = () => ({ value: 0, setValueAtTime(v) { freqs.push(v); }, exponentialRampToValueAtTime() {}, linearRampToValueAtTime() {} }), quiet = () => ({ value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {}, linearRampToValueAtTime() {} });
+  const node = () => ({ connect() {}, start() {}, stop() {}, gain: quiet(), frequency: { setValueAtTime() {}, exponentialRampToValueAtTime() {} }, Q: {} });
+  const ctx = {
+    currentTime: 0, sampleRate: 8000,
+    createOscillator() { const o = node(); o.frequency = param(); return o; },
+    createGain: node, createBiquadFilter: node, createBufferSource: node,
+    createBuffer: (c, n) => ({ getChannelData: () => new Float32Array(n) }),
+  };
+  return { ctx, freqs };
+}
+const seededRnd = (seed) => { let x = seed >>> 0; return () => { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; }; };
+tests.push({
+  name: 'S5-04 every pitched cue is a note of the mode of the piece under it, in every world',
+  node: true,
+  async run(t) {
+    const { runCue, tuneOf, CUE_NAMES } = await import('../src/js/audio.js');
+    const { SCORES } = await import('../src/js/music.js');
+    const MODES = { major: [0, 2, 4, 5, 7, 9, 11], dorian: [0, 2, 3, 5, 7, 9, 10], lydian: [0, 2, 4, 6, 7, 9, 11] };
+    let checked = 0, tonic = 0;
+    for (const [name, sc] of Object.entries(SCORES)) {
+      const mode = sc.scale ? (sc.scale[2] === 3 ? MODES.dorian : MODES.lydian) : MODES.major;
+      const allowed = new Set(mode.map((d) => (sc.key + d) % 12)), tune = tuneOf(name);
+      for (const cue of CUE_NAMES.filter((c) => !NON_PITCHED.includes(c))) {
+        for (const arg of ARGS[cue] || [0]) {
+          for (let draw = 1; draw <= 8; draw++) {
+            const { ctx, freqs } = recorder();
+            runCue(cue, arg, { tune, size: 5 }, ctx, {}, seededRnd(draw * 131 + arg));
+            for (const f of freqs) {
+              if (cue === 'combo' && f < 130) continue; // the low growl of a combo glides; it is not a note
+              const semis = Math.round(12 * Math.log2(f / 261.6256)), pc = ((semis % 12) + 12) % 12;
+              checked++;
+              if (!allowed.has(pc)) t.fail(`${name}: ${cue} ${arg} sounds pitch class ${pc} (${f.toFixed(1)} Hz), not in the mode of ${(sc.key % 12)}`);
+            }
+          }
+        }
+      }
+      // the first chime of a chain is the tonic of the piece
+      const { ctx, freqs } = recorder();
+      runCue('match', 0, { tune, size: 3 }, ctx, {}, seededRnd(7));
+      const tpc = (((Math.round(12 * Math.log2(freqs[0] / 261.6256))) % 12) + 12) % 12;
+      if (tpc === sc.key % 12) tonic++; else t.fail(`${name}: the first match chime is pitch class ${tpc}, the piece's tonic is ${sc.key % 12}`);
+    }
+    t.log(`${checked} tones checked across ${Object.keys(SCORES).length} pieces; the first chime is the tonic in ${tonic}`);
+    t.expect(checked > 3000, 'a real number of tones was checked');
+  },
+});
+tests.push({
+  name: 'S5-04 with no piece playing the cues are in C, and a world\'s cues are not',
+  node: true,
+  async run(t) {
+    const { runCue, tuneOf } = await import('../src/js/audio.js');
+    const first = (tune) => { const { ctx, freqs } = recorder(); runCue('match', 0, { tune, size: 3 }, ctx, {}, seededRnd(3)); return freqs[0]; };
+    const c = first(tuneOf(null)), lakes = first(tuneOf('lakes'));
+    t.expect(Math.abs(Math.log2(c / 523.25)) < 0.02, `a first chime in C is C5 (${c.toFixed(1)} Hz)`);
+    t.expect(Math.abs(12 * Math.log2(lakes / c) + 3) < 0.7, `in the lakes (A) it is three semitones lower (${lakes.toFixed(1)} Hz)`);
+  },
+});
+tests.push({
+  name: 'S5-04 the retuned cues keep their level in every key',
+  viewports: ['desktop'],
+  async run(t) {
+    const list = await t.game('audioList'), out = [];
+    for (const score of list.music) {
+      const inPlay = !['title', 'intro', 'results'].includes(score); // the win phrase sounds while a level is on, in a world's key
+      for (const [name, arg] of [['match', 0], ['match', 3], ['crystal', 0], ['win', 3], ['star', 3], ['goal', 0], ['token', 3], ['combo', 0], ['click', 0], ['starline', 2]]) {
+        if (name === 'win' && !inPlay) continue;
+        const peaks = [];
+        for (let seed = 1; seed <= 3; seed++) peaks.push((await t.game('cueRender', name, arg, { score }, 3, false, seed)).peak);
+        peaks.sort((a, b) => a - b);
+        if (name !== 'click') t.expect(peaks[1] >= 0.2 && peaks[1] <= 0.45, `${score}: ${name} ${arg} median peak ${peaks[1]} is inside 0.2 to 0.45`);
+        else t.expect(peaks[1] < 0.45, `${score}: click median peak ${peaks[1]} is under 0.45`);
+        if (score === 'avenue') out.push(`${name} ${arg} ${peaks.join('/')}`);
+      }
+    }
+    t.log(`in Bb: ${out.join('; ')}`);
+  },
+});
