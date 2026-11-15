@@ -1,6 +1,6 @@
 // DOM screens and dialogs: title, world map, level intro, results, world complete, pause, help,
 // settings, about, Free Soak and tutorial tips. Game logic stays in play.js and the engine.
-import { PLAY, startLevel, showGameChrome, levelById, updateHud, goalLabel, layoutAndBuild, doBooster, showHint } from './play.js';
+import { PLAY, startLevel, showGameChrome, levelById, updateHud, goalLabel, layoutAndBuild, doBooster, showHint, startWith, LOADOUTS } from './play.js';
 import { SAVE, STAR_STEP, reliefFor, changeSettings, markTutorial, saveDaily, resetSave, saveUnreadable, startFreshSave, configureSaveEffects, reserveCurrent, adoptCurrent, saveTerminal } from './save.js';
 import { cloneState } from '../engine/game.js';
 import { goalIcon, PIECES, ICON_IMAGES } from '../view/vector-art.js';
@@ -48,13 +48,16 @@ export function toast(text, ms = 1300) {
 }
 
 // --- modal ---------------------------------------------------------------------------------------
+// While a dialog is open the page behind it cannot be tabbed to, read by a screen reader or clicked: it is inert.
+const BEHIND = ['hud', 'tray', 'screen', 'board-sr'];
+const setBehind = (on) => { for (const id of BEHIND) { const el = $(id); if (el) el.inert = on; } };
 export function openModal(html, opts = {}) {
   const m = modalEl();
   UI.lastFocus = document.activeElement;
   m.innerHTML = `<div class="card ${opts.cls || ''}">${html}</div>`;
   m.classList.remove('hidden');
   m.setAttribute('aria-label', opts.label || 'Dialog');
-  UI.modalOpen = true;
+  UI.modalOpen = true; setBehind(true);
   if (!VIEW.reduced) { m.classList.add('enter'); UI.transitions++; setTimeout(() => { m.classList.remove('enter'); UI.transitions--; }, 340); }
   const first = m.querySelector('[data-focus]') || m.querySelector('button');
   if (first) first.focus();
@@ -62,7 +65,7 @@ export function openModal(html, opts = {}) {
 }
 export function closeModal() {
   const m = modalEl();
-  m.classList.add('hidden'); m.innerHTML = ''; UI.modalOpen = false;
+  m.classList.add('hidden'); m.innerHTML = ''; UI.modalOpen = false; setBehind(false);
   if (UI.lastFocus && UI.lastFocus.focus) try { UI.lastFocus.focus(); } catch (_) { /* element gone */ }
 }
 
@@ -248,10 +251,24 @@ export function showIntro(L) {
     <p>${L.goals.map((g) => GOAL_TEXT[g.type]).join(' · ')}${L.moves ? ` in <b>${L.moves} moves</b>` : ''}.</p>
     <div class="goals-big">${goalChips(L.goals)}</div>
     ${relief ? `<p class="relief"><b>Della lends you a hand:</b> ${relief} extra move${relief === 1 ? '' : 's'} this time.</p>` : ''}
+    ${loadoutRow(L)}
     <p class="fine">Stars at ${L.stars.map((x) => x.toLocaleString('en-US')).join(' · ')} points${pr ? ` · best ${pr.best.toLocaleString('en-US')}` : ''}</p>
     <div class="actions"><button class="btn" data-act="go" data-focus>Play</button><button class="btn alt small" data-act="back">Map</button><button class="round" data-act="help" aria-label="How to play">?</button></div>`, { label: `Level ${L.world}-${L.n} ${L.name}` });
   fillIcons(m);
-  bindActs(m, { go: () => enterLevel(L), back: () => showMap(L.id), help: () => showHelp(() => showIntro(L)) });
+  let pick = '';
+  m.querySelectorAll('[data-load]').forEach((b) => b.addEventListener('click', () => {
+    unlockAudio(); sfx('click'); pick = b.dataset.load;
+    m.querySelectorAll('[data-load]').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+    const note = m.querySelector('#load-note');
+    if (note) note.textContent = pick ? `Spends one ${BOOSTER_NAMES[pick]}: a ${LOADOUTS[pick].name} starts on the board.` : '';
+  }));
+  bindActs(m, { go: () => enterLevel(L, pick ? { loadout: pick } : {}), back: () => showMap(L.id), help: () => showHelp(() => showIntro(L)) });
+}
+// "Start with": offered on a stop (not a lesson) to a player holding a Hammer or a Line. Choosing nothing is the same as before.
+function loadoutRow(L) {
+  const have = Object.keys(LOADOUTS).filter((k) => (SAVE.boosters[k] || 0) > 0);
+  if (!have.length || L.tip) return '';
+  return `<div class="loadout" role="group" aria-labelledby="l-load"><span id="l-load" class="fine">Start with</span><button class="chip-btn" data-load="" aria-pressed="true">Nothing</button>${have.map((k) => `<button class="chip-btn" data-load="${k}" aria-pressed="false">${LOADOUTS[k].name}</button>`).join('')}</div><p class="fine" id="load-note" aria-live="polite"></p>`;
 }
 
 export function enterLevel(L, opts = {}) {
@@ -269,6 +286,7 @@ export function enterLevel(L, opts = {}) {
   screenEl().innerHTML = ''; screenEl().className = 'screen';
   setScene('game');
   startLevel(L, opts);
+  if (opts.loadout && !startWith(opts.loadout)) toast('Could not start with that: the booster was kept.');
   const tip = L.tip && TIPS[L.tip];
   if (tip && !SAVE.tutorialSeen.includes(L.tip)) {
     showTip(L.tip);
@@ -307,8 +325,15 @@ export function showTip(id) {
 export function closeTip() { const t = document.getElementById('tip'); if (t) t.remove(); UI.tipOpen = false; }
 
 // --- results -------------------------------------------------------------------------------------
+// The card each stop gives, as an index into its world's cards in data/lore.json: the card about the Ohio Club comes from the Ohio Club.
+// Every list uses each of its world's ten cards once, so none is unreachable; a few stops have no card of their own and take the nearest in spirit.
+const LORE_BY_STOP = { 1: [8, 0, 1, 4, 7, 3, 5, 6, 2, 9], 2: [7, 1, 6, 8, 5, 0, 2, 4, 3, 9], 3: [0, 1, 5, 7, 9, 2, 8, 3, 4, 6], 4: [0, 1, 2, 5, 4, 3, 6, 7, 9, 8], 5: [0, 1, 8, 3, 7, 4, 6, 2, 5, 9], 6: [0, 1, 5, 2, 3, 4, 6, 8, 7, 9] };
+export function cardsByStop(w) {
+  const list = LORE.filter((c) => c.world === w), order = LORE_BY_STOP[w];
+  return order && order.length === list.length && order.every((k) => list[k]) ? order.map((k) => list[k]) : list;
+}
 function loreFor(L) {
-  const list = LORE.filter((c) => c.world === L.world);
+  const list = cardsByStop(L.world);
   return list[(L.n - 1) % list.length];
 }
 export function onWin(s, L) {
@@ -577,12 +602,12 @@ export function showAbout() {
 }
 
 // --- Scrapbook: every lore card, by world; the ones not won yet are blanks that name the stop holding them -------------------------
-// The card on the results card of a stop is the n-th of its world (loreFor), so a blank can say which stop to win.
+// The card on the results card of a stop is the one cardsByStop lists n-th, so a blank can say which stop to win.
 export function showScrapbook(world) {
   const prev = UI.scene;
   setScene('scrapbook');
   const got = new Set(SAVE.lore), worlds = [1, 2, 3, 4, 5, 6];
-  const inWorld = (k) => LORE.filter((c) => c.world === k);
+  const inWorld = cardsByStop;
   const have = (k) => inWorld(k).filter((c) => got.has(c.id)).length;
   const render = (cur) => {
     const cards = inWorld(cur), stops = LEVELS.filter((l) => l.world === cur);

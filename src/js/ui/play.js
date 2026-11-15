@@ -1,6 +1,6 @@
 // In-level controller: input → engine action → timeline playback → HUD, sounds, end-of-level flow.
 import { newGame, apply, cloneState } from '../engine/game.js';
-import { swappableAt, TOKEN } from '../engine/grid.js';
+import { swappableAt, isColour, TOKEN, CRYSTAL } from '../engine/grid.js';
 import { goalDone, starsFor } from '../engine/goals.js';
 import { bestMove } from '../engine/ai.js';
 import { isLegalSwap } from '../engine/moves.js';
@@ -44,6 +44,7 @@ export function startLevel(level, opts = {}) {
   ensurePack(`w${world}`).then((ok) => { if (ok && PLAY.world === world && PLAY.active) { buildBackdrop(world, true); requestRender(); } });
   buildHud();
   updateHud();
+  syncBoardSR();
   showGameChrome(true);
   startMusic(PLAY.world);
   scheduleHint();
@@ -59,12 +60,14 @@ export function layoutAndBuild() {
   buildBackdrop(PLAY.world);
   buildBoard(s, PLAY.world);
   drawStatic(s);
+  syncBoardSR();
   requestRender();
 }
 
 export function showGameChrome(on) {
   $('hud').classList.toggle('hidden', !on);
   $('tray').classList.toggle('hidden', !on);
+  if ($('board-sr')) $('board-sr').hidden = !on;
   VIEW.layers.board && (VIEW.layers.board.visible = on);
   if (!on) { PLAY.active = false; clearHint(); }
   requestRender();
@@ -157,6 +160,46 @@ export function updateHud(partialScore, movesOverride) {
 
 function bump(el) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
 
+// --- the board in words, for a screen reader -------------------------------------------------------------------
+// #board-sr is a hidden grid the canvas cannot be: every cell with its row, column and contents. It is rebuilt when a move settles and a
+// level starts, and the keyboard cursor, a picked-up piece and the hint are spoken through the live region.
+const SPECIAL_NAMES = { h: 'Cascade, sweeps its row', v: 'Cascade, sweeps its column', b: 'Hot Stone', B: 'Hot Stone' };
+export function cellWords(s, i) {
+  if (!s.mask[i]) return 'no cell';
+  const t = s.tile[i], parts = [];
+  if (s.stone[i]) parts.push(`tufa rock, ${s.stone[i]} layer${s.stone[i] > 1 ? 's' : ''}`);
+  else if (s.moss[i]) parts.push('algae');
+  else if (!t) parts.push('empty');
+  else if (t.k === TOKEN) parts.push('bath token');
+  else if (t.k === CRYSTAL) parts.push('Spring Crystal');
+  else parts.push(`${KIND_NAMES[t.k]}${t.s ? `, ${SPECIAL_NAMES[t.s] || 'special'}` : ''}`);
+  if (s.crust[i]) parts.push('mineral crust');
+  if (s.lock[i]) parts.push('padlocked');
+  if (s.fog[i]) parts.push('fogged');
+  if (s.exit[i]) parts.push('drain');
+  return parts.join(', ');
+}
+export const cellName = (s, i) => `row ${((i / s.w) | 0) + 1}, column ${(i % s.w) + 1}, ${cellWords(s, i)}`;
+export function syncBoardSR() {
+  const el = $('board-sr'), s = PLAY.state;
+  if (!el) return;
+  el.textContent = '';
+  if (!s) return;
+  el.setAttribute('aria-rowcount', s.h); el.setAttribute('aria-colcount', s.w);
+  for (let y = 0; y < s.h; y++) {
+    const row = document.createElement('div'); row.setAttribute('role', 'row'); row.setAttribute('aria-rowindex', y + 1);
+    for (let x = 0; x < s.w; x++) {
+      const i = y * s.w + x;
+      if (!s.mask[i]) continue;
+      const c = document.createElement('div'); c.setAttribute('role', 'gridcell'); c.setAttribute('aria-colindex', x + 1);
+      c.textContent = cellWords(s, i);
+      row.appendChild(c);
+    }
+    el.appendChild(row);
+  }
+}
+const say = (text) => { if (PLAY.ui && PLAY.ui.announce) PLAY.ui.announce(text); };
+
 export function goalLabel(g, left) {
   if (g.type === 'collect') return `Collect ${left} more ${KIND_NAMES[g.kind]}`;
   if (g.type === 'score') return `Score ${left} more points`;
@@ -201,6 +244,25 @@ export function doBooster(name, cell, dir) {
   sfx('booster');
   play(pre, r, () => afterMove(r));
   return r;
+}
+
+// "Start with": before the first move a Hammer buys a Hot Stone on the board and a Line a Cascade. It is paid for and saved like a booster used in play.
+export const LOADOUTS = { hammer: { special: 'b', name: 'Hot Stone' }, line: { special: 'h', name: 'Cascade' } };
+export function startWith(name) {
+  const s = PLAY.state, give = LOADOUTS[name];
+  if (!give || !PLAY.active || PLAY.anim || !s || s.phase !== 'play' || s.movesUsed > 0 || !(s.boosters[name] > 0)) return false;
+  const away = (i) => Math.hypot((i % s.w) - (s.w - 1) / 2, ((i / s.w) | 0) - (s.h - 1) / 2);
+  const cells = s.tile.map((t, i) => i).filter((i) => swappableAt(s, i) && isColour(s.tile[i]) && !s.tile[i].s);
+  if (!cells.length) return false;
+  const at = cells.reduce((best, i) => (away(i) < away(best) ? i : best)); // the piece nearest the middle of the board
+  const action = prepareSaveAction({ mode: saveMode(s), booster: name, localAvailable: s.boosters[name] });
+  if (!action.ok) return false;
+  s.tile[at].s = give.special; s.boosters[name]--;
+  recordComputedAction(action, { levelId: PLAY.level.id, state: cloneState(s) }, name);
+  commitMove();
+  layoutAndBuild(); updateHud(); syncBoardSR();
+  say(`${give.name} placed at ${cellName(s, at)}.`);
+  return true;
 }
 
 // A move counts the moment it is made: the save already holds the board it leaves behind, so reloading during the
@@ -385,6 +447,7 @@ function afterMove(r) {
     if (tl.some((e) => e.t === 'reshuffle')) PLAY.ui.toast('No moves left: reshuffled!');
     PLAY.ui.announce(announceText(r));
   }
+  syncBoardSR();
   if (r.valid && s.phase === 'play') cuesAfterMove(s);
   if (r.valid && s.phase === 'play') saveSettledAction(); // No unresumable encore publication; final outcome owns its coherent transaction.
   if (s.phase === 'encore') {
@@ -426,6 +489,11 @@ function announceText(r) {
   if (fired) parts.push(`${fired} special piece${fired > 1 ? 's' : ''} fired.`);
   if (specials) parts.push(`${specials} special piece${specials > 1 ? 's' : ''} made.`);
   if (s.movesLeft != null) parts.push(`${s.movesLeft} moves left.`);
+  const pre = PLAY.lastPre;
+  s.goals.forEach((g, j) => {
+    if (g.type === 'score' || goalDone(g) || !pre || !pre.goals[j] || pre.goals[j].have === g.have) return;
+    parts.push(`${goalLabel(g, g.type === 'moss' ? g.have : Math.max(0, g.need - g.have))}.`);
+  });
   return parts.join(' ');
 }
 
@@ -446,6 +514,11 @@ export function showHint() {
   BOARD.hint = m;
   requestRender();
   return m;
+}
+function speakHint() {
+  const m = showHint();
+  if (m) say(`Hint: swap ${cellName(PLAY.state, m[0])} with ${cellName(PLAY.state, m[1])}.`);
+  else say('No hint right now.');
 }
 export function clearHint() { if (PLAY.hintTimer) clearTimeout(PLAY.hintTimer); PLAY.hintTimer = 0; if (BOARD.hint) { BOARD.hint = null; requestRender(); } }
 
@@ -616,16 +689,18 @@ export function handleKey(e) {
     const j = ny * s.w + nx;
     if (PLAY.selected >= 0 && !PLAY.anim) { const a = PLAY.selected; setSelected(-1); PLAY.cursor = j; BOARD.cursor = j; doSwap(a, j); return true; }
     PLAY.cursor = j; BOARD.cursor = j; if (PLAY.armed) setAim(j); requestRender();
+    say(cellName(s, j));
     return true;
   }
   if (e.key === 'Enter' || e.key === ' ') {
     if (PLAY.cursor < 0) { PLAY.cursor = firstCell(s); BOARD.cursor = PLAY.cursor; BOARD.showCursor = true; if (PLAY.armed) setAim(PLAY.cursor); requestRender(); return true; }
     if (PLAY.armed) { useArmed(PLAY.cursor); return true; }
-    if (PLAY.selected === PLAY.cursor) setSelected(-1); else if (swappableAt(s, PLAY.cursor)) { setSelected(PLAY.cursor); sfx('select', 0, { pan: panOf(PLAY.cursor) }); }
+    if (PLAY.selected === PLAY.cursor) { setSelected(-1); say('Put down.'); } else if (swappableAt(s, PLAY.cursor)) { setSelected(PLAY.cursor); sfx('select', 0, { pan: panOf(PLAY.cursor) }); say(`${cellName(s, PLAY.cursor)}, picked up. Arrow toward a neighbour to swap.`); }
+    else say(cellName(s, PLAY.cursor));
     return true;
   }
   if (e.key === 'Escape' && (PLAY.selected >= 0 || PLAY.armed)) { setSelected(-1); PLAY.armed = null; setAim(-1); updateHud(); return true; }
-  if (e.key === 'h' || e.key === 'H') { showHint(); return true; }
+  if (e.key === 'h' || e.key === 'H') { speakHint(); return true; }
   return false;
 }
 function firstCell(s) { const c = (s.w >> 1) + (s.h >> 1) * s.w; return s.mask[c] ? c : s.mask.indexOf(1); }
