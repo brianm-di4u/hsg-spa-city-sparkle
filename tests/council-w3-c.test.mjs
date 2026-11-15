@@ -272,3 +272,81 @@ tests.push({
     t.expect((await t.page.locator('#modal h2').innerText()).length > 0, 'level names such as Magnolia Promenade are places and are not touched');
   },
 });
+
+// --- S2-18: Records and achievements ---------------------------------------------------------------------------------------------
+import { ACHIEVEMENTS, recordCounts, earnedSet, newlyEarned } from '../src/js/ui/records.js';
+const LEVELS_NODE = [];
+for (let w = 1; w <= 2; w++) for (let n = 1; n <= 3; n++) LEVELS_NODE.push({ id: `w${w}-0${n}`, world: w });
+tests.push({
+  name: 'S2-18 the records add up what the save holds, and achievements follow from them',
+  node: true,
+  run(t) {
+    const none = recordCounts({}, LEVELS_NODE);
+    t.equal(none.cleared, 0, 'an empty save has cleared nothing');
+    t.equal(earnedSet({}, LEVELS_NODE).size, 0, 'and earned nothing');
+    const save = { progress: { 'w1-01': { stars: 3, best: 100 }, 'w1-02': { stars: 1, best: 50 }, 'w1-03': { stars: 2, best: 70 } }, stats: { 'w1-01': { tries: 3, wins: 1, bestMoves: 9 }, 'w1-02': { tries: 1, wins: 1, bestMoves: 12 } }, boosters: { hammer: 1, line: 2 }, lore: ['a', 'b'], daily: { bestStreak: 3 }, soakBest: 4000 };
+    const c = recordCounts(save, LEVELS_NODE);
+    t.equal(c.cleared, 3, 'three levels cleared'); t.equal(c.stars, 6, 'six stars'); t.equal(c.threeStar, 1, 'one three-star win');
+    t.equal(c.worlds, 1, 'world 1 is whole'); t.equal(c.worldCount, 2, 'of two');
+    t.equal(c.runs, 4, 'four runs'); t.equal(c.wins, 2, 'two wins'); t.equal(c.comebacks, 1, 'one level was won after a loss');
+    t.equal(c.boosters, 3, 'three boosters held'); t.equal(c.bestStreak, 3, 'best streak'); t.equal(c.bestDaily, 4000, 'best Daily score');
+    const got = [...earnedSet(save, LEVELS_NODE)];
+    t.equal(got.join(','), 'first-dip,sparkling,second-wind,postcard,three-days', `earned ${got.join(', ')}`);
+    t.equal(new Set(ACHIEVEMENTS.map((a) => a.id)).size, ACHIEVEMENTS.length, 'every achievement has its own id');
+    t.expect(ACHIEVEMENTS.every((a) => a.name && a.how && /\.$/.test(a.how)), 'each has a name and a sentence');
+    const before = earnedSet({ progress: { 'w1-01': { stars: 1, best: 1 } } }, LEVELS_NODE);
+    t.equal(newlyEarned(before, save, LEVELS_NODE).map((a) => a.id).join(','), 'sparkling,second-wind,postcard,three-days', 'only what is new since before');
+    const damaged = recordCounts({ progress: { 'w1-01': null, x: 5 }, stats: { 'w1-01': {} }, boosters: null, lore: 'no', daily: 3 }, LEVELS_NODE);
+    t.equal(damaged.cleared, 0, 'a damaged save counts as nothing rather than throwing');
+  },
+});
+async function recordsFixture(t) {
+  await t.waitIdle();
+  await t.game('act', 'save', {
+    progress: { 'w1-01': { stars: 3, best: 12000 }, 'w1-02': { stars: 2, best: 9000 }, 'w1-03': { stars: 1, best: 5000 } },
+    stats: { 'w1-01': { tries: 3, wins: 1, bestMoves: 9 }, 'w1-02': { tries: 1, wins: 1, bestMoves: 12 }, 'w1-03': { tries: 1, wins: 1, bestMoves: 14 } },
+    lore: ['x1', 'x2'], soakBest: 21500, daily: { streak: 1, bestStreak: 3, last: '2026-03-04', days: {} },
+  });
+}
+tests.push({
+  name: 'S2-18 the title opens Records with the numbers and the achievements, and Close returns to the title',
+  async run(t) {
+    await recordsFixture(t);
+    await t.game('scene', 'title');
+    await t.checkLayout();
+    await t.shot('S2-18-title');
+    await t.page.locator('.menu-row [data-act="records"]').click();
+    await t.page.waitForSelector('#modal .rec-stats');
+    t.equal((await t.state()).scene, 'records', 'the Records card is open');
+    const text = await t.page.locator('#modal .card').innerText();
+    t.expect(/Levels cleared\s*3 of 60/i.test(text), 'levels cleared');
+    t.expect(/Stars\s*6 of 180/i.test(text), 'stars');
+    t.expect(/Three-star wins\s*1/i.test(text), 'three-star wins');
+    t.expect(/Best Daily streak\s*3 days/i.test(text), 'the Daily streak');
+    t.expect(/21,500/.test(text), 'the best Daily score');
+    t.equal(await t.page.locator('.ach-list li.done').count(), 4, 'First Dip, Sparkling, Second Wind and Three Days Running are earned');
+    t.equal(await t.page.locator('.ach-list li.todo').count(), ACHIEVEMENTS.length - 4, 'the rest are listed with what they take');
+    const card = await t.page.locator('#modal .card').boundingBox();
+    t.expect(card.x >= 0 && card.x + card.width <= t.vp.width && card.y >= 0 && card.y + card.height <= t.vp.height, 'the card fits the screen');
+    t.expect(await t.page.evaluate(() => { const c = document.querySelector('#modal .card'); return c.scrollWidth <= c.clientWidth; }), 'the card does not scroll sideways');
+    await t.shot('S2-18-records');
+    await t.page.keyboard.press('Escape');
+    t.equal((await t.state()).scene, 'title', 'Esc closes the card');
+    t.equal(await t.page.locator('#modal .rec-stats').count(), 0, 'and it is gone');
+  },
+});
+tests.push({
+  name: 'S2-18 a win that earns an achievement says so on the results card, once',
+  async run(t) {
+    await t.waitIdle();
+    await t.game('scene', 'win', 'w1-01');
+    await t.page.waitForSelector('.modal .ribbon');
+    const first = await t.page.locator('#modal .ach').allInnerTexts();
+    t.equal(first.length, 2, `a first win with three stars earns two (${first.join(' | ')})`);
+    t.expect(/First Dip/.test(first[0]) && /Sparkling/.test(first[1]), 'First Dip and Sparkling, each with what it took');
+    await t.shot('S2-18-achievement');
+    await t.game('scene', 'win', 'w1-01');
+    await t.page.waitForSelector('.modal .ribbon');
+    t.equal(await t.page.locator('#modal .ach').count(), 0, 'winning the same level again earns nothing new');
+  },
+});
