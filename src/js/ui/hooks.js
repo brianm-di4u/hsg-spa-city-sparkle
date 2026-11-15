@@ -8,7 +8,7 @@ import { BOARD } from '../view/board-view.js';
 import { visibleMotes } from '../view/backdrop.js';
 import { boardFromAscii, cloneState, hashState } from '../engine/grid.js';
 import { legalMoves } from '../engine/moves.js';
-import { AUDIO, audioList, audioRender, audioState, cueRender, mixRender, sfx } from '../audio.js';
+import { AUDIO, audioList, audioRender, audioState, cueRender, mixRender, crowdLevel, sfx } from '../audio.js';
 
 export const HOOK = { seed: 1, artReady: () => true };
 
@@ -36,7 +36,7 @@ function summary() {
     lore: SAVE.lore.slice(), daily: JSON.parse(JSON.stringify(SAVE.daily)), levelStats: JSON.parse(JSON.stringify(SAVE.stats)), soakBest: SAVE.soakBest, soakDay: SAVE.soakDay, tutorialSeen: SAVE.tutorialSeen.slice(), storageOk: SAVE.storageOk, current: SAVE.current ? SAVE.current.levelId : null,
     lastTimeline: PLAY.lastResult, anim: { playing: !!PLAY.anim, frozen: VIEW.frozenMs }, hash: s ? hashState(s) : null,
     selected: PLAY.selected, legal: BOARD.legalDrawn.slice(), cursor: PLAY.cursor, hint: BOARD.hint, hintArrow: hintArrow(), drag: BOARD.drag ? { i: BOARD.drag.i, j: BOARD.drag.j, dx: BOARD.drag.dx, dy: BOARD.drag.dy, released: !!BOARD.drag.rel } : null, motes: visibleMotes(), armed: PLAY.armed, art: VIEW.artSource,
-    layout: { ...VIEW.layout }, reduced: VIEW.reduced, modal: UI.modalOpen, tip: UI.tipOpen, sounds: AUDIO.played.slice(-20),
+    layout: { ...VIEW.layout }, reduced: VIEW.reduced, modal: UI.modalOpen, tip: UI.tipOpen, sounds: AUDIO.played.slice(-20), calls: AUDIO.calls.slice(-20),
     stats: s ? { ...s.stats } : null, levels: LEVELS.length,
   };
 }
@@ -57,6 +57,7 @@ export function installHooks() {
     audioRender: (name, seconds, wantWav, levels) => audioRender(name, seconds, wantWav, levels),
     cueRender: (name, arg, opt, seconds, wantWav, seed, levels) => cueRender(name, arg, opt, seconds, wantWav, seed, levels),
     mixRender: (spec) => mixRender(spec),
+    crowdLevel: (n) => crowdLevel(n),
     cue: (name, arg, opt) => { sfx(name, arg, opt); return true; },
     getState: () => summary(),
     dailyPick(key) { const p = dailyLevel(LEVELS, key || todayKey()); return { key: p.key, from: p.from, name: p.level.name, moves: p.level.moves, seed: p.seed, stars: p.level.stars }; },

@@ -366,3 +366,74 @@ tests.push({
     t.equal((await t.game('act', 'swap', [1, 1], [1, 0])).valid, true, 'and play goes on without it');
   },
 });
+
+// --- S5-03: skipping a move keeps its sounds ----------------------------------------------------------------------------------
+const calls = (t) => t.page.evaluate(() => window.__game.getState().calls);
+const names = (xs) => xs.map((c) => c.name);
+async function playMove(t, skip) {
+  await board(t, CHAIN, { moves: 10, goals: [{ type: 'stone', need: 3 }], stars: [1, 2, 3] });
+  const before = (await calls(t)).length;
+  await t.page.evaluate((k) => { const g = window.__game; g.act('swap', [1, 1], [1, 0]); if (k) g.act('skip'); }, skip);
+  await t.waitIdle();
+  return (await calls(t)).slice(before > 0 ? before : 0);
+}
+tests.push({
+  name: 'S5-03 a skipped move still sounds every cue the whole move would, each once and spread out',
+  viewports: ['desktop'],
+  async run(t) {
+    const full = await playMove(t, false), quick = await playMove(t, true);
+    t.log(`played through: ${names(full).join(' ')}; skipped: ${names(quick).join(' ')}`);
+    t.expect(new Set(names(full)).size >= 3, `the move has at least three kinds of sound (${[...new Set(names(full))].join(', ')})`);
+    t.equal([...new Set(names(quick))].sort().join(), [...new Set(names(full))].sort().join(), 'the skipped move sounds the same kinds of cue');
+    t.equal(new Set(names(quick)).size, quick.length, 'each is struck once');
+    const together = quick.filter((c) => c.name !== 'starline' && c.name !== 'low');
+    t.expect(together.every((c) => Math.abs(c.level - (together.length <= 3 ? 1 : Math.max(0.35, 2.8 / together.length))) < 1e-9), `each is turned down for a crowd of ${together.length} (level ${together[0].level.toFixed(2)})`);
+    const gaps = quick.filter((c) => c.name !== 'starline' && c.name !== 'low').map((c) => c.at); // those two come after the move, not with it
+    t.expect(gaps.every((g, k) => k === 0 || Math.abs(g - gaps[k - 1] - 0.04) < 1e-9), `they are 40 ms apart (${gaps.map((g) => g.toFixed(2)).join(' ')})`);
+    const hi = (xs) => Math.max(...xs.filter((c) => c.name === 'match').map((c) => c.arg));
+    t.equal(hi(quick), hi(full), 'the match is the highest wave the move reached');
+  },
+});
+tests.push({
+  name: 'S5-03 a replay is still silent, and a move skipped late only adds the beats it had not played',
+  viewports: ['desktop'],
+  async run(t) {
+    await playMove(t, false);
+    const n = (await calls(t)).length;
+    await t.page.evaluate(() => { window.__game.act('replay'); window.__game.act('skip'); });
+    await t.waitIdle();
+    t.equal((await calls(t)).length, n, 'a replay makes no sound, skipped or not');
+    // skipping part-way through: what already played is not played again
+    await board(t, CHAIN, { moves: 10, goals: [{ type: 'stone', need: 3 }], stars: [1, 2, 3] });
+    const before = (await calls(t)).length;
+    await t.page.evaluate(() => { window.__game.act('swap', [1, 1], [1, 0]); });
+    await t.page.waitForFunction((b) => window.__game.getState().calls.length > b + 1, before, { timeout: 5000 });
+    await t.game('act', 'skip');
+    await t.waitIdle();
+    const all = (await calls(t)).slice(before), once = {};
+    for (const c of all) once[c.name] = (once[c.name] || 0) + 1;
+    t.expect(Object.values(once).every((k) => k <= 2), `no cue is played more than twice (${JSON.stringify(once)})`);
+  },
+});
+tests.push({
+  name: 'S5-03 even the most cues a move can pile up stay under 0.95 at the maximum volume',
+  viewports: ['desktop'],
+  async run(t) {
+    const list = await t.game('audioList');
+    const pieces = [];
+    for (const name of list.music) pieces.push([name, (await t.game('audioRender', name, 12, false, MAX)).peak]);
+    pieces.sort((a, b) => b[1] - a[1]);
+    const loud = [];
+    for (const name of ONE_MOVE) loud.push([name, (await t.game('cueRender', name, 3, {}, 2.5, false, 1, MAX)).peak]);
+    loud.sort((a, b) => b[1] - a[1]);
+    const out = [];
+    for (const n of [4, 5, 6, 7, 8]) {
+      const level = await t.game('crowdLevel', n);
+      const mix = await t.game('mixRender', { piece: pieces[0][0], bed: 'rain', seconds: 4, levels: MAX, cues: loud.slice(0, n).map(([name], k) => ({ name, arg: 3, at: 1 + k * 0.04, seed: 1 + k, opt: { level } })) });
+      out.push(`${n} cues at level ${level}: ${mix.peak}`);
+      t.expect(mix.peak < 0.95, `${n} cues together, each at ${level}, peak ${mix.peak}, under 0.95`);
+    }
+    t.log(out.join('; '));
+    t.equal(await t.game('crowdLevel', 3), 1, 'three cues or fewer are as loud as one');
+  },
+});

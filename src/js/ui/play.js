@@ -10,7 +10,7 @@ import { BOARD, buildBoard, drawStatic, startAnim, drawAnim } from '../view/boar
 import { frameAt } from '../view/player.js';
 import { buildBackdrop, drawAmbient } from '../view/backdrop.js';
 import { goalIcon } from '../view/vector-art.js';
-import { sfx, unlockAudio, startMusic, setMusicIntensity } from '../audio.js';
+import { sfx, unlockAudio, startMusic, setMusicIntensity, crowdLevel } from '../audio.js';
 import { SAVE, prepareSaveAction, recordComputedAction, saveSettledAction } from './save.js';
 import { ensurePack } from '../art.js';
 import { haptic, pulseFor, PULSE } from './haptics.js';
@@ -302,15 +302,16 @@ export function playFrame(now) {
 }
 
 function beatEffects(A) {
-  const upto = A.applied;
+  const upto = A.applied, skipped = [];
   while (PLAY.playedBeat < upto && PLAY.playedBeat < A.sched.beats.length - 1) {
     PLAY.playedBeat++;
     const evs = A.sched.beats[PLAY.playedBeat].events;
-    if (!A.skip && !A.replay) beatSounds(evs);
+    if (A.skip && !A.replay) skipped.push(evs); else if (!A.replay) beatSounds(evs);
     if (A.replay && PLAY.playedBeat === 1) updateHud(PLAY.shownScore);
     for (const e of evs) if (e.t === 'score') PLAY.shownScore += e.pts;
     if (evs.some((e) => e.t === 'score' || e.t === 'goal')) updateHud(PLAY.shownScore, A.replay && PLAY.playedBeat < 1 ? PLAY.lastPre.movesLeft : undefined);
   }
+  if (skipped.length) skippedSounds(skipped);
 }
 
 // The HUD score climbs through the beat that earns it instead of jumping when the beat ends.
@@ -331,18 +332,22 @@ const panCol = (x) => { const w = PLAY.state ? PLAY.state.w : 0; return w > 1 ? 
 const panOf = (i) => (i >= 0 && PLAY.state ? panCol(i % PLAY.state.w) : 0);
 const goalIsDone = (e) => (e.type === 'moss' ? e.have === 0 : e.have >= e.need);
 
-function beatSounds(evs) {
+// One beat's sounds: each distinct cue once, from where the first thing in the beat happened. A skip hands it the beats it folded together
+// (merged): the match is the highest wave reached, and the cues are spread 40 ms apart so they read as a run, not a blur.
+const SKIP_GAP = 0.04;
+function beatSounds(evs, merged = false) {
   haptic(pulseFor(evs));
-  const once = new Set();
+  const cues = [], once = new Set();
   // A beat's cues come from where the first thing in it happened; a match is heard on the side the player swapped.
   const here = evs.find((e) => e.t === 'swap' || e.t === 'fire' || e.t === 'hit' || e.t === 'special' || e.t === 'collect');
   const w = PLAY.state.w, at = !here ? 0 : here.t === 'swap' ? panCol(((here.a % w) + (here.b % w)) / 2) : panOf(here.t === 'hit' ? here.i : here.at);
-  const size = evs.reduce((n, e) => n + (e.t === 'match' ? e.cells.length : 0), 0);
-  const s1 = (n, a, o) => { if (!once.has(n)) { once.add(n); sfx(n, a, { pan: at, ...o }); } };
+  const size = merged ? merged.size : evs.reduce((n, e) => n + (e.t === 'match' ? e.cells.length : 0), 0);
+  const top = merged ? Math.max(...evs.filter((e) => e.t === 'wave').map((e) => e.n)) : 0;
+  const s1 = (n, a, o) => { if (!once.has(n)) { once.add(n); cues.push([n, a, o]); } };
   for (const e of evs) {
     if (e.t === 'swap') s1('swap');
     else if (e.t === 'swapBack') s1('bounce');
-    else if (e.t === 'wave') s1('match', e.n, { size });
+    else if (e.t === 'wave') s1('match', merged ? top : e.n, { size });
     else if (e.t === 'combo') s1('combo');
     else if (e.t === 'goal' && goalIsDone(e)) s1('goal');
     else if (e.t === 'fire') s1(e.s === 'C' ? 'crystal' : e.s === 'b' || e.s === 'B' ? 'stone' : 'cascade');
@@ -352,6 +357,14 @@ function beatSounds(evs) {
     else if (e.t === 'spread') s1('spread');
     else if (e.t === 'reshuffle') s1('reshuffle');
   }
+  const level = crowdLevel(cues.length);
+  cues.forEach(([n, a, o], k) => sfx(n, a, { pan: at, level, at: merged ? k * SKIP_GAP : 0, ...o }));
+}
+// The player skipped: the beats that had not played yet are folded into one set of sounds, so the information in them (a special made, a
+// blocker broken, a goal met) is still heard.
+function skippedSounds(beats) {
+  const size = Math.max(...beats.map((evs) => evs.reduce((n, e) => n + (e.t === 'match' ? e.cells.length : 0), 0)));
+  beatSounds(beats.flat(), { size });
 }
 
 function finishAnim() {

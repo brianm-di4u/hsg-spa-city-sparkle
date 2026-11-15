@@ -5,7 +5,7 @@
 import { makeAudioKit, measureAudio } from './audio-kit.js';
 import { SCORES, SCENES, WORLD_MOOD } from './music.js';
 
-export const AUDIO = { ctx: null, master: null, sfxGain: null, kit: null, sound: true, music: true, ambience: true, volume: 0.5, played: [], mood: null, holds: new Set(), suspendTimer: 0 };
+export const AUDIO = { ctx: null, master: null, sfxGain: null, kit: null, sound: true, music: true, ambience: true, volume: 0.5, played: [], calls: [], mood: null, holds: new Set(), suspendTimer: 0 };
 // Levels of the shipping mix. MASTER_SCALE was 0.6; at 1.2 the default volume (0.5) leaves the cues audible over the music.
 const MASTER_SCALE = 1.2;
 const MUSIC_LEVEL = 0.6, AMBIENCE_LEVEL = 1; // measured: every piece peaks 0.06 to 0.16 and every bed under 0.07 at the default volume
@@ -136,12 +136,15 @@ function runCue(name, arg, opt, ctx, dest, rnd) {
   CUE = { ctx, dest: pannerFor(ctx, dest, opt.pan), rnd, j: jitter(rnd), trim: CUE_TRIM[name] * (opt.level ?? 1), at: opt.at || 0 };
   try { buildCue(name, arg, opt); } finally { CUE = prev; }
 }
+// Cues struck together (the sounds of one beat, or of every beat a skip folds into one) get quieter as they pile up, so even at the maximum
+// volume they stay under 0.95 at the speakers (measured in tests/council-w3-d). Up to three together are as loud as one.
+export const crowdLevel = (n) => (n <= 3 ? 1 : Math.max(0.35, 2.8 / n));
 // The big cues pull the music down for a moment so they are heard over it.
 const DUCKS = { win: [6, 700], lose: [6, 700], world: [6, 1100] };
 
 export function sfx(name, arg = 0, opt = {}) {
-  AUDIO.played.push(name);
-  if (AUDIO.played.length > 50) AUDIO.played.shift();
+  AUDIO.played.push(name); AUDIO.calls.push({ name, arg, level: opt.level ?? 1, at: opt.at || 0 });
+  if (AUDIO.played.length > 50) { AUDIO.played.shift(); AUDIO.calls.shift(); }
   if (!AUDIO.sound || !ensure() || AUDIO.ctx.state !== 'running') return;
   if (DUCKS[name]) AUDIO.kit?.music.duck(...DUCKS[name]);
   runCue(name, arg, opt, AUDIO.ctx, AUDIO.sfxGain, Math.random);
