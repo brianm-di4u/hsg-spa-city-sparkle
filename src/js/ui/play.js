@@ -32,6 +32,7 @@ export function startLevel(level, opts = {}) {
   PLAY.level = level; PLAY.world = level.world || 1;
   PLAY.state = opts.state || newGame(level, opts.seed != null ? opts.seed : Date.now() % 1e9, { boosters: { ...SAVE.boosters } });
   if (!opts.state) PLAY.state.boosters = { ...SAVE.boosters };
+  if (opts.relief && PLAY.state.movesLeft != null) PLAY.state.movesLeft += opts.relief; // see RELIEF_AFTER in save.js
   PLAY.selected = -1; PLAY.cursor = -1; PLAY.armed = null; PLAY.anim = null; PLAY.down = null; PLAY.active = true;
   PLAY.shownScore = PLAY.state.score;
   VIEW.world = PLAY.world;
@@ -168,7 +169,7 @@ export function goalLabel(g, left) {
 // --- actions ----------------------------------------------------------------------------------------
 export const isBusy = () => !!PLAY.anim;
 
-export function doSwap(a, b) {
+export function doSwap(a, b, pulled = 0) {
   if (!PLAY.active || PLAY.anim || !PLAY.state || PLAY.state.phase !== 'play') return { valid: false, reason: 'busy' };
   const mode = saveMode(PLAY.state);
   const action = prepareSaveAction({ mode });
@@ -180,6 +181,7 @@ export function doSwap(a, b) {
   PLAY.selected = -1; BOARD.sel = -1;
   if (r.valid && mode !== 'soak') { recordComputedAction(action, { levelId: PLAY.level.id, state: cloneState(PLAY.state) }); commitMove(); }
   play(pre, r, () => afterMove(r));
+  if (pulled && PLAY.anim) PLAY.anim.dragFrac = pulled;
   return r;
 }
 
@@ -252,6 +254,7 @@ export function playFrame(now) {
   }
   const amb = PLAY.active ? drawAmbient() : false;
   const specials = PLAY.active && !VIEW.reduced && PLAY.state && PLAY.state.tile.some(isSpecialTile); // halos pulse
+  if (BOARD.drag && BOARD.drag.rel) busy = true; // the spring back plays out
   VIEW.wantAmbient = amb || specials || (PLAY.active && !!BOARD.hint) || (PLAY.active && PLAY.selected >= 0);
   return busy;
 }
@@ -419,18 +422,20 @@ export function bindInput(canvas) {
   canvas.addEventListener('pointermove', (e) => {
     const d = PLAY.down;
     if (!d || d.swapped || d.id !== e.pointerId) return;
-    const dx = e.clientX - d.x, dy = e.clientY - d.y, th = VIEW.layout.cell * 0.3;
-    if (Math.max(Math.abs(dx), Math.abs(dy)) < th) return;
+    const dx = e.clientX - d.x, dy = e.clientY - d.y, cell = VIEW.layout.cell, th = cell * 0.3;
     const s = PLAY.state, x = d.i % s.w, y = (d.i / s.w) | 0;
+    const horiz = Math.abs(dx) > Math.abs(dy), far = Math.max(Math.abs(dx), Math.abs(dy));
     let j = -1;
-    if (Math.abs(dx) > Math.abs(dy)) j = dx > 0 ? (x < s.w - 1 ? d.i + 1 : -1) : (x > 0 ? d.i - 1 : -1);
+    if (horiz) j = dx > 0 ? (x < s.w - 1 ? d.i + 1 : -1) : (x > 0 ? d.i - 1 : -1);
     else j = dy > 0 ? (y < s.h - 1 ? d.i + s.w : -1) : (y > 0 ? d.i - s.w : -1);
+    if (far < th) { showDrag(d.i, j, horiz ? dx : 0, horiz ? 0 : dy, cell); return; }
     d.swapped = true;
-    if (j >= 0 && s.mask[j]) { setSelected(-1); doSwap(d.i, j); }
+    if (j >= 0 && s.mask[j]) { const f = dragFraction(horiz ? dx : dy, cell, j, s, d.i); BOARD.drag = null; setSelected(-1); doSwap(d.i, j, f); } else BOARD.drag = null;
   });
   const up = (e) => {
     const d = PLAY.down;
     PLAY.down = null;
+    letGo();
     if (!d || d.swapped || d.id !== e.pointerId) return;
     const s = PLAY.state;
     if (PLAY.selected >= 0 && PLAY.selected !== d.i && adjacent(s, PLAY.selected, d.i)) { const a = PLAY.selected; setSelected(-1); doSwap(a, d.i); return; }
@@ -439,7 +444,27 @@ export function bindInput(canvas) {
     scheduleHint();
   };
   canvas.addEventListener('pointerup', up);
-  canvas.addEventListener('pointercancel', () => { PLAY.down = null; });
+  canvas.addEventListener('pointercancel', () => { PLAY.down = null; letGo(); });
+}
+
+// A piece follows the finger along the axis of the pull, at most one cell, and the one it would trade with gives way by the same
+// amount. A pull toward nothing (an edge, a hole, a blocked cell) only gives a little. Letting go springs both back.
+const DRAG_DEAD_PX = 4, DRAG_BLOCKED = 0.12;
+function showDrag(i, j, dx, dy, cell) {
+  const s = PLAY.state, along = dx || dy;
+  if (Math.abs(along) < DRAG_DEAD_PX) { if (BOARD.drag && !BOARD.drag.rel) { BOARD.drag = null; requestRender(); } return; }
+  const ok = j >= 0 && s.mask[j] && swappableAt(s, i) && swappableAt(s, j);
+  const room = ok ? cell : cell * DRAG_BLOCKED, k = Math.min(1, room / Math.abs(along));
+  BOARD.drag = { i, j: ok ? j : -1, dx: dx * k, dy: dy * k, rel: 0 };
+  requestRender();
+}
+// How much of the swap the pull has already made when it commits, 0 to 0.6, so the slide carries on from where the piece is.
+function dragFraction(along, cell, j, s, i) { return j >= 0 && swappableAt(s, i) && swappableAt(s, j) ? Math.min(0.6, Math.abs(along) / cell) : 0; }
+function letGo() {
+  const d = BOARD.drag;
+  if (!d) return;
+  if (VIEW.reduced) BOARD.drag = null; else d.rel = performance.now();
+  requestRender();
 }
 
 function setSelected(i) { PLAY.selected = i; BOARD.sel = i; requestRender(); }

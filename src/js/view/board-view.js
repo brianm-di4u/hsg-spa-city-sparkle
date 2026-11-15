@@ -5,7 +5,7 @@ import { VIEW, WORLD_LOOK, retireTextures } from './stage.js';
 import { modelFromState, applyEvent } from './model.js';
 import { schedule, frameAt, ease, hrand, TICK_MS } from './player.js';
 
-const B = { halos: [], halosUsed: 0, built: null, cells: [], drains: [], layer: {}, tiles: new Map(), fx: [], fxUsed: 0, pops: [], popsUsed: 0, callout: null, frame: null, maskG: null, model: null, sel: -1, cursor: -1, hint: null, hintG: null, showCursor: false };
+const B = { halos: [], halosUsed: 0, built: null, cells: [], drains: [], layer: {}, tiles: new Map(), fx: [], fxUsed: 0, pops: [], popsUsed: 0, callout: null, frame: null, maskG: null, model: null, sel: -1, cursor: -1, hint: null, hintG: null, showCursor: false, drag: null, dragFrac: 0 };
 export const BOARD = B;
 
 const texFor = (t) => {
@@ -90,7 +90,7 @@ function tileSprite(id, t) {
   if (!sp) { sp = new PIXI.Sprite(texFor(t)); sp.anchor.set(0.5); B.layer.pieces.addChild(sp); B.tiles.set(id, sp); }
   const tx = texFor(t);
   if (tx && sp.texture !== tx) sp.texture = tx;
-  sp.visible = true; sp.alpha = 1; sp.rotation = 0; sp.tint = 0xffffff;
+  sp.visible = true; sp.alpha = 1; sp.rotation = 0; sp.tint = 0xffffff; sp.zIndex = 0;
   sp.width = sp.height = VIEW.layout.cell * 1.1; // the renders carry a soft shadow margin
   sp._used = true;
   // colour-blind badge (Settings): a glyph in the corner of every colour piece
@@ -217,7 +217,9 @@ export function drawFrame(model, beat, p, opts = {}) {
     let sc = 1;
     if (swapEv && (i === swapEv.a || i === swapEv.b)) {
       const other = i === swapEv.a ? swapEv.b : swapEv.a;
-      const [ox, oy] = cellXY(other), q = swapEv.t === 'swap' ? ease.outBackStrong(p) : ease.inOutSine(p);
+      const [ox, oy] = cellXY(other);
+      let q = swapEv.t === 'swap' ? ease.outBackStrong(p) : ease.inOutSine(p);
+      if (swapEv.t === 'swap' && B.dragFrac) q = B.dragFrac + (1 - B.dragFrac) * q; // the pull the player made is where the slide starts
       x += (ox - x) * q; y += (oy - y) * q; sc = 1 + 0.12 * Math.sin(Math.PI * p);
       if (i === swapEv.a) sp.zIndex = 2;
     }
@@ -236,6 +238,12 @@ export function drawFrame(model, beat, p, opts = {}) {
     if (resh.has(id)) {
       const [tx, ty] = cellXY(resh.get(id)), q = ease.inOutSine(p);
       x += (tx - x) * q; y += (ty - y) * q - Math.sin(Math.PI * q) * cell * 0.6; sc = 1 - 0.25 * Math.sin(Math.PI * q);
+    }
+    if (!beat && B.drag && (i === B.drag.i || i === B.drag.j)) {
+      // a piece follows the finger and the one it would trade with gives way; letting go springs both back
+      const d = B.drag, k = dragSpring(), sign = i === d.i ? 1 : -1;
+      x += d.dx * k * sign; y += d.dy * k * sign;
+      if (i === d.i) { sp.zIndex = 2; sc = 1.08; }
     }
     if (!beat && B.sel === i) sc = 1.12 + 0.04 * Math.sin(VIEW.ambientT / 120);
     if (!beat && B.hint && (B.hint[0] === i || B.hint[1] === i)) {
@@ -459,9 +467,19 @@ export function startAnim(preState, timeline, reduced) {
   const base = modelFromState(preState);
   return { sched, base, model: JSON.parse(JSON.stringify(base)), applied: 0, t0: performance.now(), timeline };
 }
+// How far the pulled pieces are from rest, 1 while held and falling to 0 over DRAG_SPRING_MS after letting go.
+const DRAG_SPRING_MS = 80;
+function dragSpring() {
+  const d = B.drag;
+  if (!d || !d.rel) return 1;
+  const k = 1 - (performance.now() - d.rel) / DRAG_SPRING_MS;
+  if (k <= 0) { B.drag = null; return 0; }
+  return k;
+}
 // Draws the animation at elapsed ms; returns true while still playing.
 export function drawAnim(anim, ms) {
   const { i, p } = frameAt(anim.sched, ms);
+  B.dragFrac = anim.dragFrac || 0;
   if (i < anim.applied) { anim.model = JSON.parse(JSON.stringify(anim.base)); anim.applied = 0; }
   while (anim.applied < i) { for (const e of anim.sched.beats[anim.applied].events) applyEvent(anim.model, e); anim.applied++; }
   if (i >= anim.sched.beats.length) { drawFrame(anim.model, null, 1); return false; }

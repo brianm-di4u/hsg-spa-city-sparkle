@@ -183,3 +183,105 @@ tests.push({
     await t.game('act', 'clock', null);
   },
 });
+
+// --- S1-03: a piece follows the finger, and the slide carries on from where it was pulled to -----------------------------
+// Pointer input is real: the mouse on a desktop, CDP touch on the phone. The finger is held (holdEndMs) while the state is read.
+async function board(t) {
+  await t.game('newGame', { level: 'w1-01', seed: 3, tips: false });
+  await t.waitIdle();
+  const s = await t.state();
+  const rect = await t.page.evaluate(() => { const r = document.querySelector('#stage canvas').getBoundingClientRect(); return { x: r.left, y: r.top }; });
+  const L = s.layout;
+  const at = (i, fx = 0, fy = 0) => [rect.x + L.bx + ((i % s.board.w) + 0.5 + fx) * L.cell, rect.y + L.by + (((i / s.board.w) | 0) + 0.5 + fy) * L.cell];
+  return { s, L, at, rect };
+}
+async function pull(t, from, to, holdMs, during) {
+  const run = t.viewport === 'mobile'
+    ? t.touchDrag(from, to, { steps: 6, holdEndMs: holdMs })
+    : (async () => { await t.page.mouse.move(...from); await t.page.mouse.down(); await t.page.mouse.move(...to, { steps: 6 }); await t.page.waitForTimeout(holdMs); await t.page.mouse.up(); })();
+  await during();
+  await run;
+}
+const waitDrag = (t, pred) => t.page.waitForFunction(`(${pred})(window.__game.getState().drag)`, null, { timeout: 5000 });
+tests.push({
+  name: 'S1-03 a pressed piece follows the finger and its neighbour gives way; letting go springs both back and nothing is played',
+  async run(t) {
+    const { s, L, at } = await board(t);
+    // a piece in the middle of the board with a swappable neighbour to its right, and one that is not a legal swap
+    const legal = new Set((await t.game('act', 'legal')).map(([a, b]) => `${a}-${b}`));
+    const w = s.board.w, i = ((w >> 1) + w * (s.board.h >> 1)), j = i + 1;
+    const id = s.board.cells[i].id, idj = s.board.cells[j].id;
+    const rest = await t.game('act', 'sprite', id), restJ = await t.game('act', 'sprite', idj);
+    const dist = L.cell * 0.18; // short of the 0.3 cell that makes the swap
+    let seen;
+    await pull(t, at(i), [at(i)[0] + dist, at(i)[1] + 1], 1200, async () => {
+      await waitDrag(t, `(d) => d && !d.released && d.dx > ${dist * 0.97}`);
+      await t.page.waitForFunction(({ id, x, dist }) => { const p = window.__game.act('sprite', id); return p && p.x > x + dist * 0.9; }, { id, x: rest.x, dist }, { timeout: 5000 });
+      seen = { drag: (await t.state()).drag, a: await t.game('act', 'sprite', id), b: await t.game('act', 'sprite', idj) };
+      await t.shot('S1-03-drag-follow');
+    });
+    t.equal(seen.drag.i, i, 'the pressed piece is the one being pulled');
+    t.equal(seen.drag.j, j, 'and its neighbour on the pull side is the one giving way');
+    t.expect(Math.abs(seen.drag.dx - dist) < L.cell * 0.06, `it is pulled ${seen.drag.dx.toFixed(1)} px of ${dist.toFixed(1)}`);
+    t.expect(Math.abs(seen.a.x - rest.x - seen.drag.dx) < 1.5, 'the piece is drawn that far along');
+    t.expect(Math.abs(restJ.x - seen.b.x - seen.drag.dx) < 1.5, 'the neighbour is drawn the same distance the other way');
+    t.expect(seen.a.scale > rest.scale, 'the held piece is a little larger');
+    t.equal((await t.state()).movesUsed, 0, 'no move was made');
+    await t.page.waitForFunction(() => window.__game.getState().drag === null, null, { timeout: 5000 });
+    const back = await t.game('act', 'sprite', id), backJ = await t.game('act', 'sprite', idj);
+    t.expect(Math.abs(back.x - rest.x) < 1 && Math.abs(backJ.x - restJ.x) < 1, 'both are back at rest once the finger is up');
+    t.equal((await t.state()).movesUsed, 0, 'still no move');
+  },
+});
+tests.push({
+  name: 'S1-03 a pull toward the edge or a hole only gives a little',
+  async run(t) {
+    const { s, L, at } = await board(t);
+    const i = s.board.cells.findIndex((c, k) => c && k % s.board.w === 0); // on the left edge, so a pull to the left has no neighbour
+    t.expect(i >= 0, 'there is a cell on the left edge');
+    let seen;
+    await pull(t, at(i), [at(i)[0] - L.cell * 0.25, at(i)[1] + 1], 800, async () => {
+      await waitDrag(t, (d) => d && d.dx < 0);
+      seen = (await t.state()).drag;
+    });
+    t.equal(seen.j, -1, 'nothing gives way');
+    t.expect(Math.abs(seen.dx) <= L.cell * 0.12 + 0.01, `the pull is held to ${Math.abs(seen.dx).toFixed(1)} px of ${(L.cell * 0.12).toFixed(1)}`);
+  },
+});
+tests.push({
+  name: 'S1-03 a pull past the threshold swaps, and the slide carries on from where the piece had been pulled to',
+  async run(t) {
+    const { s, L, at } = await board(t);
+    const [[a, b]] = (await t.game('act', 'legal')).map(([p, q]) => [p[0] + p[1] * s.board.w, q[0] + q[1] * s.board.w]);
+    const ia = s.board.cells[a].id;
+    const ax = a % s.board.w, bx = b % s.board.w, ay = (a / s.board.w) | 0, by = (b / s.board.w) | 0;
+    const fx = (bx - ax) * 0.36, fy = (by - ay) * 0.36; // just over the 0.3 cell threshold
+    const rest = await t.game('act', 'sprite', ia);
+    await t.game('act', 'clock', 0);   // the move's animation starts frozen at its first instant
+    const [sx, sy] = at(a), [ex, ey] = at(a, fx, fy);
+    if (t.viewport === 'mobile') await t.touchDrag([sx, sy], [ex, ey], { steps: 6 });
+    else { await t.page.mouse.move(sx, sy); await t.page.mouse.down(); await t.page.mouse.move(ex, ey, { steps: 6 }); await t.page.mouse.up(); }
+    await t.page.waitForFunction(() => window.__game.getState().movesUsed === 1, null, { timeout: 5000 });
+    const start = await t.game('act', 'sprite', ia);
+    const moved = Math.hypot(start.x - rest.x, start.y - rest.y);
+    t.expect(moved > L.cell * 0.25 && moved < L.cell * 0.5, `the swap starts ${moved.toFixed(1)} px along, not from rest (a cell is ${L.cell.toFixed(1)} px)`);
+    t.equal((await t.state()).drag, null, 'the pull is over');
+    await t.game('act', 'clock', null);
+    await t.waitIdle(8000);
+    t.equal((await t.state()).movesUsed, 1, 'one move was made');
+  },
+});
+tests.push({
+  name: 'S1-03 a tap still selects a piece, and a swap by two taps still works',
+  async run(t) {
+    const { s, at } = await board(t);
+    const [[a, b]] = (await t.game('act', 'legal')).map(([p, q]) => [p[0] + p[1] * s.board.w, q[0] + q[1] * s.board.w]);
+    const tap = (p) => (t.viewport === 'mobile' ? t.tap(p) : t.page.mouse.click(...p));
+    await tap(at(a));
+    await t.page.waitForFunction((i) => window.__game.getState().selected === i, a, { timeout: 5000 });
+    t.equal((await t.state()).drag, null, 'a tap leaves no pull behind');
+    await tap(at(b));
+    await t.page.waitForFunction(() => window.__game.getState().movesUsed === 1, null, { timeout: 5000 });
+    await t.waitIdle(8000);
+  },
+});
