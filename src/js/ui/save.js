@@ -18,8 +18,10 @@ export const STAR_STEP = 12;
 export const RELIEF_AFTER = 3, RELIEF_MOVES = 3;
 export const reliefFor = (levelId) => (RELIEF_MOVES > 0 && !SAVE.progress[levelId] && ((SAVE.stats[levelId] || {}).tries || 0) >= RELIEF_AFTER ? RELIEF_MOVES : 0);
 const starsOf = (progress) => Object.values(progress).reduce((n, p) => n + (p && p.stars || 0), 0);
-const SETTING_KEYS = ['sound', 'music', 'ambience', 'volume', 'motion', 'steam', 'hints', 'badges', 'postcardSeen', 'animSpeed'];
-export const freshSave = () => ({ v: 1, settings: { sound: true, music: true, ambience: true, volume: 0.5, motion: 'auto', steam: true, hints: true, badges: false, postcardSeen: false, animSpeed: 1 }, progress: {}, stats: {}, boosters: { hammer: 1, line: 1, shuffle: 1, plus5: 1 }, lore: [], tutorialSeen: [], current: null, soakDay: null, soakBest: 0, daily: freshDaily() });
+const SETTING_KEYS = ['sound', 'music', 'ambience', 'volume', 'motion', 'steam', 'hints', 'badges', 'postcardSeen', 'animSpeed', 'vibration'];
+// Vibration starts on for a touch screen and off otherwise, for a save that has not chosen yet.
+const touchScreen = () => typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+export const freshSave = () => ({ v: 1, settings: { sound: true, music: true, ambience: true, volume: 0.5, motion: 'auto', steam: true, hints: true, badges: false, postcardSeen: false, animSpeed: 1, vibration: touchScreen() }, progress: {}, stats: {}, boosters: { hammer: 1, line: 1, shuffle: 1, plus5: 1 }, lore: [], tutorialSeen: [], current: null, soakDay: null, soakBest: 0, daily: freshDaily() });
 // Settings as read from a save: the defaults under what the save holds. A save from before the Ambience switch gets it
 // where its Sound effects switch is, so a player who had the effects off hears no new sound.
 const readSettings = (saved) => { const st = { ...freshSave().settings, ...(saved || {}) }; if (!saved || typeof saved.ambience !== 'boolean') st.ambience = st.sound !== false; return st; };

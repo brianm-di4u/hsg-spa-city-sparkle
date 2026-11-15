@@ -281,3 +281,88 @@ tests.push({
     t.equal(base, 844, 'a move takes its normal length');
   },
 });
+
+// --- S1-08: haptics -----------------------------------------------------------------------------------------------------------
+// navigator.vibrate is replaced by a recorder before the page loads; nobody here can feel it, so the test checks what would be asked of the phone.
+const recordVibration = () => { window.__vib = []; Object.defineProperty(navigator, 'vibrate', { configurable: true, value: (p) => { window.__vib.push(p); return true; } }); };
+const buzzes = (t) => t.page.evaluate(() => window.__vib.slice());
+const flat = (xs) => xs.flat();
+const SPECIAL = ['a a b a c', 'd e a c d', 'b c d e b', 'e d c b a', 'c b e a d']; // swapping [2,0] with [2,1] makes four in a row: a Cascade is made
+tests.push({
+  name: 'S1-08 on a touch screen a match buzzes 10 to 25 ms and a special made buzzes longer, by default',
+  viewports: ['mobile'],
+  initScript: recordVibration,
+  async run(t) {
+    await board(t, SPECIAL, { moves: 20, goals: [{ type: 'score', need: 900000 }], stars: [1000, 2000, 3000] });
+    t.equal((await t.state()).settings.vibration, true, 'Vibration starts on for a touch screen');
+    t.equal((await buzzes(t)).length, 0, 'nothing buzzed yet');
+    t.equal((await t.game('act', 'swap', [2, 0], [2, 1])).valid, true, 'the swap that makes four in a row');
+    await t.waitIdle();
+    const b = flat(await buzzes(t));
+    t.log(`buzzes: ${JSON.stringify(b)}`);
+    t.expect(b.length > 0 && b.every((n) => n >= 10 && n <= 25), 'every pulse is 10 to 25 ms');
+    t.expect(b.includes(10) || b.includes(20), 'a match buzzes');
+    t.expect(b.includes(20), 'the special made buzzes the longer 20 ms');
+    await board(t, CHAIN, { moves: 10, goals: [{ type: 'stone', need: 1 }], stars: [1, 2, 3] });
+    await t.page.evaluate(() => { window.__vib.length = 0; });
+    await t.game('act', 'swap', [1, 1], [1, 0]);
+    await t.waitIdle();
+    t.equal((await buzzes(t))[0], 10, 'a plain match buzzes 10 ms');
+  },
+});
+tests.push({
+  name: 'S1-08 a refused swap buzzes a double tap, and Vibration off silences everything',
+  viewports: ['mobile'],
+  initScript: recordVibration,
+  async run(t) {
+    await board(t, RULES);
+    await t.game('act', 'swap', [0, 0], [1, 0]);
+    const b = await buzzes(t);
+    t.expect(b.some((p) => Array.isArray(p) && p.length === 3 && p.filter((_, k) => k % 2 === 0).every((n) => n >= 10 && n <= 25)), `a padlock buzzes a double tap (${JSON.stringify(b)})`);
+    await t.game('scene', 'settings');
+    await t.shot('S1-08-settings-vibration');
+    await t.page.click('[data-toggle="vibration"]');
+    t.equal((await t.state()).settings.vibration, false, 'the switch turns it off');
+    await t.page.evaluate(() => { window.__vib.length = 0; });
+    await t.game('scene', 'game');
+    await board(t, SPECIAL, { moves: 20, goals: [{ type: 'score', need: 900000 }], stars: [1000, 2000, 3000] });
+    await t.game('act', 'swap', [2, 0], [2, 1]);
+    await t.waitIdle();
+    t.equal((await buzzes(t)).length, 0, 'nothing buzzes with the switch off');
+  },
+});
+tests.push({
+  name: 'S1-08 with a mouse Vibration starts off, can be turned on in Settings, and reduced motion silences it',
+  viewports: ['desktop'],
+  initScript: recordVibration,
+  async run(t) {
+    await board(t, SPECIAL, { moves: 20, goals: [{ type: 'score', need: 900000 }], stars: [1000, 2000, 3000] });
+    t.equal((await t.state()).settings.vibration, false, 'Vibration starts off without a touch screen');
+    await t.game('act', 'swap', [2, 0], [2, 1]);
+    await t.waitIdle();
+    t.equal((await buzzes(t)).length, 0, 'so nothing buzzes');
+    await t.game('scene', 'settings');
+    await t.page.click('[data-toggle="vibration"]');
+    t.equal((await t.state()).settings.vibration, true, 'the switch turns it on');
+    t.expect((await buzzes(t)).length === 1, 'turning it on gives one buzz to feel');
+    await t.page.evaluate(() => { window.__vib.length = 0; });
+    await t.page.click('[data-motion="reduced"]');
+    t.expect((await t.state()).reduced && (await t.state()).settings.vibration, 'reduced motion is on with Vibration still on');
+    await board(t, SPECIAL, { moves: 20, goals: [{ type: 'score', need: 900000 }], stars: [1000, 2000, 3000] });
+    await t.game('act', 'swap', [2, 0], [2, 1]);
+    await t.waitIdle();
+    t.equal((await buzzes(t)).length, 0, 'with reduced motion on nothing buzzes');
+  },
+});
+tests.push({
+  name: 'S1-08 where there is no vibration motor the switch is not offered',
+  viewports: ['desktop'],
+  initScript: () => { Object.defineProperty(navigator, 'vibrate', { configurable: true, value: undefined }); },
+  async run(t) {
+    await t.game('scene', 'settings');
+    t.equal(await t.page.locator('[data-toggle="vibration"]').count(), 0, 'no Vibration row');
+    await t.game('scene', 'game');
+    await board(t);
+    t.equal((await t.game('act', 'swap', [1, 1], [1, 0])).valid, true, 'and play goes on without it');
+  },
+});

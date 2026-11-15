@@ -13,6 +13,7 @@ import { goalIcon } from '../view/vector-art.js';
 import { sfx, unlockAudio, startMusic, setMusicIntensity } from '../audio.js';
 import { SAVE, prepareSaveAction, recordComputedAction, saveSettledAction } from './save.js';
 import { ensurePack } from '../art.js';
+import { haptic, pulseFor, PULSE } from './haptics.js';
 
 export const PLAY = {
   state: null, level: null, world: 1, anim: null, onAnimDone: null, selected: -1, cursor: -1, keyMode: false,
@@ -231,7 +232,7 @@ function whyStuck(s, i) {
 // comes back, and the pressed piece gives a little toward where it was sent and springs back, so a missed gesture is told from a refused one.
 const NUDGE_CELLS = 0.18;
 function refused(a, b) {
-  sfx('bounce', 0, { pan: panOf(a) });
+  sfx('bounce', 0, { pan: panOf(a) }); haptic(PULSE.refused);
   if (VIEW.reduced || !PLAY.state || b < 0) return;
   const w = PLAY.state.w, cell = VIEW.layout.cell, dx = (b % w) - (a % w), dy = ((b / w) | 0) - ((a / w) | 0);
   if (Math.abs(dx) + Math.abs(dy) !== 1) return;
@@ -331,6 +332,7 @@ const panOf = (i) => (i >= 0 && PLAY.state ? panCol(i % PLAY.state.w) : 0);
 const goalIsDone = (e) => (e.type === 'moss' ? e.have === 0 : e.have >= e.need);
 
 function beatSounds(evs) {
+  haptic(pulseFor(evs));
   const once = new Set();
   // A beat's cues come from where the first thing in it happened; a match is heard on the side the player swapped.
   const here = evs.find((e) => e.t === 'swap' || e.t === 'fire' || e.t === 'hit' || e.t === 'special' || e.t === 'collect');
@@ -472,7 +474,7 @@ export function bindInput(canvas) {
     if (far < th) { d.refused = false; showDrag(d.i, j, horiz ? dx : 0, horiz ? 0 : dy, cell); return; }
     if (j < 0 || !s.mask[j]) { // an edge or a hole: the piece gives a little and the gesture stays open, so the player can aim again without lifting
       showDrag(d.i, -1, horiz ? dx : 0, horiz ? 0 : dy, cell);
-      if (!d.refused) { d.refused = true; sfx('bounce', 0, { pan: panOf(d.i) }); }
+      if (!d.refused) { d.refused = true; sfx('bounce', 0, { pan: panOf(d.i) }); haptic(PULSE.refused); }
       return;
     }
     d.swapped = true;

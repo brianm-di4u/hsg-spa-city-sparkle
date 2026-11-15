@@ -11,6 +11,7 @@ import { atmosphere } from './atmos.js';
 import { dailyLevel, dayKey, addDays, streakNow, cleanDaily } from './daily.js';
 import { ensurePack } from '../art.js';
 import { ACHIEVEMENTS, recordCounts, earnedSet, newlyEarned } from './records.js';
+import { haptic, canVibrate, PULSE } from './haptics.js';
 
 export const UI = { scene: 'boot', transitions: 0, modalOpen: false, lastFocus: null, tipOpen: false, dailyDate: null }; // dailyDate: a test can pin today's date
 const $ = (id) => document.getElementById(id);
@@ -498,6 +499,7 @@ export function showSettings(back) {
     <div class="set-row"><label for="vol">Volume</label><input id="vol" type="range" min="0" max="1" step="0.05" value="${st.volume}"></div>
     <div class="set-row"><label id="l-motion">Motion</label><div class="seg" role="group" aria-labelledby="l-motion">${['auto', 'reduced', 'full'].map((v) => `<button class="chip-btn" data-motion="${v}" aria-pressed="${st.motion === v}">${v[0].toUpperCase() + v.slice(1)}</button>`).join('')}</div></div>
     <div class="set-row"><label id="l-speed">Move speed</label><div class="seg" role="group" aria-labelledby="l-speed">${SPEEDS.map((v) => `<button class="chip-btn" data-speed="${v}" aria-pressed="${VIEW.speed === v}" aria-label="${v} times">${v}×</button>`).join('')}</div></div>
+    ${canVibrate() ? toggle('vibration', 'Vibration') : ''}
     ${toggle('steam', 'Ambient steam')}${toggle('hints', 'Hints after 5 s')}${toggle('badges', 'Colour-blind badges')}
     <div class="set-row"><label>Progress</label><button class="chip-btn" data-act="reset">Reset…</button></div>
     <div class="set-row"><label>Play record</label><button class="chip-btn" data-act="copystats">Copy my stats</button></div>
@@ -505,7 +507,7 @@ export function showSettings(back) {
     <div class="actions"><button class="btn small" data-act="close" data-focus>Done</button></div>`, { label: 'Settings' });
   m.querySelectorAll('[data-toggle]').forEach((b) => b.addEventListener('click', () => {
     const k = b.dataset.toggle; changeSettings({ [k]: !st[k] }); b.setAttribute('aria-pressed', st[k]); b.textContent = st[k] ? 'On' : 'Off';
-    applySettings(); unlockAudio(); sfx('click');
+    applySettings(); unlockAudio(); sfx('click'); if (k === 'vibration') haptic(PULSE.special);
   }));
   m.querySelectorAll('[data-motion]').forEach((b) => b.addEventListener('click', () => {
     changeSettings({ motion: b.dataset.motion }); m.querySelectorAll('[data-motion]').forEach((x) => x.setAttribute('aria-pressed', st.motion === x.dataset.motion)); applySettings();
