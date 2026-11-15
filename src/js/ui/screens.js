@@ -10,6 +10,7 @@ import { TIPS } from './tips.js';
 import { atmosphere } from './atmos.js';
 import { dailyLevel, dayKey, addDays, streakNow, cleanDaily } from './daily.js';
 import { ensurePack } from '../art.js';
+import { ACHIEVEMENTS, recordCounts, earnedSet, newlyEarned } from './records.js';
 
 export const UI = { scene: 'boot', transitions: 0, modalOpen: false, lastFocus: null, tipOpen: false, dailyDate: null }; // dailyDate: a test can pin today's date
 const $ = (id) => document.getElementById(id);
@@ -104,6 +105,7 @@ export function showTitle() {
           <button class="btn small alt" data-act="help">Help</button>
           <button class="btn small alt" data-act="settings">Settings</button>
           <button class="btn small alt" data-act="scrapbook">Scrapbook</button>
+          <button class="btn small alt" data-act="records">Records</button>
           <button class="btn small alt" data-act="about">About</button>
         </div>
       </div>
@@ -112,7 +114,7 @@ export function showTitle() {
     continue: () => enterLevel(null, { continue: true, skipIntro: true }),
     play: () => showMap(undefined, { premise: true }),
     daily: () => (dailyOpen ? showDaily() : toast('Finish Bathhouse Row to unlock the Daily Challenge', 2200)),
-    help: () => showHelp(), settings: () => showSettings(), scrapbook: () => showScrapbook(), about: () => showAbout(),
+    help: () => showHelp(), settings: () => showSettings(), scrapbook: () => showScrapbook(), records: () => showRecords(), about: () => showAbout(),
   });
   const f = screenEl().querySelector('[data-focus]');
   if (f) f.focus();
@@ -314,7 +316,7 @@ export function onWin(s, L) {
   if (L.mode === 'daily') return onDailyWin(s, L);
   if (s.mode === 'soak') return;
   const stars = s.starsWon, total = s.score + (s.encoreScore || 0); // stars are counted on the score plus the Encore
-  const card = loreFor(L);
+  const card = loreFor(L), had = earnedSet(SAVE, LEVELS);
   const receipt = saveTerminal({ levelId: L.id, stars, score: total, moves: s.movesUsed, loreId: card && card.id,
     rewardType: ['hammer', 'line', 'shuffle', 'plus5'][LEVELS.indexOf(L) % 4],
     worldLevels: LEVELS.filter((l) => l.world === L.world).map((l) => l.id) }, { levelId: L.id, state: cloneState(s) });
@@ -322,6 +324,7 @@ export function onWin(s, L) {
   const worldComplete = !!receipt.outcome?.worldComplete;
   sfx('win', stars); setMood('results', L.world);
   const idx = LEVELS.indexOf(L), next = LEVELS[idx + 1];
+  const fresh = newlyEarned(had, SAVE, LEVELS);
   const m = openModal(`
     <div class="ribbon"><span>Level cleared!</span></div>
     <p class="fine" style="text-align:center">World ${L.world} · Level ${L.n}</p>
@@ -330,13 +333,17 @@ export function onWin(s, L) {
     <p class="result-score" data-to="${total}">${total.toLocaleString('en-US')}</p>
     <p class="result-sub">${s.encoreScore ? `${s.score.toLocaleString('en-US')} + ${s.encoreScore.toLocaleString('en-US')} Encore bonus: stars count both` : 'points'}${rewards.length ? ` · new booster: ${rewards.join(', ')}` : ''}</p>
     <p class="fine" style="text-align:center">${totalStars()} stars · next booster at ${nextBoosterAt()}</p>
+    ${achievementLines(fresh)}
     ${card ? `<div class="lore${paint('card-frame') ? ' framed' : ''}" style="${paint('card-frame') ? `--card-frame: url(${paint('card-frame')})` : ''}" aria-label="Lore card"><span class="tag">Real history</span><h4>${esc(card.title)}</h4><p>${esc(card.text)}</p><p class="src">Source: ${esc(card.source)}</p></div>` : ''}
     <div class="actions">${next && !worldComplete ? '<button class="btn" data-act="next" data-focus>Next level</button>' : ''}${worldComplete ? '<button class="btn" data-act="world" data-focus>Postcard restored!</button>' : ''}<button class="btn alt small" data-act="replay">Replay</button><button class="btn alt small" data-act="map">Map</button></div>`, { label: 'Level cleared' });
   stars && [1, 2, 3].slice(0, stars).forEach((n) => setTimeout(() => sfx('star', n), 200 + n * 180));
-  if (rewards.length) setTimeout(() => { if (UI.scene === 'win') sfx('earned'); }, 200 + (stars + 1) * 180 + 250);
+  if (rewards.length || fresh.length) setTimeout(() => { if (UI.scene === 'win') sfx('earned'); }, 200 + (stars + 1) * 180 + 250);
+  if (fresh.length) announce(`New achievement: ${fresh.map((a) => a.name).join(', ')}.`);
   celebrate(m, L.world);
   bindActs(m, { next: () => showIntro(next), replay: () => enterLevel(L), map: () => showMap(L.id), world: () => showWorldComplete(L.world) });
 }
+// A line for each achievement this win earned, on the results card.
+const achievementLines = (list) => list.map((a) => `<p class="ach"><b>New: ${esc(a.name)}</b> ${esc(a.how)}</p>`).join('');
 // Sparkles drift up around the results card; the score counts up from zero (instantly under reduced motion).
 function celebrate(m, world = 1) {
   const fx = document.createElement('div');
@@ -553,6 +560,25 @@ export function showScrapbook(world) {
   render(world || worlds.find((k) => have(k) > 0) || 1);
 }
 
+// --- Records: what the save already knows, and the small achievements ---------------------------------------------------------
+export function showRecords() {
+  const prev = UI.scene;
+  setScene('records');
+  const c = recordCounts(SAVE, LEVELS), got = earnedSet(SAVE, LEVELS), n = (v) => v.toLocaleString('en-US');
+  const cell = (label, value) => `<div><dt>${label}</dt><dd>${value}</dd></div>`;
+  const m = openModal(`<h2>Records</h2>
+    <dl class="daily-stats rec-stats">
+      ${cell('Levels cleared', `${c.cleared} of ${c.levels}`)}${cell('Stars', `${c.stars} of ${c.levels * 3}`)}${cell('Three-star wins', c.threeStar)}
+      ${cell('Postcards', `${c.worlds} of ${c.worldCount}`)}${cell('Scrapbook', `${c.lore} of ${LORE.length}`)}${cell('Boosters held', c.boosters)}
+      ${cell('Games played', c.runs)}${cell('Games won', c.wins)}${cell('Best Daily streak', plural(c.bestStreak, 'day'))}
+    </dl>
+    <p class="fine">Best Daily score ever: ${c.bestDaily ? n(c.bestDaily) : 'none yet'}</p>
+    <h3 class="rec-head">Achievements: ${got.size} of ${ACHIEVEMENTS.length}</h3>
+    <ul class="ach-list" aria-label="Achievements">${ACHIEVEMENTS.map((a) => `<li class="${got.has(a.id) ? 'done' : 'todo'}"><b>${esc(a.name)}<span class="sr-only">${got.has(a.id) ? ' (earned)' : ' (not yet)'}</span></b>${esc(a.how)}</li>`).join('')}</ul>
+    <div class="actions"><button class="btn small" data-act="close" data-focus>Close</button></div>`, { label: 'Records' });
+  bindActs(m, { close: () => { closeModal(); setScene(prev === 'records' ? 'title' : prev); } });
+}
+
 // --- Daily Challenge -----------------------------------------------------------------------------
 export const todayKey = () => UI.dailyDate || dayKey();
 const dateOf = (k) => new Date(+k.slice(0, 4), +k.slice(5, 7) - 1, +k.slice(8, 10));
@@ -604,10 +630,12 @@ export function startDaily() {
 }
 function onDailyWin(s, L) {
   const total = s.score + (s.encoreScore || 0), stars = s.starsWon;
+  const had = earnedSet(SAVE, LEVELS);
   const receipt = saveDaily({ key: L.dayKey, score: total, stars, won: true });
   const o = receipt.outcome || {}, d = cleanDaily(SAVE.daily), n = (v) => v.toLocaleString('en-US');
   sfx('win', stars); setMood('results', L.world);
   const bits = [];
+  const fresh = newlyEarned(had, SAVE, LEVELS);
   if (o.newBest) bits.push('new best today');
   if (o.newEver) bits.push('new best ever');
   const m = openModal(`
@@ -618,8 +646,10 @@ function onDailyWin(s, L) {
     <p class="result-score" data-to="${total}">${n(total)}</p>
     <p class="result-sub">${s.encoreScore ? `${n(s.score)} + ${n(s.encoreScore)} Encore bonus` : 'points'}${bits.length ? ' · ' + bits.join(' · ') : ''}</p>
     <p class="daily-line" style="text-align:center"><b>${plural(o.streak != null ? o.streak : streakNow(d, L.dayKey), 'day')}</b> in a row · best ever ${n(SAVE.soakBest || total)}</p>
+    ${achievementLines(fresh)}
     <div class="actions"><button class="btn" data-act="again" data-focus>Play again</button><button class="btn alt small" data-act="back">Home</button></div>`, { label: 'Daily cleared' });
   stars && [1, 2, 3].slice(0, stars).forEach((k) => setTimeout(() => sfx('star', k), 200 + k * 180));
+  if (fresh.length) { setTimeout(() => { if (UI.scene === 'win') sfx('earned'); }, 200 + (stars + 1) * 180 + 250); announce(`New achievement: ${fresh.map((a) => a.name).join(', ')}.`); }
   celebrate(m, L.world);
   bindActs(m, { again: () => startDaily(), back: () => showTitle() });
 }
