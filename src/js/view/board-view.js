@@ -5,7 +5,7 @@ import { VIEW, WORLD_LOOK, retireTextures } from './stage.js';
 import { modelFromState, applyEvent } from './model.js';
 import { schedule, frameAt, ease, hrand, TICK_MS } from './player.js';
 
-const B = { halos: [], halosUsed: 0, built: null, cells: [], drains: [], layer: {}, tiles: new Map(), fx: [], fxUsed: 0, pops: [], popsUsed: 0, callout: null, frame: null, maskG: null, model: null, sel: -1, cursor: -1, hint: null, hintG: null, legal: null, legalDrawn: [], aim: null, aimDrawn: [], showCursor: false, drag: null, dragFrac: 0 };
+const B = { halos: [], halosUsed: 0, built: null, cells: [], drains: [], layer: {}, tiles: new Map(), fx: [], fxUsed: 0, pops: [], popsUsed: 0, callout: null, frame: null, maskG: null, model: null, sel: -1, cursor: -1, hint: null, hintG: null, legal: null, legalDrawn: [], aim: null, aimDrawn: [], extras: { spray: 0, steam: 0 }, showCursor: false, drag: null, dragFrac: 0 };
 export const BOARD = B;
 
 const texFor = (t) => {
@@ -187,7 +187,7 @@ function drawAim() {
 // Draws the model, plus the beat at index i with progress p when a timeline plays.
 export function drawFrame(model, beat, p, opts = {}) {
   const { cell } = VIEW.layout;
-  B.fxUsed = 0; B.popsUsed = 0; B.halosUsed = 0; B.legalDrawn = []; B.aimDrawn = [];
+  B.fxUsed = 0; B.popsUsed = 0; B.halosUsed = 0; B.legalDrawn = []; B.aimDrawn = []; B.extras.spray = 0; B.extras.steam = 0;
   for (const sp of B.tiles.values()) sp._used = false;
   const ev = beat ? beat.events : [];
   const hitTiles = new Set(), hitLayer = new Map();
@@ -387,6 +387,7 @@ const CALLOUTS = [[8, '143°F!'], [6, 'Boiling Over!'], [4, 'Simmering!'], [3, '
 const FIRE_CALL = { h: 'Cascade!', v: 'Cascade!', b: 'Hot Stone!', C: 'Spring Crystal!' };
 const COMBO_CALL = { GG: 'Steam Cross!', GB: 'Big Vent!', BB: 'Hot Rocks!', CG: 'Cascade Storm!', CB: 'Stone Shower!', CC: 'Spring Flood!' };
 
+const SPRAY = 14, STEAM = 9; // droplets thrown by a Cascade, steam puffs rising from a Hot Stone
 function drawFx(ev, p, beat) {
   if (!beat) { if (B.callout) B.callout.visible = false; return; }
   const { cell } = VIEW.layout;
@@ -418,6 +419,13 @@ function drawFx(ev, p, beat) {
           pf.position.set(x + (e.s === 'h' ? f : 0), y + (e.s === 'v' ? f : 0) - p * cell * 0.7 * hrand(e.id, j));
           pf.width = pf.height = cell * (0.5 + 0.7 * p); pf.alpha = 0.32 * (1 - p);
         }
+        // the sheet of water throws spray: droplets leave it along its length, rise, and fall back
+        if (!reduced) for (let j = 0; j < SPRAY; j++) {
+          const f = (hrand(e.id, j, 11) - 0.5) * len, rise = cell * (0.9 + 1.1 * hrand(e.id, j, 13)), side = hrand(e.id, j, 17) < 0.5 ? -1 : 1, d = fxSprite(VIEW.tex.puff, 'add');
+          const lift = rise * p - cell * 1.2 * p * p, dir = hrand(e.id, j, 21) < 0.5 ? 1 : -1; // up or down off the sheet, then back toward it // a throw: up first, then down under its own weight
+          d.position.set(x + (e.s === 'h' ? f : side * Math.abs(lift) * 0.6), y + (e.s === 'v' ? f : -lift * dir));
+          d.width = d.height = cell * (0.45 + 0.3 * hrand(e.id, j, 19)); d.alpha = Math.min(1, p * 6) * (1 - p * 0.4); d.tint = 0xc4efff; B.extras.spray++;
+        }
         // the impact travels outward from the special: a spark at each leading tip of the beam
         for (const sgn of [-1, 1]) { const g = fxSprite(VIEW.tex.glint); const d = (len / 2) * sgn; g.position.set(x + (e.s === 'h' ? d : 0), y + (e.s === 'v' ? d : 0)); g.width = g.height = cell * 0.9; g.alpha = 1 - p; }
       } else if (e.s === 'b' || e.s === 'B') {
@@ -425,6 +433,15 @@ function drawFx(ev, p, beat) {
         const ri = fxSprite(VIEW.tex.ring); ri.position.set(x, y); ri.width = ri.height = cell * (0.5 + 2.6 * ease.outCubic(q)); ri.alpha = 0.9 * (1 - p); ri.tint = 0xfff2c8;
         const r2 = fxSprite(VIEW.tex.puff); r2.position.set(x, y); r2.width = r2.height = cell * (1 + 3.5 * q); r2.alpha = 0.7 * (1 - p); r2.tint = 0xff8a20;
         const core = fxSprite(VIEW.tex.puff); core.position.set(x, y); core.width = core.height = cell * 1.6; core.alpha = Math.max(0, 1 - p * 3); core.tint = 0xfff6e0;
+        // steam: soft white puffs leave the burst and rise, growing as they thin; a faint second ring ripples out behind the first like heat over stone
+        if (!reduced) {
+          for (let j = 0; j < STEAM; j++) {
+            const a = (j / STEAM) * Math.PI * 2 + hrand(e.id, j, 23), reach = cell * (0.5 + 1.5 * ease.outCubic(q)) * (0.6 + 0.5 * hrand(e.id, j, 29)), st = fxSprite(VIEW.tex.puff, 'normal');
+            st.position.set(x + Math.cos(a) * reach, y + Math.sin(a) * reach * 0.7 - p * cell * (0.7 + 0.8 * hrand(e.id, j, 31)));
+            st.width = st.height = cell * (0.7 + 1.0 * p); st.alpha = 0.8 * Math.min(1, p * 4) * (1 - p * 0.7); st.tint = 0xffffff; B.extras.steam++;
+          }
+          const sh = fxSprite(VIEW.tex.ring); sh.position.set(x, y); sh.width = sh.height = cell * (0.4 + 5.2 * ease.outCubic(Math.max(0, q - 0.15))); sh.alpha = 0.35 * (1 - p); sh.tint = 0xffd9a8;
+        }
       } else if (e.s === 'C') {
         for (const c of e.cells) {
           if (c === e.at) continue;

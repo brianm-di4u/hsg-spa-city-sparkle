@@ -315,3 +315,54 @@ tests.push({
     }
   },
 });
+
+// --- S4-17: a Cascade throws spray, a Hot Stone breathes steam --------------------------------------------------------------
+// The extra sprites drawn at one frozen moment of a move (the game counts the droplets and steam puffs it draws), at Full motion and then at
+// Reduced, which draws none of them. The counts are the same every run: they come from the number of cells and a fixed hash, not from chance.
+const CASCADE = ['aH a c b e', 'd e a e c', 'b d b d a', 'c a e c b', 'e b d a c'];
+const STONE = ['c d e f c', 'd e f c d', 'e f aB a c', 'f c d e a', 'c d e f c'];
+async function fxAt(t, type, n, frac) {
+  await t.game('act', 'replay');
+  const ms = await t.game('act', 'beatAt', type, n);
+  t.expect(ms != null, `the move has a ${type} ${n} beat`);
+  await t.game('act', 'clock', ms + frac);
+  await t.waitFrames(3);
+  return (await t.state()).fx;
+}
+async function fxOnce(t, board, swap, type, n, frac, shotName) {
+  await t.game('newGame', { level: 'w1-01', seed: 4, tips: false });
+  await t.game('act', 'board', board);
+  await t.waitIdle();
+  t.equal((await t.game('act', 'swap', ...swap)).valid, true, 'the swap makes a special fire');
+  await t.waitIdle(8000);
+  const r = await fxAt(t, type, n, frac);
+  if (shotName) await t.shot(shotName, { wait: false });
+  await t.game('act', 'clock', null);
+  await t.waitIdle(8000);
+  return r;
+}
+async function fxPair(t, board, swap, type, n, frac, shotName) {
+  t.equal((await t.state()).reduced, false, 'motion is full');
+  const full = await fxOnce(t, board, swap, type, n, frac, shotName);
+  await t.page.emulateMedia({ reducedMotion: 'reduce' });
+  await t.reload();
+  t.equal((await t.state()).reduced, true, 'and now reduced');
+  const calm = await fxOnce(t, board, swap, type, n, frac);
+  return { full, calm };
+}
+tests.push({
+  name: 'S4-17 a Cascade throws spray off its sheet of water, and none of it under reduced motion',
+  async run(t) {
+    const r = await fxPair(t, CASCADE, [[2, 1], [2, 0]], 'fire', 'h', 70, 'S4-17-cascade-fire');
+    t.equal(r.full.spray, 14, 'Full motion throws fourteen droplets');
+    t.equal(r.calm.spray, 0, 'Reduced motion throws none');
+  },
+});
+tests.push({
+  name: 'S4-17 a Hot Stone breathes steam and a heat ripple, and none of it under reduced motion',
+  async run(t) {
+    const r = await fxPair(t, STONE, [[4, 3], [4, 2]], 'fire', 'b', 110, 'S4-17-stone-fire');
+    t.equal(r.full.steam, 9, 'Full motion lets off nine puffs of steam');
+    t.equal(r.calm.steam, 0, 'Reduced motion lets off none');
+  },
+});
