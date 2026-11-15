@@ -1,8 +1,8 @@
 // Council wave 2, batch B: cue variation and silent events (S5-02, S5-06).
 export const tests = [];
 
-const CUES = ['select', 'swap', 'bounce', 'match', 'cascade', 'stone', 'crystal', 'special', 'tufa', 'lock', 'moss', 'fog', 'token', 'spread', 'reshuffle', 'win', 'lose', 'star', 'click', 'booster', 'goal', 'low', 'world', 'earned', 'intro', 'combo', 'starline'];
-const NEW_CUES = ['goal', 'low', 'world', 'earned', 'intro', 'combo', 'starline'];
+const CUES = ['select', 'swap', 'bounce', 'match', 'cascade', 'stone', 'crystal', 'special', 'tufa', 'lock', 'moss', 'fog', 'token', 'spread', 'reshuffle', 'win', 'lose', 'star', 'click', 'booster', 'goal', 'low', 'world', 'earned', 'intro', 'combo', 'starline', 'encore'];
+const NEW_CUES = ['goal', 'low', 'world', 'earned', 'intro', 'combo', 'starline', 'encore'];
 // A representative call for each cue: [name, arg, options].
 const CALLS = CUES.map((c) => [c, { match: 3, token: 2, star: 2, starline: 2, low: 3 }[c] || 0, c === 'match' ? { size: 5, pan: 0.3 } : {}]);
 const CUE_MIN = 0.18, CUE_MAX = 0.45; // standards: gameplay cues peak 0.2 to 0.45 (a little room below for the random gain spread)
