@@ -81,3 +81,41 @@ tests.push({
   },
 });
 
+// --- S6-11: a move counts when it is made --------------------------------------------------------------------------
+tests.push({
+  name: 'S6-11 reloading during a move\'s animation does not take the move back',
+  async run(t) {
+    await inLevel(t);
+    const start = await t.state();
+    await t.game('act', 'clock', 0); // freeze the animation so the move is still "playing"
+    const legal = await t.game('act', 'legal');
+    await t.game('act', 'swap', ...legal[0]);
+    const mid = await t.state();
+    t.equal(mid.anim.playing, true, 'the animation is still playing');
+    t.equal(mid.movesLeft, start.movesLeft - 1, 'the screen shows one move spent');
+    const saved = await stored(t);
+    t.equal(saved.current.state.movesLeft, mid.movesLeft, 'the save already holds the board after the move');
+    await t.reload();
+    await t.waitIdle();
+    await t.page.locator('[data-act="continue"]').click();
+    await t.waitIdle();
+    const back = await t.state();
+    t.equal(back.movesLeft, mid.movesLeft, 'Continue shows the same moves left as before the reload');
+    t.equal(back.hash, mid.hash, 'and the same board');
+  },
+});
+tests.push({
+  name: 'S6-11 a booster spent mid-animation is spent in the save at once',
+  async run(t) {
+    await inLevel(t);
+    await t.game('act', 'clock', 0);
+    const r = await t.game('act', 'booster', 'shuffle');
+    t.equal(r.valid, true, 'the shuffle ran');
+    const saved = await stored(t);
+    t.equal(saved.boosters.shuffle, 0, 'the booster is gone from the save');
+    await t.reload();
+    await t.waitIdle();
+    t.equal((await t.state()).saveBoosters.shuffle, 0, 'and still gone after a reload');
+  },
+});
+

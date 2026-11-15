@@ -178,7 +178,7 @@ export function doSwap(a, b) {
   const r = apply(PLAY.state, { type: 'swap', a, b });
   if (r.reason === 'blocked') return r;
   PLAY.selected = -1; BOARD.sel = -1;
-  if (r.valid && mode !== 'soak') recordComputedAction(action, { levelId: PLAY.level.id, state: cloneState(PLAY.state) });
+  if (r.valid && mode !== 'soak') { recordComputedAction(action, { levelId: PLAY.level.id, state: cloneState(PLAY.state) }); commitMove(); }
   play(pre, r, () => afterMove(r));
   return r;
 }
@@ -191,11 +191,16 @@ export function doBooster(name, cell, dir) {
   const r = apply(PLAY.state, { type: 'booster', name, cell, dir });
   if (!r.valid) return r;
   recordComputedAction(action, { levelId: PLAY.level.id, state: cloneState(PLAY.state) }, name);
+  commitMove();
   PLAY.armed = null;
   sfx('booster');
   play(pre, r, () => afterMove(r));
   return r;
 }
+
+// A move counts the moment it is made: the save already holds the board it leaves behind, so reloading during the
+// animation cannot take it back. A move that ends the level (Encore, win, loss) is saved by the end-of-level flow instead.
+function commitMove() { if (PLAY.state.phase === 'play') saveSettledAction(); }
 
 function play(pre, r, done) {
   PLAY.lastPre = pre; PLAY.lastTimeline = r.timeline;

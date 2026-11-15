@@ -33,7 +33,7 @@ export const tests=[
 }},
 
 {name:'unrelated actual Sound success retains visible unsaved state for unpaid board until recovery',async run(t){
- await game(t);await t.page.evaluate(()=>{const old=Storage.prototype.setItem;let fail=true;Storage.prototype.setItem=function(k,v){if(k==='spa-city-sparkle:v1'&&fail){fail=false;throw Error('fixture failed settlement');}return old.call(this,k,v);};});await t.game('act','booster','shuffle');await t.waitIdle(8000);await t.page.keyboard.press('KeyP');await t.page.locator('[data-act="settings"]').click();await t.page.locator('[data-toggle="sound"]').click();t.equal((await t.state()).storageOk,false,'preferences did not acknowledge unpaid board');t.expect((await t.page.locator('[role="dialog"]').innerText()).includes('Storage is unavailable'),'existing settings shows unsaved status');await t.shot('save-preference-success-still-unsaved');
+ await game(t);await t.page.evaluate(()=>{const old=Storage.prototype.setItem;let fails=2;Storage.prototype.setItem=function(k,v){if(k==='spa-city-sparkle:v1'&&fails>0){fails--;throw Error('fixture failed settlement');}return old.call(this,k,v);};});await t.game('act','booster','shuffle');await t.waitIdle(8000);await t.page.keyboard.press('KeyP');await t.page.locator('[data-act="settings"]').click();await t.page.locator('[data-toggle="sound"]').click();t.equal((await t.state()).storageOk,false,'preferences did not acknowledge unpaid board');t.expect((await t.page.locator('[role="dialog"]').innerText()).includes('Storage is unavailable'),'existing settings shows unsaved status');await t.shot('save-preference-success-still-unsaved');
 }},
 
 ];
