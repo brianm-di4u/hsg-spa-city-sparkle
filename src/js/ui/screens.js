@@ -478,7 +478,7 @@ export function showHelp(back, tab = 'basics') {
 const SPEEDS = [1, 1.5, 2];
 export function applySettings() {
   const st = SAVE.settings;
-  AUDIO.sound = st.sound; AUDIO.music = st.music; AUDIO.ambience = st.ambience; AUDIO.volume = st.volume; applyLevels();
+  AUDIO.sound = st.sound; AUDIO.music = st.music; AUDIO.ambience = st.ambience; AUDIO.volume = st.volume; AUDIO.musicVolume = st.musicVolume; AUDIO.sfxVolume = st.sfxVolume; applyLevels();
   const sysReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   VIEW.reduced = st.motion === 'reduced' || (st.motion === 'auto' && sysReduced);
   VIEW.speed = SPEEDS.includes(st.animSpeed) ? st.animSpeed : 1;
@@ -497,6 +497,8 @@ export function showSettings(back) {
   const m = openModal(`<h2>Settings</h2>
     ${toggle('sound', 'Sound effects')}${toggle('music', 'Music')}${toggle('ambience', 'Ambience')}
     <div class="set-row"><label for="vol">Volume</label><input id="vol" type="range" min="0" max="1" step="0.05" value="${st.volume}"></div>
+    <div class="set-row"><label for="vol-music">Music volume</label><input id="vol-music" type="range" min="0" max="1" step="0.05" value="${st.musicVolume}"></div>
+    <div class="set-row"><label for="vol-sfx">Effects volume</label><input id="vol-sfx" type="range" min="0" max="1" step="0.05" value="${st.sfxVolume}"></div>
     <div class="set-row"><label id="l-motion">Motion</label><div class="seg" role="group" aria-labelledby="l-motion">${['auto', 'reduced', 'full'].map((v) => `<button class="chip-btn" data-motion="${v}" aria-pressed="${st.motion === v}">${v[0].toUpperCase() + v.slice(1)}</button>`).join('')}</div></div>
     <div class="set-row"><label id="l-speed">Move speed</label><div class="seg" role="group" aria-labelledby="l-speed">${SPEEDS.map((v) => `<button class="chip-btn" data-speed="${v}" aria-pressed="${VIEW.speed === v}" aria-label="${v} times">${v}×</button>`).join('')}</div></div>
     ${canVibrate() ? toggle('vibration', 'Vibration') : ''}
@@ -515,7 +517,12 @@ export function showSettings(back) {
   m.querySelectorAll('[data-speed]').forEach((b) => b.addEventListener('click', () => {
     changeSettings({ animSpeed: +b.dataset.speed }); applySettings(); m.querySelectorAll('[data-speed]').forEach((x) => x.setAttribute('aria-pressed', VIEW.speed === +x.dataset.speed));
   }));
-  m.querySelector('#vol').addEventListener('input', (e) => { changeSettings({ volume: +e.target.value }); applySettings(); });
+  // Each slider moves its level as it is dragged; letting go plays the click, so the level can be judged by ear (the music is its own preview).
+  for (const [id, key, hear] of [['vol', 'volume', true], ['vol-music', 'musicVolume', false], ['vol-sfx', 'sfxVolume', true]]) {
+    const el = m.querySelector('#' + id);
+    el.addEventListener('input', (e) => { changeSettings({ [key]: +e.target.value }); applySettings(); });
+    el.addEventListener('change', () => { unlockAudio(); applyLevels(); if (hear) sfx('click'); });
+  }
   bindActs(m, {
     fresh: () => { const r = startFreshSave(); toast(r.ok ? 'Started fresh. Your old save is kept.' : 'Could not start fresh. Storage is unavailable.'); if (r.ok) m.querySelector('#fresh-row')?.remove(); },
     reset: () => confirmReset(prev, back),

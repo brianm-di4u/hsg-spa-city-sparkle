@@ -5,7 +5,7 @@
 import { makeAudioKit, measureAudio } from './audio-kit.js';
 import { SCORES, SCENES, WORLD_MOOD } from './music.js';
 
-export const AUDIO = { ctx: null, master: null, sfxGain: null, kit: null, sound: true, music: true, ambience: true, volume: 0.5, played: [], calls: [], mood: null, holds: new Set(), suspendTimer: 0 };
+export const AUDIO = { ctx: null, master: null, sfxGain: null, kit: null, sound: true, music: true, ambience: true, volume: 0.5, musicVolume: 1, sfxVolume: 1, musicLevel: 0, played: [], calls: [], mood: null, holds: new Set(), suspendTimer: 0 };
 // Levels of the shipping mix. MASTER_SCALE was 0.6; at 1.2 the default volume (0.5) leaves the cues audible over the music.
 const MASTER_SCALE = 1.2;
 const MUSIC_LEVEL = 0.6, AMBIENCE_LEVEL = 1; // measured: every piece peaks 0.06 to 0.16 and every bed under 0.07 at the default volume
@@ -29,15 +29,17 @@ function ensure() {
 // Resume on any state but 'running': iOS Safari reports 'interrupted' after a call, lock or alarm.
 export function unlockAudio() { const c = ensure(); if (c && c.state !== 'running') try { c.resume().catch(() => {}); } catch (_) { /* resume is best effort */ } }
 // A hand-edited save can hold any volume; a gain of NaN throws, and one above 1 is louder than the slider goes.
-const safeVolume = (v) => (Number.isFinite(+v) && v !== null && v !== '' ? Math.min(1, Math.max(0, +v)) : 0.5);
+const safeVolume = (v, fallback = 0.5) => (Number.isFinite(+v) && v !== null && v !== '' ? Math.min(1, Math.max(0, +v)) : fallback);
 export function applyLevels() {
   if (!AUDIO.ctx) return;
   AUDIO.master.gain.cancelScheduledValues(AUDIO.ctx.currentTime);
   AUDIO.master.gain.value = safeVolume(AUDIO.volume) * MASTER_SCALE;
-  AUDIO.sfxGain.gain.value = AUDIO.sound ? 1 : 0;
+  // Music volume and Effects volume (1 is the level the mix was built at; they only turn it down) sit under the same switches as before.
+  AUDIO.sfxGain.gain.value = AUDIO.sound ? safeVolume(AUDIO.sfxVolume, 1) : 0;
   // Sound effects, Music and Ambience are three separate switches. Music never depended on the effects switch: a
   // player who turns the effects off keeps the music, as before the ambience was added.
-  AUDIO.kit.music.level(AUDIO.music ? MUSIC_LEVEL : 0);
+  AUDIO.musicLevel = AUDIO.music ? MUSIC_LEVEL * safeVolume(AUDIO.musicVolume, 1) : 0; // what the music bus is asked for, kept for the tests
+  AUDIO.kit.music.level(AUDIO.musicLevel);
   AUDIO.kit.amb.level(AUDIO.ambience ? AMBIENCE_LEVEL : 0);
 }
 
@@ -148,7 +150,7 @@ export function runCue(name, arg, opt, ctx, dest, rnd) {
 }
 // Cues struck together (the sounds of one beat, or of every beat a skip folds into one) get quieter as they pile up, so even at the maximum
 // volume they stay under 0.95 at the speakers (measured in tests/council-w3-d). Up to three together are as loud as one.
-export const crowdLevel = (n) => (n <= 3 ? 1 : Math.max(0.35, 2.8 / n));
+export const crowdLevel = (n) => (n <= 3 ? 1 : Math.max(0.3, 2.5 / n));
 // The big cues pull the music down for a moment so they are heard over it.
 const DUCKS = { win: [6, 700], lose: [6, 700], world: [6, 1100] };
 
@@ -208,19 +210,20 @@ export function resumeAudio() {
 // What a player would hear right now, for tests: the mood, whether it is held, and the two buses' levels.
 export function audioState() {
   const k = AUDIO.kit;
-  return { ctx: AUDIO.ctx ? AUDIO.ctx.state : null, master: AUDIO.master ? +AUDIO.master.gain.value.toFixed(3) : null, mood: AUDIO.mood, held: !!(k && k.held), holds: [...AUDIO.holds], music: k ? +k.buses.music.gain.value.toFixed(3) : null, ambience: k ? +k.buses.ambience.gain.value.toFixed(3) : null, intensity: k ? k.intensity : null, playing: k ? { music: !!k.music.score, ambience: !!k.amb.scene } : null };
+  return { ctx: AUDIO.ctx ? AUDIO.ctx.state : null, master: AUDIO.master ? +AUDIO.master.gain.value.toFixed(3) : null, mood: AUDIO.mood, held: !!(k && k.held), holds: [...AUDIO.holds], music: k ? +k.buses.music.gain.value.toFixed(3) : null, musicLevel: k ? +AUDIO.musicLevel.toFixed(3) : null, sfx: AUDIO.sfxGain ? +AUDIO.sfxGain.gain.value.toFixed(3) : null, ambience: k ? +k.buses.ambience.gain.value.toFixed(3) : null, intensity: k ? k.intensity : null, playing: k ? { music: !!k.music.score, ambience: !!k.amb.scene } : null };
 }
 export const audioList = () => ({ music: Object.keys(SCORES), ambience: Object.keys(SCENES), cues: CUE_NAMES });
 // What a render is heard through: the master volume (the shipped default unless a test asks for another, for example the slider at
 // its maximum) and the limiter. Every hook below builds it the same way, so a measurement is what the speakers get.
 const offlineMaster = (ctx, out, lv = {}) => { const master = ctx.createGain(); master.gain.value = safeVolume(lv.volume ?? 0.5) * MASTER_SCALE; master.connect(limiter(ctx)).connect(out); return master; };
+const offlineSfx = (ctx, master, lv = {}) => { const g = ctx.createGain(); g.gain.value = safeVolume(lv.sfxVolume ?? 1, 1); g.connect(master); return g; };
 export function audioRender(name, seconds = 30, wantWav = false, levels = {}) {
   const score = SCORES[name], scene = SCENES[name];
   if (!score && !scene) return Promise.reject(new Error('unknown audio: ' + name));
   return measureAudio((ctx, out) => {
     const master = offlineMaster(ctx, out, levels);
     const kit = makeAudioKit(ctx, master, { seed: 0x5EED1 });
-    kit.music.level(MUSIC_LEVEL); kit.amb.level(AMBIENCE_LEVEL);
+    kit.music.level(MUSIC_LEVEL * safeVolume(levels.musicVolume ?? 1, 1)); kit.amb.level(AMBIENCE_LEVEL);
     if (score) kit.music.play(score, { fade: 0.05, at: 0 }); else kit.amb.play(scene, { fade: 0.05, at: 0 });
     kit.scheduleUntil(seconds);
     return () => { const b = score && kit.music.info(); return b && { ...b, formSeconds: +((b.formBars * (score.beats || 4) * 60) / score.bpm).toFixed(1) }; };
@@ -231,7 +234,8 @@ export function audioRender(name, seconds = 30, wantWav = false, levels = {}) {
 export function cueRender(name, arg = 0, opt = {}, seconds = 2.5, wantWav = false, seed = 1, levels = {}) {
   if (!CUE_NAMES.includes(name)) return Promise.reject(new Error('unknown cue: ' + name));
   return measureAudio((ctx, out) => {
-    runCue(name, arg, { tune: tuneOf(opt.score), ...opt }, ctx, offlineMaster(ctx, out, levels), seeded(seed));
+    const master = offlineMaster(ctx, out, levels);
+    runCue(name, arg, { tune: tuneOf(opt.score), ...opt }, ctx, offlineSfx(ctx, master, levels), seeded(seed));
   }, seconds, { wav: wantWav });
 }
 // The busiest moment: a piece at full intensity, a bed and a run of cues struck together, as one render. spec = { piece, bed, cues: [{ name, arg, opt, at, seed }],
@@ -239,10 +243,9 @@ export function cueRender(name, arg = 0, opt = {}, seconds = 2.5, wantWav = fals
 export function mixRender(spec) {
   const { piece, bed, cues = [], seconds = 6, levels = {} } = spec;
   return measureAudio((ctx, out) => {
-    const master = offlineMaster(ctx, out, levels), sfxBus = ctx.createGain();
-    sfxBus.gain.value = 1; sfxBus.connect(master);
+    const master = offlineMaster(ctx, out, levels), sfxBus = offlineSfx(ctx, master, levels);
     const kit = makeAudioKit(ctx, master, { seed: 0x5EED1 });
-    kit.music.level(MUSIC_LEVEL); kit.amb.level(AMBIENCE_LEVEL); kit.music.intensity(1);
+    kit.music.level(MUSIC_LEVEL * safeVolume(levels.musicVolume ?? 1, 1)); kit.amb.level(AMBIENCE_LEVEL); kit.music.intensity(1);
     if (piece) kit.music.play(SCORES[piece], { fade: 0.05, at: 0 });
     if (bed) kit.amb.play(SCENES[bed], { fade: 0.05, at: 0 });
     kit.scheduleUntil(seconds);

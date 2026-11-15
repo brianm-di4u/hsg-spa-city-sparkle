@@ -387,7 +387,8 @@ tests.push({
     t.equal([...new Set(names(quick))].sort().join(), [...new Set(names(full))].sort().join(), 'the skipped move sounds the same kinds of cue');
     t.equal(new Set(names(quick)).size, quick.length, 'each is struck once');
     const together = quick.filter((c) => c.name !== 'starline' && c.name !== 'low');
-    t.expect(together.every((c) => Math.abs(c.level - (together.length <= 3 ? 1 : Math.max(0.35, 2.8 / together.length))) < 1e-9), `each is turned down for a crowd of ${together.length} (level ${together[0].level.toFixed(2)})`);
+    const crowd = await t.game('crowdLevel', together.length);
+    t.expect(crowd < 1 && together.every((c) => Math.abs(c.level - crowd) < 1e-9), `each is turned down for a crowd of ${together.length} (level ${together[0].level.toFixed(2)}, want ${crowd.toFixed(2)})`);
     const gaps = quick.filter((c) => c.name !== 'starline' && c.name !== 'low').map((c) => c.at); // those two come after the move, not with it
     t.expect(gaps.every((g, k) => k === 0 || Math.abs(g - gaps[k - 1] - 0.04) < 1e-9), `they are 40 ms apart (${gaps.map((g) => g.toFixed(2)).join(' ')})`);
     const hi = (xs) => Math.max(...xs.filter((c) => c.name === 'match').map((c) => c.arg));
@@ -519,5 +520,98 @@ tests.push({
       }
     }
     t.log(`in Bb: ${out.join('; ')}`);
+  },
+});
+
+// --- S5-09: Music and Effects volume, and a click to judge a slider by --------------------------------------------------------
+const MUSIC_LEVEL = 0.6; // audio.js: the shipped music level, at music volume 1
+const slide = async (t, id, steps) => { // real keys on the slider: Home, then so many steps of 0.05 to the right
+  await t.page.focus('#' + id);
+  await t.page.keyboard.press('Home');
+  for (let i = 0; i < steps; i++) await t.page.keyboard.press('ArrowRight');
+};
+tests.push({
+  name: 'S5-09 Music volume and Effects volume sliders move their own bus and are kept',
+  async run(t) {
+    await t.game('scene', 'settings');
+    await t.page.waitForSelector('#vol-music');
+    t.equal(await t.page.locator('label[for="vol-music"]').textContent(), 'Music volume', 'the music slider is labelled');
+    t.equal(await t.page.locator('label[for="vol-sfx"]').textContent(), 'Effects volume', 'the effects slider is labelled');
+    let s = (await t.state()).settings;
+    t.expect(s.musicVolume === 1 && s.sfxVolume === 1, 'both start at 1: the mix is as it was');
+    await t.shot('S5-09-settings-sliders');
+    await slide(t, 'vol-music', 8); // 0.4
+    await t.page.waitForFunction(() => window.__game.audioState().music !== null, null, { timeout: 5000 });
+    let a = await t.game('audioState');
+    s = (await t.state()).settings;
+    t.equal(s.musicVolume, 0.4, 'the music slider saves 0.4');
+    t.equal(a.musicLevel, +(MUSIC_LEVEL * 0.4).toFixed(3), `the music level is the shipped level times 0.4 (${a.musicLevel})`);
+    t.equal(a.sfx, 1, 'the effects bus did not move');
+    t.equal(a.master, 0.6, 'nor did the master volume');
+    await slide(t, 'vol-sfx', 10); // 0.5
+    a = await t.game('audioState');
+    t.equal(a.sfx, 0.5, 'the effects slider halves the effects bus');
+    t.equal(a.musicLevel, +(MUSIC_LEVEL * 0.4).toFixed(3), 'and leaves the music where it was');
+    await t.reload();
+    s = (await t.state()).settings;
+    t.expect(s.musicVolume === 0.4 && s.sfxVolume === 0.5, 'both are kept across a reload');
+    await t.page.mouse.click(5, 5);
+    await t.page.waitForFunction(() => window.__game.audioState().sfx !== null, null, { timeout: 5000 });
+    a = await t.game('audioState');
+    t.expect(a.sfx === 0.5 && a.musicLevel === +(MUSIC_LEVEL * 0.4).toFixed(3), 'and applied when the sound starts');
+  },
+});
+tests.push({
+  name: 'S5-09 letting go of the Volume and Effects sliders plays a click; the Music slider does not need one',
+  viewports: ['desktop'],
+  async run(t) {
+    await t.game('scene', 'settings');
+    await t.page.waitForSelector('#vol');
+    const clicks = async () => (await sounds(t)).filter((n) => n === 'click').length;
+    const base = await clicks();
+    await slide(t, 'vol', 6);
+    t.expect((await clicks()) >= base + 1, 'the master slider plays the click');
+    const afterVol = await clicks();
+    await slide(t, 'vol-sfx', 6);
+    t.expect((await clicks()) >= afterVol + 1, 'the effects slider plays the click');
+    const afterSfx = await clicks();
+    await slide(t, 'vol-music', 6);
+    t.equal(await clicks(), afterSfx, 'the music slider makes none: the music is its own preview');
+  },
+});
+tests.push({
+  name: 'S5-09 the sliders only turn the mix down: a lower Music volume lowers the render, and the switches stay separate',
+  viewports: ['desktop'],
+  async run(t) {
+    const full = await t.game('audioRender', 'garvan', 8, false), half = await t.game('audioRender', 'garvan', 8, false, { musicVolume: 0.5 });
+    t.expect(Math.abs(half.peak / full.peak - 0.5) < 0.08, `music at 0.5 peaks about half (${full.peak} to ${half.peak})`);
+    const loud = await t.game('cueRender', 'goal', 0, {}, 3, false, 1), soft = await t.game('cueRender', 'goal', 0, {}, 3, false, 1, { sfxVolume: 0.5 });
+    t.expect(soft.peak < loud.peak * 0.8, `effects at 0.5 are quieter (${loud.peak} to ${soft.peak})`);
+    // the switches did not change meaning: Music off silences the music bus whatever its slider says, effects off silences the effects
+    await t.game('scene', 'settings');
+    await t.page.mouse.click(5, 5);
+    await t.page.waitForFunction(() => window.__game.audioState().sfx !== null, null, { timeout: 5000 });
+    await t.page.click('[data-toggle="music"]');
+    let a = await t.game('audioState');
+    t.expect(a.musicLevel === 0 && a.sfx === 1, `Music off silences the music and leaves the effects (${a.musicLevel}, ${a.sfx})`);
+    await t.page.click('[data-toggle="music"]');
+    await t.page.click('[data-toggle="sound"]');
+    a = await t.game('audioState');
+    t.expect(a.sfx === 0 && a.musicLevel === MUSIC_LEVEL, `Sound effects off silences the effects and leaves the music (${a.sfx}, ${a.musicLevel})`);
+  },
+});
+tests.push({
+  name: 'S5-09 an old save gets both at 1, and a damaged one never goes above the shipped level',
+  viewports: ['desktop'],
+  async run(t) {
+    const KEY = 'spa-city-sparkle:v1';
+    for (const [saved, music, sfx] of [[{ volume: 0.5 }, 0.6, 1], [{ musicVolume: 7, sfxVolume: -2 }, 0.6, 0], [{ musicVolume: 'loud', sfxVolume: null }, 0.6, 1]]) {
+      await t.page.evaluate(([k, st]) => localStorage.setItem(k, JSON.stringify({ v: 1, settings: st })), [KEY, saved]);
+      await t.reload();
+      await t.page.mouse.click(5, 5);
+      await t.page.waitForFunction(() => window.__game.audioState().sfx !== null, null, { timeout: 5000 });
+      const a = await t.game('audioState');
+      t.expect(a.musicLevel === music && a.sfx === sfx, `${JSON.stringify(saved)} gives music ${a.musicLevel} (want ${music}) and effects ${a.sfx} (want ${sfx})`);
+    }
   },
 });
