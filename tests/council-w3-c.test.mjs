@@ -232,3 +232,24 @@ tests.push({
     t.equal(await t.page.locator('#tip').count(), 0, 'one Got it and the tips are done');
   },
 });
+
+// --- S2-07: the lose card names its points, fits a phone, and says how to earn boosters --------------------------------------------
+tests.push({
+  name: 'S2-07 the lose card says points, keeps every button inside the card, and says how to earn boosters',
+  async run(t) {
+    await t.game('newGame', { level: 'w1-01', seed: 3, tips: false });
+    await t.game('act', 'board', ['a b a c e', 'b c d e a', 'c d e a b', 'd e a b c', 'e a b c d'], { moves: 3, goals: [{ type: 'score', need: 9999639 }], stars: [1000, 2000, 3000] });
+    await t.waitIdle();
+    await t.game('scene', 'lose');
+    const chip = await t.page.locator('.goals-big .goal .n').first().innerText();
+    t.equal(chip, '9,999,639 pts', 'the chip names its unit');
+    const card = await t.page.locator('#modal .card').boundingBox();
+    const buttons = await t.page.locator('.lose-actions .btn').evaluateAll((bs) => bs.map((b) => { const r = b.getBoundingClientRect(); return { x: r.x, r: r.x + r.width, y: r.y, b: r.y + r.height, text: b.textContent }; }));
+    t.equal(buttons.length, 3, '+5 moves, Retry and Map are all there');
+    t.expect(buttons.every((b) => b.x >= card.x && b.r <= card.x + card.width), `every button is inside the card (${buttons.map((b) => `${b.text} ${Math.round(b.x)}-${Math.round(b.r)}`).join(', ')}; card ${Math.round(card.x)}-${Math.round(card.x + card.width)})`);
+    if (t.viewport === 'mobile') t.expect(buttons[0].b <= buttons[1].y + 1, 'on a phone the +5 moves button has a row to itself');
+    t.expect(/three-star wins/.test(await t.page.locator('#modal .card').innerText()), 'it says how to earn boosters');
+    t.expect(await t.page.evaluate(() => { const c = document.querySelector('#modal .card'); return c.scrollWidth <= c.clientWidth; }), 'the card does not scroll sideways');
+    await t.shot('S2-07-lose-card');
+  },
+});
