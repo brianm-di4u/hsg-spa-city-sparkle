@@ -3,6 +3,7 @@ import { newGame, apply, cloneState } from '../engine/game.js';
 import { swappableAt, TOKEN } from '../engine/grid.js';
 import { goalDone, starsFor } from '../engine/goals.js';
 import { bestMove } from '../engine/ai.js';
+import { isLegalSwap } from '../engine/moves.js';
 import { isSpecialTile } from '../engine/specials.js';
 import { VIEW, computeLayout, buildVectorTextures, requestRender, resizeStage, WORLD_LOOK } from '../view/stage.js';
 import { BOARD, buildBoard, drawStatic, startAnim, drawAnim } from '../view/board-view.js';
@@ -33,7 +34,7 @@ export function startLevel(level, opts = {}) {
   PLAY.state = opts.state || newGame(level, opts.seed != null ? opts.seed : Date.now() % 1e9, { boosters: { ...SAVE.boosters } });
   if (!opts.state) PLAY.state.boosters = { ...SAVE.boosters };
   if (opts.relief && PLAY.state.movesLeft != null) PLAY.state.movesLeft += opts.relief; // see RELIEF_AFTER in save.js
-  PLAY.selected = -1; PLAY.cursor = -1; PLAY.armed = null; PLAY.anim = null; PLAY.down = null; PLAY.active = true;
+  PLAY.selected = -1; PLAY.cursor = -1; PLAY.armed = null; PLAY.anim = null; PLAY.down = null; PLAY.active = true; BOARD.sel = -1; BOARD.legal = null;
   PLAY.shownScore = PLAY.state.score; PLAY.explained = 0; PLAY.explainedAt = -Infinity;
   VIEW.world = PLAY.world;
   layoutAndBuild();
@@ -178,7 +179,7 @@ export function doSwap(a, b, pulled = 0) {
   const pre = cloneState(PLAY.state);
   const r = apply(PLAY.state, { type: 'swap', a, b });
   if (r.reason === 'blocked') { explainRefusal(whyStuck(PLAY.state, a) || whyStuck(PLAY.state, b)); return r; }
-  PLAY.selected = -1; BOARD.sel = -1;
+  PLAY.selected = -1; BOARD.sel = -1; BOARD.legal = null;
   if (r.valid && mode !== 'soak') { recordComputedAction(action, { levelId: PLAY.level.id, state: cloneState(PLAY.state) }); commitMove(); }
   play(pre, r, () => afterMove(r));
   if (r.reason === 'nomatch') explainRefusal('nomatch');
@@ -496,7 +497,18 @@ function letGo() {
   requestRender();
 }
 
-function setSelected(i) { PLAY.selected = i; BOARD.sel = i; requestRender(); }
+// The neighbours the picked piece can legally trade with, for the rings on the board.
+function legalNeighbours(i) {
+  const s = PLAY.state, x = i % s.w, out = [];
+  for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    const nx = x + dx, ny = ((i / s.w) | 0) + dy;
+    if (nx < 0 || ny < 0 || nx >= s.w || ny >= s.h) continue;
+    const j = ny * s.w + nx;
+    if (s.mask[j] && isLegalSwap(s, i, j)) out.push(j);
+  }
+  return out;
+}
+function setSelected(i) { PLAY.selected = i; BOARD.sel = i; BOARD.legal = i >= 0 && PLAY.state ? legalNeighbours(i) : null; requestRender(); }
 
 export function armBooster(name) {
   if (!PLAY.active || PLAY.anim) return;

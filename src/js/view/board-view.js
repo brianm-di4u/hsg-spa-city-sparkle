@@ -5,7 +5,7 @@ import { VIEW, WORLD_LOOK, retireTextures } from './stage.js';
 import { modelFromState, applyEvent } from './model.js';
 import { schedule, frameAt, ease, hrand, TICK_MS } from './player.js';
 
-const B = { halos: [], halosUsed: 0, built: null, cells: [], drains: [], layer: {}, tiles: new Map(), fx: [], fxUsed: 0, pops: [], popsUsed: 0, callout: null, frame: null, maskG: null, model: null, sel: -1, cursor: -1, hint: null, hintG: null, showCursor: false, drag: null, dragFrac: 0 };
+const B = { halos: [], halosUsed: 0, built: null, cells: [], drains: [], layer: {}, tiles: new Map(), fx: [], fxUsed: 0, pops: [], popsUsed: 0, callout: null, frame: null, maskG: null, model: null, sel: -1, cursor: -1, hint: null, hintG: null, legal: null, legalDrawn: [], showCursor: false, drag: null, dragFrac: 0 };
 export const BOARD = B;
 
 const texFor = (t) => {
@@ -159,11 +159,22 @@ function drawHint() {
   g.visible = true; g.alpha = still ? 1 : Math.min(1, Math.sin(q * Math.PI) * 2.2);
 }
 
+// With a piece picked up, a soft ring marks each neighbour it can legally trade with (B.legal, set by the controller), so a tap-tap player need not scan the board.
+const LEGAL_RING = 0.62, LEGAL_TINT = 0x9ff0ff;
+function drawLegal() {
+  const { cell } = VIEW.layout, pulse = VIEW.reduced ? 0 : 0.5 + 0.5 * Math.sin(VIEW.ambientT / 260);
+  for (const j of B.legal) {
+    const r = fxSprite(VIEW.tex.ring);
+    r.position.set(...cellXY(j)); r.width = r.height = cell * (LEGAL_RING + 0.06 * pulse); r.alpha = 0.7 + 0.25 * pulse; r.tint = LEGAL_TINT;
+    B.legalDrawn.push(j);
+  }
+}
+
 // --- per-frame drawing --------------------------------------------------------------------------
 // Draws the model, plus the beat at index i with progress p when a timeline plays.
 export function drawFrame(model, beat, p, opts = {}) {
   const { cell } = VIEW.layout;
-  B.fxUsed = 0; B.popsUsed = 0; B.halosUsed = 0;
+  B.fxUsed = 0; B.popsUsed = 0; B.halosUsed = 0; B.legalDrawn = [];
   for (const sp of B.tiles.values()) sp._used = false;
   const ev = beat ? beat.events : [];
   const hitTiles = new Set(), hitLayer = new Map();
@@ -282,6 +293,7 @@ export function drawFrame(model, beat, p, opts = {}) {
   B.layer.pieces.sortableChildren = true;
 
   if (!beat && B.hint) drawHint(); else if (B.hintG) B.hintG.visible = false;
+  if (!beat && B.sel >= 0 && B.legal) drawLegal();
   drawFx(ev, p, beat);
   // cursor (keyboard) and selection
   const cur = B.cursorSprite;
