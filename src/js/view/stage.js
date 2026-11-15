@@ -16,7 +16,7 @@ export const VIEW = {
   layers: {}, tex: {}, artSource: 'vector', paintings: {}, artNames: new Set(), vectorWorld: 0, retired: [],
   world: 1, layout: { W: 0, H: 0, cell: 48, bx: 0, by: 0, cols: 9, rows: 9, portrait: true },
   anim: null, frozenMs: null, raf: 0, ambientT: 0, lastFrame: 0,
-  reduced: false, steam: true, badges: false, onFrame: null, idleFrames: 0, wantAmbient: false,
+  reduced: false, speed: 1, steam: true, badges: false, onFrame: null, idleFrames: 0, wantAmbient: false,
 };
 
 export async function initStage(el) {

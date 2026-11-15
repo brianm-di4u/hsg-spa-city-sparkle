@@ -473,11 +473,14 @@ export function showHelp(back, tab = 'basics') {
 }
 
 // --- settings ------------------------------------------------------------------------------------
+// The Move speed setting: how fast a move's animation plays. 1 is the pace the game was made at.
+const SPEEDS = [1, 1.5, 2];
 export function applySettings() {
   const st = SAVE.settings;
   AUDIO.sound = st.sound; AUDIO.music = st.music; AUDIO.ambience = st.ambience; AUDIO.volume = st.volume; applyLevels();
   const sysReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   VIEW.reduced = st.motion === 'reduced' || (st.motion === 'auto' && sysReduced);
+  VIEW.speed = SPEEDS.includes(st.animSpeed) ? st.animSpeed : 1;
   VIEW.steam = st.steam;
   document.body.classList.toggle('no-steam', !st.steam);
   VIEW.badges = !!st.badges;
@@ -494,6 +497,7 @@ export function showSettings(back) {
     ${toggle('sound', 'Sound effects')}${toggle('music', 'Music')}${toggle('ambience', 'Ambience')}
     <div class="set-row"><label for="vol">Volume</label><input id="vol" type="range" min="0" max="1" step="0.05" value="${st.volume}"></div>
     <div class="set-row"><label id="l-motion">Motion</label><div class="seg" role="group" aria-labelledby="l-motion">${['auto', 'reduced', 'full'].map((v) => `<button class="chip-btn" data-motion="${v}" aria-pressed="${st.motion === v}">${v[0].toUpperCase() + v.slice(1)}</button>`).join('')}</div></div>
+    <div class="set-row"><label id="l-speed">Move speed</label><div class="seg" role="group" aria-labelledby="l-speed">${SPEEDS.map((v) => `<button class="chip-btn" data-speed="${v}" aria-pressed="${VIEW.speed === v}" aria-label="${v} times">${v}×</button>`).join('')}</div></div>
     ${toggle('steam', 'Ambient steam')}${toggle('hints', 'Hints after 5 s')}${toggle('badges', 'Colour-blind badges')}
     <div class="set-row"><label>Progress</label><button class="chip-btn" data-act="reset">Reset…</button></div>
     <div class="set-row"><label>Play record</label><button class="chip-btn" data-act="copystats">Copy my stats</button></div>
@@ -505,6 +509,9 @@ export function showSettings(back) {
   }));
   m.querySelectorAll('[data-motion]').forEach((b) => b.addEventListener('click', () => {
     changeSettings({ motion: b.dataset.motion }); m.querySelectorAll('[data-motion]').forEach((x) => x.setAttribute('aria-pressed', st.motion === x.dataset.motion)); applySettings();
+  }));
+  m.querySelectorAll('[data-speed]').forEach((b) => b.addEventListener('click', () => {
+    changeSettings({ animSpeed: +b.dataset.speed }); applySettings(); m.querySelectorAll('[data-speed]').forEach((x) => x.setAttribute('aria-pressed', VIEW.speed === +x.dataset.speed));
   }));
   m.querySelector('#vol').addEventListener('input', (e) => { changeSettings({ volume: +e.target.value }); applySettings(); });
   bindActs(m, {

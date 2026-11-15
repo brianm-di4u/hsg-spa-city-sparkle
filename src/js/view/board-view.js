@@ -475,7 +475,7 @@ function drawFx(ev, p, beat) {
 // --- timeline playback ----------------------------------------------------------------------------
 // anim = {sched, base (model before), model, applied, t0, done}
 export function startAnim(preState, timeline, reduced) {
-  const sched = schedule(timeline, { reduced });
+  const sched = schedule(timeline, { reduced, speed: VIEW.speed });
   const base = modelFromState(preState);
   return { sched, base, model: JSON.parse(JSON.stringify(base)), applied: 0, t0: performance.now(), timeline };
 }

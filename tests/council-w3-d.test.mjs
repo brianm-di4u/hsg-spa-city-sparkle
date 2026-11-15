@@ -230,3 +230,54 @@ tests.push({
     t.equal((await t.state()).selected, -1, 'the piece is not selected');
   },
 });
+
+// --- S1-02: a Move speed setting that is kept ---------------------------------------------------------------------------------
+const CHAIN = ['a b a c e', 'S2 a d e S1', 'd S3 b d c', 'e d c b e', 'b c e a d']; // the winning swap [1,1] with [1,0] breaks a stone, so it has several beats
+async function totalFor(t) {
+  await board(t, CHAIN, { moves: 10, goals: [{ type: 'stone', need: 1 }], stars: [1, 2, 3] });
+  const total = await t.page.evaluate(() => { const g = window.__game; g.act('swap', [1, 1], [1, 0]); return g.act('total'); });
+  await t.page.evaluate(() => window.__game.act('skip'));
+  await t.waitIdle();
+  return total;
+}
+tests.push({
+  name: 'S1-02 Move speed 1.5 and 2 shorten a move by that much, and the choice is kept',
+  async run(t) {
+    await t.game('scene', 'settings');
+    await t.page.waitForSelector('[data-speed]');
+    const pressed = () => t.page.evaluate(() => [...document.querySelectorAll('[data-speed]')].filter((b) => b.getAttribute('aria-pressed') === 'true').map((b) => b.dataset.speed));
+    t.equal((await pressed()).join(), '1', 'the speed starts at 1');
+    t.equal((await t.state()).settings.animSpeed, 1, 'and the saved setting is 1');
+    await t.shot('S1-02-settings-speed');
+    await t.page.click('[data-speed="2"]');
+    t.equal((await t.state()).settings.animSpeed, 2, 'pressing 2× saves 2');
+    t.equal((await pressed()).join(), '2', 'and shows it pressed');
+    await t.reload();
+    t.equal((await t.state()).settings.animSpeed, 2, 'the choice survives a reload');
+    const fast = await totalFor(t);
+    await t.game('scene', 'settings');
+    await t.page.click('[data-speed="1.5"]');
+    const mid = await totalFor(t);
+    await t.game('scene', 'settings');
+    await t.page.click('[data-speed="1"]');
+    const base = await totalFor(t);
+    t.log(`the same move lasts ${base} ms at 1x, ${mid} ms at 1.5x, ${fast} ms at 2x`);
+    t.expect(base > 300, `the move has some length (${base} ms)`);
+    t.expect(Math.abs(base / mid - 1.5) < 0.1, `1.5× is a third shorter (${base} to ${mid} ms)`);
+    t.expect(Math.abs(base / fast - 2) < 0.15, `2× is half as long (${base} to ${fast} ms)`);
+  },
+});
+tests.push({
+  name: 'S1-02 a damaged Move speed in a save plays at the normal pace',
+  viewports: ['desktop'],
+  async run(t) {
+    await t.game('act', 'save', { settings: { animSpeed: 7 } });
+    await t.reload();
+    t.equal((await t.state()).settings.animSpeed, 7, 'the damaged value is what the save holds');
+    await t.game('scene', 'settings');
+    const ok = await t.page.evaluate(() => [...document.querySelectorAll('[data-speed]')].filter((b) => b.getAttribute('aria-pressed') === 'true').map((b) => b.dataset.speed));
+    t.equal(ok.join(), '1', 'the buttons show the normal pace');
+    const base = await totalFor(t);
+    t.equal(base, 844, 'a move takes its normal length');
+  },
+});

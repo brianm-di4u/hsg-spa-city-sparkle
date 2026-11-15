@@ -24,6 +24,7 @@ export function beatDuration(evs, opts = {}) {
   if (has('spread')) d = Math.max(d, 320);
   if (has('end')) d = Math.max(d, 60);
   if (opts.reduced) d = Math.round(d * 0.35);
+  if (opts.speed > 1) d = Math.round(d / opts.speed); // the Move speed setting: 1, 1.5 or 2 times as fast
   return d;
 }
 
