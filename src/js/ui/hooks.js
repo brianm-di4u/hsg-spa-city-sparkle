@@ -1,6 +1,6 @@
 // window.__game: the test-harness contract (shared/test-harness/README.md, DEV-PLAN §3).
 import { PLAY, startLevel, doSwap, doBooster, skipAnim, showHint, layoutAndBuild, updateHud, levelById, armBooster, replayLast, beatAt } from './play.js';
-import { UI, showTitle, showMap, showIntro, enterLevel, showHelp, showSettings, showAbout, showPause, onWin, onLose, showWorldComplete, showDaily, startDaily, todayKey, closeModal, showTip, closeTip } from './screens.js';
+import { UI, showTitle, showMap, showIntro, enterLevel, showHelp, showSettings, showAbout, showScrapbook, showPause, onWin, onLose, showWorldComplete, showDaily, startDaily, todayKey, closeModal, showTip, closeTip } from './screens.js';
 import { SAVE, arrangeSaveFixture, adoptCurrent } from './save.js';
 import { VIEW, requestRender } from '../view/stage.js';
 import { dailyLevel } from './daily.js';
@@ -66,7 +66,7 @@ export function installHooks() {
     scene(name, arg) {
       const L = levelById(arg || (PLAY.level && PLAY.level.id) || LEVELS[0].id);
       const map = {
-        title: () => showTitle(), map: () => showMap(arg), intro: () => showIntro(L), help: () => showHelp(undefined, arg), settings: () => showSettings(), about: () => showAbout(),
+        title: () => showTitle(), map: () => showMap(arg), intro: () => showIntro(L), help: () => showHelp(undefined, arg), settings: () => showSettings(), about: () => showAbout(), scrapbook: () => showScrapbook(arg),
         game: () => enterLevel(L, { seed: HOOK.seed }), pause: () => showPause(), daily: () => showDaily(), soak: () => startDaily(), world: () => showWorldComplete(+(arg || 1)),
         win: () => { if (!PLAY.state) enterLevel(L, { seed: HOOK.seed }); const s = PLAY.state; s.score = Math.max(s.score, s.stars[2]); s.encoreScore = s.encoreScore || 1860; for (const g of s.goals) g.have = g.type === 'moss' ? 0 : g.type === 'score' ? s.score : g.need; s.movesLeft = 0; s.phase = 'won'; s.starsWon = 3; PLAY.ui && updateHud(); onWin(s, PLAY.level); },
         lose: () => { if (!PLAY.state) enterLevel(L, { seed: HOOK.seed }); PLAY.state.movesLeft = 0; PLAY.state.phase = 'lost'; updateHud(); onLose(PLAY.state, PLAY.level); },

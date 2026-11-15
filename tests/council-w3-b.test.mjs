@@ -2,6 +2,7 @@
 // (S4-11, S5-16, S1-05, S2-16, S3-04, S1-03, S2-19, S2-21).
 // Nothing here depends on chance: every board is seeded and every wait is for a condition.
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { schedule, FAILED_SWAP_MS } from '../src/js/view/player.js';
 import { RELIEF_AFTER, RELIEF_MOVES } from '../src/js/ui/save.js';
 
@@ -347,5 +348,76 @@ tests.push({
     await t.page.locator('[data-act="continue"]').click();
     await t.waitIdle();
     t.equal((await t.state()).movesLeft, start - 1, 'Continue shows the same moves left, with no second gift');
+  },
+});
+
+// --- S2-21: the Scrapbook lists every lore card, found or not --------------------------------------------------------------
+const LORE = JSON.parse(fs.readFileSync(new URL('../data/lore.json', import.meta.url), 'utf8'));
+const cardsOf = (w) => LORE.filter((c) => c.world === w);
+tests.push({
+  name: 'S2-21 the title opens a Scrapbook: a fresh profile has 0 of 60 and each blank names the stop that holds its card',
+  async run(t) {
+    await t.game('scene', 'title');
+    await t.waitIdle();
+    await t.checkLayout();
+    await t.shot('S2-21-title-menu');
+    await t.page.locator('.menu [data-act="scrapbook"]').click();
+    t.equal(await t.page.locator('#modal h2').innerText(), 'Scrapbook', 'the Scrapbook opens');
+    const text = await t.page.locator('#modal').innerText();
+    t.expect(text.includes('0 of 60 cards found'), 'it counts the cards');
+    t.equal(await t.page.locator('#modal .tab').count(), 6, 'one tab for each world');
+    t.equal(await t.page.locator('#modal .scrap .lore').count(), 10, 'ten slots for the world');
+    t.equal(await t.page.locator('#modal .scrap .lore.blank').count(), 10, 'all of them blank');
+    t.expect(text.includes('Win stop 1-1, Magnolia Promenade, to find it.'), 'a blank names its stop');
+    t.expect(!cardsOf(1).some((c) => text.includes(c.text)), 'a blank does not show the card');
+    const inView = await t.page.evaluate(() => ['#modal h2', '#modal [data-act="close"]'].map((q) => { const r = document.querySelector(q).getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }));
+    t.equal(inView.join(), 'true,true', 'the title and the Close button are both on screen without scrolling the card');
+    await t.shot('S2-21-scrapbook-empty');
+    await t.page.keyboard.press('Escape');
+    await t.waitForStable();
+    t.equal((await t.state()).scene, 'title', 'Esc closes it and returns to the title');
+  },
+});
+tests.push({
+  name: 'S2-21 found cards can be re-read with their source, by world, and the counts add up',
+  async run(t) {
+    const got = [cardsOf(1)[0], cardsOf(1)[3], cardsOf(3)[1]];
+    await t.game('act', 'save', { lore: got.map((c) => c.id) });
+    await t.game('scene', 'scrapbook');
+    await t.waitIdle();
+    let text = await t.page.locator('#modal').innerText();
+    t.expect(text.includes('3 of 60 cards found'), 'three found');
+    t.equal(await t.page.locator('#modal .scrap .lore:not(.blank)').count(), 2, 'it opens on the first world that has cards: two found');
+    for (const c of [got[0], got[1]]) t.expect(text.includes(c.title) && text.includes(c.text) && text.includes(`Source: ${c.source}`), `"${c.title}" is there in full, with its source`);
+    t.equal(await t.page.locator('#modal .tab[aria-selected="true"]').getAttribute('data-tab'), '1', 'world 1 is selected');
+    t.equal(await t.page.locator('#modal .tab[data-tab="1"]').innerText(), '1 · 2/10', 'the tab counts its cards');
+    await t.page.locator('#modal .tab[data-tab="3"]').click();
+    text = await t.page.locator('#modal').innerText();
+    t.expect(text.includes(got[2].title) && text.includes(got[2].text), 'world 3 shows its card');
+    t.equal(await t.page.locator('#modal .scrap .lore:not(.blank)').count(), 1, 'and only the one');
+    t.equal(await t.page.locator('#modal .tab[aria-selected="true"]').getAttribute('data-tab'), '3', 'the tab moved');
+    t.equal(await t.page.locator('#modal .tab[data-tab="3"]').evaluate((e) => document.activeElement === e), true, 'focus stays on the tab for the keyboard');
+    await t.checkLayout();
+    await t.shot('S2-21-scrapbook-found');
+    await t.page.locator('#modal [data-act="close"]').click();
+    t.equal((await t.state()).scene, 'title', 'Close returns to the title');
+  },
+});
+tests.push({
+  name: 'S2-21 winning a level puts its card in the Scrapbook, and the card is the one the results card showed',
+  async run(t) {
+    await t.game('newGame', { level: 'w1-02', seed: 3, tips: false });
+    await t.waitIdle();
+    await t.game('act', 'win');
+    await t.waitIdle();
+    const shown = await t.page.locator('#modal .lore h4').innerText();
+    t.equal((await t.state()).lore.length, 1, 'the save holds one card');
+    await t.game('scene', 'scrapbook');
+    await t.waitIdle();
+    t.equal(await t.page.locator('#modal .scrap .lore:not(.blank) h4').innerText(), shown, 'the Scrapbook shows the same card');
+    t.expect((await t.page.locator('#modal').innerText()).includes('1 of 60 cards found'), 'and counts it');
+    await t.reload();
+    await t.game('scene', 'scrapbook');
+    t.expect((await t.page.locator('#modal').innerText()).includes('1 of 60 cards found'), 'it is still there after a reload');
   },
 });

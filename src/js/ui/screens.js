@@ -103,6 +103,7 @@ export function showTitle() {
         <div class="menu-row">
           <button class="btn small alt" data-act="help">Help</button>
           <button class="btn small alt" data-act="settings">Settings</button>
+          <button class="btn small alt" data-act="scrapbook">Scrapbook</button>
           <button class="btn small alt" data-act="about">About</button>
         </div>
       </div>
@@ -111,7 +112,7 @@ export function showTitle() {
     continue: () => enterLevel(null, { continue: true, skipIntro: true }),
     play: () => showMap(undefined, { premise: true }),
     daily: () => (dailyOpen ? showDaily() : toast('Finish Bathhouse Row to unlock the Daily Challenge', 2200)),
-    help: () => showHelp(), settings: () => showSettings(), about: () => showAbout(),
+    help: () => showHelp(), settings: () => showSettings(), scrapbook: () => showScrapbook(), about: () => showAbout(),
   });
   const f = screenEl().querySelector('[data-focus]');
   if (f) f.focus();
@@ -526,6 +527,30 @@ export function showAbout() {
     <p class="fine">Open source under the MIT licence.</p>
     <div class="actions"><button class="btn small" data-act="close" data-focus>Close</button></div>`, { label: 'About' });
   bindActs(m, { close: () => { closeModal(); setScene(prev === 'about' ? 'title' : prev); } });
+}
+
+// --- Scrapbook: every lore card, by world; the ones not won yet are blanks that name the stop holding them -------------------------
+// The card on the results card of a stop is the n-th of its world (loreFor), so a blank can say which stop to win.
+export function showScrapbook(world) {
+  const prev = UI.scene;
+  setScene('scrapbook');
+  const got = new Set(SAVE.lore), worlds = [1, 2, 3, 4, 5, 6];
+  const inWorld = (k) => LORE.filter((c) => c.world === k);
+  const have = (k) => inWorld(k).filter((c) => got.has(c.id)).length;
+  const render = (cur) => {
+    const cards = inWorld(cur), stops = LEVELS.filter((l) => l.world === cur);
+    const items = cards.map((c, j) => (got.has(c.id)
+      ? `<li class="lore"><span class="tag">Stop ${j + 1}</span><h4>${esc(c.title)}</h4><p>${esc(c.text)}</p><p class="src">Source: ${esc(c.source)}</p></li>`
+      : `<li class="lore blank"><h4>Card ${j + 1}: not found yet</h4><p>Win stop ${cur}-${j + 1}${stops[j] ? `, ${esc(stops[j].name)}` : ''}, to find it.</p></li>`)).join('');
+    const m = openModal(`<h2>Scrapbook</h2><p class="fine">${got.size} of ${LORE.length} cards found</p>
+      <div class="tabs" role="tablist">${worlds.map((k) => `<button class="tab" role="tab" aria-selected="${k === cur}" data-tab="${k}"${k === cur ? ' data-focus' : ''} aria-label="${esc(WORLD_LOOK[k].name)}, ${have(k)} of ${inWorld(k).length} found">${k} · ${have(k)}/${inWorld(k).length}</button>`).join('')}</div>
+      <p class="fine">${esc(WORLD_LOOK[cur].name)}</p>
+      <ul class="scrap" role="tabpanel" aria-label="${esc(WORLD_LOOK[cur].name)} cards">${items}</ul>
+      <div class="actions"><button class="btn small" data-act="close">Close</button></div>`, { label: 'Scrapbook' });
+    m.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => { unlockAudio(); sfx('click'); render(+b.dataset.tab); m.querySelector(`[data-tab="${b.dataset.tab}"]`).focus(); }));
+    bindActs(m, { close: () => { closeModal(); setScene(prev === 'scrapbook' ? 'title' : prev); } });
+  };
+  render(world || worlds.find((k) => have(k) > 0) || 1);
 }
 
 // --- Daily Challenge -----------------------------------------------------------------------------
