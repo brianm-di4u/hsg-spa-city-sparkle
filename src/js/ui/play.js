@@ -332,8 +332,8 @@ function afterMove(r) {
   if (r.valid && s.phase === 'play') cuesAfterMove(s);
   if (r.valid && s.phase === 'play') saveSettledAction(); // No unresumable encore publication; final outcome owns its coherent transaction.
   if (s.phase === 'encore') {
-    PLAY.ui && PLAY.ui.toast('Encore!');
-    sfx('win');
+    PLAY.ui && PLAY.ui.toast(PLAY.keyMode ? 'Encore! Press Esc to skip' : 'Encore! Tap to skip', 2400);
+    sfx('encore');
     PLAY.pendingEncore = true;
     setTimeout(() => {
       PLAY.pendingEncore = false;

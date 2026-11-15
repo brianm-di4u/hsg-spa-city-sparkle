@@ -320,7 +320,7 @@ export function onWin(s, L) {
     worldLevels: LEVELS.filter((l) => l.world === L.world).map((l) => l.id) }, { levelId: L.id, state: cloneState(s) });
   const rewards = [receipt.outcome?.levelReward, receipt.outcome?.starReward].filter(Boolean).map((k) => BOOSTER_NAMES[k]);
   const worldComplete = !!receipt.outcome?.worldComplete;
-  sfx('win'); setMood('results', L.world);
+  sfx('win', stars); setMood('results', L.world);
   const idx = LEVELS.indexOf(L), next = LEVELS[idx + 1];
   const m = openModal(`
     <div class="ribbon"><span>Level cleared!</span></div>
@@ -606,7 +606,7 @@ function onDailyWin(s, L) {
   const total = s.score + (s.encoreScore || 0), stars = s.starsWon;
   const receipt = saveDaily({ key: L.dayKey, score: total, stars, won: true });
   const o = receipt.outcome || {}, d = cleanDaily(SAVE.daily), n = (v) => v.toLocaleString('en-US');
-  sfx('win'); setMood('results', L.world);
+  sfx('win', stars); setMood('results', L.world);
   const bits = [];
   if (o.newBest) bits.push('new best today');
   if (o.newEver) bits.push('new best ever');
