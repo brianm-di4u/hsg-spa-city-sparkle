@@ -2,11 +2,13 @@
 // view can draw any instant as a pure function of (timeline, ms). Frozen-clock captures and Skip rely
 // on that purity. Durations follow MECHANICS §5; reduced motion scales them by 0.35.
 export const TICK_MS = 62;
+// A swap that makes no match slides out and back; each half takes this long (190 ms, as a successful swap, until wave 3), so a mis-swipe can be retried sooner.
+export const FAILED_SWAP_MS = 110;
 
 export function beatDuration(evs, opts = {}) {
   const has = (t) => evs.some((e) => e.t === t);
   let d = 0;
-  if (has('swap') || has('swapBack')) d = Math.max(d, 190);
+  if (has('swap') || has('swapBack')) d = Math.max(d, opts.failedSwap ? FAILED_SWAP_MS : 190);
   if (has('booster')) d = Math.max(d, 160);
   if (has('encore')) d = Math.max(d, 240);
   if (has('match') || has('hit') || has('fire') || has('special')) {
@@ -31,11 +33,12 @@ export function schedule(timeline, opts = {}) {
     if (!byBeat.has(e.beat)) byBeat.set(e.beat, []);
     byBeat.get(e.beat).push(e);
   }
+  const failedSwap = timeline.events.length > 0 && timeline.events.every((e) => e.t === 'swap' || e.t === 'swapBack');
   const keys = [...byBeat.keys()].sort((a, b) => a - b);
   const beats = [];
   let t = 0;
   for (const k of keys) {
-    const events = byBeat.get(k), dur = beatDuration(events, opts);
+    const events = byBeat.get(k), dur = beatDuration(events, { ...opts, failedSwap });
     beats.push({ beat: k, start: t, dur, events });
     t += dur;
   }
