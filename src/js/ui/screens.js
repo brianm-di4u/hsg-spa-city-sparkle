@@ -298,7 +298,7 @@ export function showTip(id) {
     d.style.width = `${Math.max(60, Math.min(130, L.bx - r.right - 8))}px`;
     if (r.bottom > L.H - 8) el.style.top = `${Math.max(8, L.H - 8 - r.height)}px`;
   }
-  bindActs(el, { ok: () => { markTutorial(id); closeTip(); } });
+  bindActs(el, { ok: () => { markTutorial(id); closeTip(); if (id === 'basics' && !SAVE.tutorialSeen.includes('boosters') && UI.scene === 'game') showTip('boosters'); } }); // the first lesson is followed by the boosters: a new profile holds one of each
   el.querySelector('[data-focus]').focus();
 }
 export function closeTip() { const t = document.getElementById('tip'); if (t) t.remove(); UI.tipOpen = false; }
