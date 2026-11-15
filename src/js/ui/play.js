@@ -20,7 +20,7 @@ export const PLAY = {
 };
 
 const $ = (id) => document.getElementById(id);
-const KIND_NAMES = ['quartz', 'magnolia', 'horseshoe', 'drop', 'scallop', 'pine'];
+const KIND_NAMES = ['quartz', 'apple blossom', 'horseshoe', 'drop', 'scallop', 'pine'];
 const LOW_MOVES_CUE = [3, 1]; // a soft tick when the moves left first drop to each of these
 const LOW_MOVES_MUSIC = 5; // the music lifts (a little faster, brighter) when this many moves or fewer are left
 
