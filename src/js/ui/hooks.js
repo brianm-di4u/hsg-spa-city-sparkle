@@ -35,7 +35,7 @@ function summary() {
     boosters: s ? { ...s.boosters } : {}, saveBoosters: { ...SAVE.boosters }, progress: JSON.parse(JSON.stringify(SAVE.progress)), settings: { ...SAVE.settings },
     lore: SAVE.lore.slice(), daily: JSON.parse(JSON.stringify(SAVE.daily)), levelStats: JSON.parse(JSON.stringify(SAVE.stats)), soakBest: SAVE.soakBest, soakDay: SAVE.soakDay, tutorialSeen: SAVE.tutorialSeen.slice(), storageOk: SAVE.storageOk, current: SAVE.current ? SAVE.current.levelId : null,
     lastTimeline: PLAY.lastResult, anim: { playing: !!PLAY.anim, frozen: VIEW.frozenMs }, hash: s ? hashState(s) : null,
-    selected: PLAY.selected, legal: BOARD.legalDrawn.slice(), cursor: PLAY.cursor, hint: BOARD.hint, hintArrow: hintArrow(), drag: BOARD.drag ? { i: BOARD.drag.i, j: BOARD.drag.j, dx: BOARD.drag.dx, dy: BOARD.drag.dy, released: !!BOARD.drag.rel } : null, motes: visibleMotes(), armed: PLAY.armed, art: VIEW.artSource,
+    selected: PLAY.selected, legal: BOARD.legalDrawn.slice(), aim: BOARD.aimDrawn.slice(), cursor: PLAY.cursor, hint: BOARD.hint, hintArrow: hintArrow(), drag: BOARD.drag ? { i: BOARD.drag.i, j: BOARD.drag.j, dx: BOARD.drag.dx, dy: BOARD.drag.dy, released: !!BOARD.drag.rel } : null, motes: visibleMotes(), armed: PLAY.armed, art: VIEW.artSource,
     layout: { ...VIEW.layout }, reduced: VIEW.reduced, modal: UI.modalOpen, tip: UI.tipOpen, sounds: AUDIO.played.slice(-20), calls: AUDIO.calls.slice(-20),
     stats: s ? { ...s.stats } : null, levels: LEVELS.length,
   };

@@ -5,7 +5,7 @@ import { VIEW, WORLD_LOOK, retireTextures } from './stage.js';
 import { modelFromState, applyEvent } from './model.js';
 import { schedule, frameAt, ease, hrand, TICK_MS } from './player.js';
 
-const B = { halos: [], halosUsed: 0, built: null, cells: [], drains: [], layer: {}, tiles: new Map(), fx: [], fxUsed: 0, pops: [], popsUsed: 0, callout: null, frame: null, maskG: null, model: null, sel: -1, cursor: -1, hint: null, hintG: null, legal: null, legalDrawn: [], showCursor: false, drag: null, dragFrac: 0 };
+const B = { halos: [], halosUsed: 0, built: null, cells: [], drains: [], layer: {}, tiles: new Map(), fx: [], fxUsed: 0, pops: [], popsUsed: 0, callout: null, frame: null, maskG: null, model: null, sel: -1, cursor: -1, hint: null, hintG: null, legal: null, legalDrawn: [], aim: null, aimDrawn: [], showCursor: false, drag: null, dragFrac: 0 };
 export const BOARD = B;
 
 const texFor = (t) => {
@@ -170,11 +170,24 @@ function drawLegal() {
   }
 }
 
+// With a booster armed, the cells it would hit under the pointer (or the keyboard cursor) glow, so a slip can be corrected before letting go.
+// B.aim = { cells, kind } is set by the controller; a hammer glows amber, a line cyan.
+const AIM_TINT = { hammer: 0xffb060, line: 0x9ff0ff };
+function drawAim() {
+  const { cell } = VIEW.layout, tint = AIM_TINT[B.aim.kind] || 0xffffff;
+  for (const j of B.aim.cells) {
+    const g = fxSprite(VIEW.tex.puff), r = fxSprite(VIEW.tex.ring);
+    g.position.set(...cellXY(j)); g.width = g.height = cell * 1.1; g.alpha = 0.6; g.tint = tint;
+    r.position.set(...cellXY(j)); r.width = r.height = cell * 0.9; r.alpha = 0.85; r.tint = tint;
+    B.aimDrawn.push(j);
+  }
+}
+
 // --- per-frame drawing --------------------------------------------------------------------------
 // Draws the model, plus the beat at index i with progress p when a timeline plays.
 export function drawFrame(model, beat, p, opts = {}) {
   const { cell } = VIEW.layout;
-  B.fxUsed = 0; B.popsUsed = 0; B.halosUsed = 0; B.legalDrawn = [];
+  B.fxUsed = 0; B.popsUsed = 0; B.halosUsed = 0; B.legalDrawn = []; B.aimDrawn = [];
   for (const sp of B.tiles.values()) sp._used = false;
   const ev = beat ? beat.events : [];
   const hitTiles = new Set(), hitLayer = new Map();
@@ -294,6 +307,7 @@ export function drawFrame(model, beat, p, opts = {}) {
 
   if (!beat && B.hint) drawHint(); else if (B.hintG) B.hintG.visible = false;
   if (!beat && B.sel >= 0 && B.legal) drawLegal();
+  if (!beat && B.aim) drawAim();
   drawFx(ev, p, beat);
   // cursor (keyboard) and selection
   const cur = B.cursorSprite;

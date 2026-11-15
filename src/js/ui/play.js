@@ -17,7 +17,7 @@ import { haptic, pulseFor, PULSE } from './haptics.js';
 
 export const PLAY = {
   state: null, level: null, world: 1, anim: null, onAnimDone: null, selected: -1, cursor: -1, keyMode: false,
-  armed: null, lineDir: 'h', hintTimer: 0, lastResult: null, transitions: 0, active: false, down: null, playedBeat: -1,
+  armed: null, aim: -1, aimId: null, lineDir: 'h', hintTimer: 0, lastResult: null, transitions: 0, active: false, down: null, playedBeat: -1,
   shownScore: 0, pendingEncore: false, ui: null, // ui callbacks: {onWin, onLose, onTip, announce, toast}
 };
 
@@ -35,7 +35,7 @@ export function startLevel(level, opts = {}) {
   PLAY.state = opts.state || newGame(level, opts.seed != null ? opts.seed : Date.now() % 1e9, { boosters: { ...SAVE.boosters } });
   if (!opts.state) PLAY.state.boosters = { ...SAVE.boosters };
   if (opts.relief && PLAY.state.movesLeft != null) PLAY.state.movesLeft += opts.relief; // see RELIEF_AFTER in save.js
-  PLAY.selected = -1; PLAY.cursor = -1; PLAY.armed = null; PLAY.anim = null; PLAY.down = null; PLAY.active = true; BOARD.sel = -1; BOARD.legal = null;
+  PLAY.selected = -1; PLAY.cursor = -1; PLAY.armed = null; PLAY.aimId = null; PLAY.anim = null; PLAY.down = null; PLAY.active = true; BOARD.sel = -1; BOARD.legal = null; BOARD.aim = null;
   PLAY.shownScore = PLAY.state.score; PLAY.explained = 0; PLAY.explainedAt = -Infinity;
   VIEW.world = PLAY.world;
   layoutAndBuild();
@@ -197,7 +197,7 @@ export function doBooster(name, cell, dir) {
   if (!r.valid) return r;
   recordComputedAction(action, { levelId: PLAY.level.id, state: cloneState(PLAY.state) }, name);
   commitMove();
-  PLAY.armed = null;
+  PLAY.armed = null; setAim(-1);
   sfx('booster');
   play(pre, r, () => afterMove(r));
   return r;
@@ -469,13 +469,18 @@ export function bindInput(canvas) {
     }
     const i = cellAt(e.clientX, e.clientY);
     PLAY.keyMode = false; BOARD.showCursor = false;
+    if (PLAY.armed) { // the target is chosen on release: a press shows what it would hit, sliding to another cell moves it, and letting go off the board cancels
+      clearHint(); PLAY.aimId = e.pointerId; setAim(i);
+      try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* capture is optional */ }
+      return;
+    }
     if (i < 0) { setSelected(-1); return; }
     clearHint();
-    if (PLAY.armed) { useArmed(i); return; }
     PLAY.down = { i, x: e.clientX, y: e.clientY, swapped: false, id: e.pointerId };
     try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* capture is optional */ }
   });
   canvas.addEventListener('pointermove', (e) => {
+    if (PLAY.armed) { if (!PLAY.anim && (PLAY.aimId === e.pointerId || (PLAY.aimId == null && e.pointerType === 'mouse'))) setAim(cellAt(e.clientX, e.clientY)); return; }
     const d = PLAY.down;
     if (!d || d.swapped || d.id !== e.pointerId) return;
     const dx = e.clientX - d.x, dy = e.clientY - d.y, cell = VIEW.layout.cell, th = cell * 0.3;
@@ -494,6 +499,12 @@ export function bindInput(canvas) {
     const f = dragFraction(horiz ? dx : dy, cell, j, s, d.i); BOARD.drag = null; setSelected(-1); doSwap(d.i, j, f);
   });
   const up = (e) => {
+    if (PLAY.armed && PLAY.aimId === e.pointerId) {
+      PLAY.aimId = null;
+      const i = cellAt(e.clientX, e.clientY);
+      if (i >= 0) useArmed(i); else refuseAim();
+      return;
+    }
     const d = PLAY.down;
     PLAY.down = null;
     letGo();
@@ -505,7 +516,8 @@ export function bindInput(canvas) {
     scheduleHint();
   };
   canvas.addEventListener('pointerup', up);
-  canvas.addEventListener('pointercancel', () => { PLAY.down = null; letGo(); });
+  canvas.addEventListener('pointercancel', () => { PLAY.down = null; PLAY.aimId = null; if (PLAY.armed) setAim(-1); letGo(); });
+  canvas.addEventListener('pointerleave', () => { if (PLAY.armed && PLAY.aimId == null) setAim(-1); });
 }
 
 // A piece follows the finger along the axis of the pull, at most one cell, and the one it would trade with gives way by the same
@@ -552,7 +564,28 @@ export function armBooster(name) {
     else { PLAY.armed = null; PLAY.lineDir = 'h'; }
   } else { PLAY.armed = name; PLAY.lineDir = 'h'; }
   if (PLAY.ui && PLAY.armed) PLAY.ui.toast(PLAY.armed === 'hammer' ? 'Tap a cell to break it' : `Tap a cell: clears its ${PLAY.lineDir === 'h' ? 'row' : 'column'}`);
+  setAim(PLAY.armed && PLAY.keyMode && PLAY.cursor >= 0 ? PLAY.cursor : -1);
   updateHud();
+}
+// The cells an armed booster would hit if it were used on cell i: one for the Hammer, the row or the column for the Line.
+function aimCells(i) {
+  const s = PLAY.state;
+  if (PLAY.armed === 'hammer') return [i];
+  const out = [];
+  if (PLAY.lineDir === 'v') { for (let y = 0; y < s.h; y++) if (s.mask[y * s.w + i % s.w]) out.push(y * s.w + i % s.w); }
+  else { const y = (i / s.w) | 0; for (let x = 0; x < s.w; x++) if (s.mask[y * s.w + x]) out.push(y * s.w + x); }
+  return out;
+}
+function setAim(i) {
+  const next = i >= 0 && PLAY.armed && PLAY.state && PLAY.state.mask[i] ? i : -1;
+  PLAY.aim = next;
+  BOARD.aim = next >= 0 ? { cells: aimCells(next), kind: PLAY.armed } : null;
+  requestRender();
+}
+// A release off the board (or on a hole) uses nothing: the booster stays armed, with a thud and a line saying so.
+function refuseAim() {
+  setAim(-1); sfx('bounce'); haptic(PULSE.refused);
+  if (PLAY.ui) PLAY.ui.toast('Nothing there: tap a piece, or tap the booster again to cancel');
 }
 function useArmed(i) {
   const name = PLAY.armed;
@@ -579,19 +612,19 @@ export function handleKey(e) {
     const [dx, dy] = dirs[e.key];
     const x = PLAY.cursor % s.w, y = (PLAY.cursor / s.w) | 0, nx = x + dx, ny = y + dy;
     PLAY.keyMode = true; BOARD.showCursor = true;
-    if (nx < 0 || ny < 0 || nx >= s.w || ny >= s.h || !s.mask[ny * s.w + nx]) { requestRender(); return true; }
+    if (nx < 0 || ny < 0 || nx >= s.w || ny >= s.h || !s.mask[ny * s.w + nx]) { if (PLAY.armed) setAim(PLAY.cursor); requestRender(); return true; }
     const j = ny * s.w + nx;
     if (PLAY.selected >= 0 && !PLAY.anim) { const a = PLAY.selected; setSelected(-1); PLAY.cursor = j; BOARD.cursor = j; doSwap(a, j); return true; }
-    PLAY.cursor = j; BOARD.cursor = j; requestRender();
+    PLAY.cursor = j; BOARD.cursor = j; if (PLAY.armed) setAim(j); requestRender();
     return true;
   }
   if (e.key === 'Enter' || e.key === ' ') {
-    if (PLAY.cursor < 0) { PLAY.cursor = firstCell(s); BOARD.cursor = PLAY.cursor; BOARD.showCursor = true; requestRender(); return true; }
+    if (PLAY.cursor < 0) { PLAY.cursor = firstCell(s); BOARD.cursor = PLAY.cursor; BOARD.showCursor = true; if (PLAY.armed) setAim(PLAY.cursor); requestRender(); return true; }
     if (PLAY.armed) { useArmed(PLAY.cursor); return true; }
     if (PLAY.selected === PLAY.cursor) setSelected(-1); else if (swappableAt(s, PLAY.cursor)) { setSelected(PLAY.cursor); sfx('select', 0, { pan: panOf(PLAY.cursor) }); }
     return true;
   }
-  if (e.key === 'Escape' && (PLAY.selected >= 0 || PLAY.armed)) { setSelected(-1); PLAY.armed = null; updateHud(); return true; }
+  if (e.key === 'Escape' && (PLAY.selected >= 0 || PLAY.armed)) { setSelected(-1); PLAY.armed = null; setAim(-1); updateHud(); return true; }
   if (e.key === 'h' || e.key === 'H') { showHint(); return true; }
   return false;
 }

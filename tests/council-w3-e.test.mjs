@@ -81,3 +81,139 @@ tests.push({
     await t.page.waitForFunction(() => window.__game.audioState().muted === false, null, { timeout: 5000 });
   },
 });
+
+// --- S1-06: an armed booster shows what it would hit, fires on release, and says when a target is no good -------------------------
+const BOARD = ['a b a c e', 'S2 a d e S1', 'd S3 b d c', 'e d c b e', 'b c e a d']; // 5 by 5; S3 at [1,2] takes a hammer, S1 at [4,1] a line
+const STOCK = { hammer: 2, line: 2, shuffle: 1, plus5: 1 };
+const GOALS = { moves: 10, boosters: STOCK, goals: [{ type: 'stone', need: 6 }] };
+async function armedBoard(t) {
+  await t.game('newGame', { level: 'w2-01', seed: 3, tips: false });
+  await t.game('act', 'progress', {}, STOCK);
+  await t.game('act', 'board', BOARD, GOALS);
+  await t.waitIdle();
+}
+async function geometry(t) {
+  const s = await t.state();
+  const rect = await t.page.evaluate(() => { const r = document.querySelector('#stage canvas').getBoundingClientRect(); return { x: r.left, y: r.top }; });
+  const L = s.layout;
+  const at = (x, y) => [rect.x + L.bx + (x + 0.5) * L.cell, rect.y + L.by + (y + 0.5) * L.cell];
+  at.off = [rect.x + 3, rect.y + 3]; // a corner of the canvas, outside the board
+  return at;
+}
+const aimIs = (t, want) => t.page.waitForFunction((w) => { const a = window.__game.getState().aim.slice().sort((p, q) => p - q); return a.length === w.length && a.every((v, k) => v === w[k]); }, want, { timeout: 5000 });
+const arm = (t, name) => t.page.locator(`.booster[data-booster="${name}"]`).click();
+const row = (y) => [0, 1, 2, 3, 4].map((x) => y * 5 + x);
+const col = (x) => [0, 1, 2, 3, 4].map((y) => y * 5 + x);
+
+tests.push({
+  name: 'S1-06 the hammer, the row and the column each glow where the pointer is, and move with it',
+  viewports: ['desktop'],
+  async run(t) {
+    await armedBoard(t);
+    const at = await geometry(t);
+    t.equal((await t.state()).aim.length, 0, 'nothing glows before a booster is armed');
+    await arm(t, 'hammer');
+    await t.page.mouse.move(...at(1, 2), { steps: 4 });
+    await aimIs(t, [2 * 5 + 1]);
+    await t.shot('S1-06-hammer-aim');
+    await t.page.mouse.move(...at(3, 4), { steps: 4 });
+    await aimIs(t, [4 * 5 + 3]);
+    await arm(t, 'line'); // arming another booster replaces the first
+    await t.page.mouse.move(...at(2, 1), { steps: 4 });
+    await aimIs(t, row(1));
+    await t.shot('S1-06-line-row-aim');
+    await arm(t, 'line'); // the second press turns the row into a column
+    await t.page.mouse.move(...at(4, 3), { steps: 4 });
+    await aimIs(t, col(4));
+    t.equal((await t.state()).boosters.line, 2, 'looking spends nothing');
+    await t.page.mouse.move(...at.off, { steps: 4 });
+    await aimIs(t, []);
+  },
+});
+tests.push({
+  name: 'S1-06 a booster fires when the press is let go, can be slid off to cancel, and a miss thuds and says so',
+  viewports: ['desktop'],
+  async run(t) {
+    await armedBoard(t);
+    const at = await geometry(t);
+    await arm(t, 'hammer');
+    const before = (await sounds(t)).filter((n) => n === 'bounce').length;
+    await t.page.mouse.move(...at(1, 2), { steps: 3 });
+    await t.page.mouse.down();
+    await aimIs(t, [2 * 5 + 1]);
+    t.equal((await t.state()).boosters.hammer, 2, 'a press alone spends nothing');
+    await t.page.mouse.move(...at(4, 4), { steps: 4 }); // slide to another cell: the glow follows
+    await aimIs(t, [4 * 5 + 4]);
+    await t.page.mouse.move(...at.off, { steps: 4 });
+    await aimIs(t, []);
+    await t.page.mouse.up(); // released off the board
+    const s = await t.state();
+    t.equal(s.boosters.hammer, 2, 'let go off the board: nothing is spent');
+    t.equal(s.armed, 'hammer', 'and the hammer stays armed');
+    t.expect((await sounds(t)).filter((n) => n === 'bounce').length > before, 'the refused release thuds');
+    t.expect(/Nothing there/.test(await t.page.locator('#toast').textContent()), 'and the toast says why');
+    await t.page.mouse.move(...at(1, 2), { steps: 3 });
+    await t.page.mouse.down(); await t.page.mouse.up(); // a plain click still works
+    await t.waitIdle(8000);
+    const after = await t.state();
+    t.equal(after.boosters.hammer, 1, 'a click on a piece spends the hammer');
+    t.equal(after.board.cells[2 * 5 + 1].stone, 2, 'and it took a layer off the stone');
+    t.equal(after.armed, null, 'and puts it away');
+    t.equal(after.aim.length, 0, 'the glow is gone');
+  },
+});
+tests.push({
+  name: 'S1-06 on a phone a tap fires the booster, and a touch slid off the board cancels it',
+  viewports: ['mobile'],
+  async run(t) {
+    await armedBoard(t);
+    const at = await geometry(t);
+    await arm(t, 'line');
+    await t.touchDrag(at(2, 1), at.off, { steps: 4 });
+    let s = await t.state();
+    t.equal(s.boosters.line, 2, 'a touch slid off the board spends nothing');
+    t.equal(s.armed, 'line', 'the line stays armed');
+    t.equal(s.aim.length, 0, 'and nothing glows');
+    await t.tap(at(2, 1));
+    await t.waitIdle(8000);
+    s = await t.state();
+    t.equal(s.boosters.line, 1, 'a tap spends the line');
+    t.equal(s.board.cells[1 * 5 + 4].stone, 0, 'the row through [2,1] was cleared: the stone at its end is gone');
+  },
+});
+tests.push({
+  name: 'S1-06 with the keyboard the glow follows the cursor, and Esc puts the booster away',
+  viewports: ['desktop'],
+  async run(t) {
+    await armedBoard(t);
+    await t.page.keyboard.press('1'); // Hammer
+    t.equal((await t.state()).armed, 'hammer', 'the key arms the hammer');
+    await t.page.keyboard.press('ArrowRight'); // wakes the cursor on the middle piece and moves it
+    const c = (await t.state()).cursor;
+    await aimIs(t, [c]);
+    await t.page.keyboard.press('ArrowUp');
+    await aimIs(t, [c - 5]);
+    await t.page.keyboard.press('Escape');
+    await aimIs(t, []);
+    t.equal((await t.state()).armed, null, 'Esc puts the booster away');
+    await t.page.keyboard.press('2'); // Line, with the cursor already showing
+    await aimIs(t, row(((c - 5) / 5) | 0));
+  },
+});
+const sounds = (t) => t.page.evaluate(() => window.__game.getState().sounds);
+tests.push({
+  name: 'S1-06 the glow fits the board on a phone (a column, and a hammer on a stone)',
+  viewports: ['mobile'],
+  async run(t) {
+    await armedBoard(t);
+    const at = await geometry(t);
+    await arm(t, 'line'); await arm(t, 'line'); // column
+    await t.page.mouse.move(...at(1, 2), { steps: 3 });
+    await aimIs(t, col(1));
+    await t.shot('S1-06-line-column-aim');
+    await arm(t, 'hammer');
+    await t.page.mouse.move(...at(4, 1), { steps: 3 });
+    await aimIs(t, [1 * 5 + 4]);
+    await t.shot('S1-06-hammer-aim');
+  },
+});
