@@ -178,7 +178,7 @@ export function doSwap(a, b, pulled = 0) {
   clearHint();
   const pre = cloneState(PLAY.state);
   const r = apply(PLAY.state, { type: 'swap', a, b });
-  if (r.reason === 'blocked') { explainRefusal(whyStuck(PLAY.state, a) || whyStuck(PLAY.state, b)); return r; }
+  if (r.reason === 'blocked') { explainRefusal(whyStuck(PLAY.state, a) || whyStuck(PLAY.state, b)); refused(a, b); return r; }
   PLAY.selected = -1; BOARD.sel = -1; BOARD.legal = null;
   if (r.valid && mode !== 'soak') { recordComputedAction(action, { levelId: PLAY.level.id, state: cloneState(PLAY.state) }); commitMove(); }
   play(pre, r, () => afterMove(r));
@@ -226,6 +226,17 @@ function whyStuck(s, i) {
   if (s.lock[i]) return 'lock';
   if (s.fog[i]) return 'fog';
   return t.k === TOKEN ? 'token' : null;
+}
+// A move the board refuses (a padlock, tufa, fog, a token in the way, or a pull past the edge or into a hole): the same soft thud as a swap that
+// comes back, and the pressed piece gives a little toward where it was sent and springs back, so a missed gesture is told from a refused one.
+const NUDGE_CELLS = 0.18;
+function refused(a, b) {
+  sfx('bounce', 0, { pan: panOf(a) });
+  if (VIEW.reduced || !PLAY.state || b < 0) return;
+  const w = PLAY.state.w, cell = VIEW.layout.cell, dx = (b % w) - (a % w), dy = ((b / w) | 0) - ((a / w) | 0);
+  if (Math.abs(dx) + Math.abs(dy) !== 1) return;
+  BOARD.drag = { i: a, j: -1, dx: dx * cell * NUDGE_CELLS, dy: dy * cell * NUDGE_CELLS, rel: performance.now() };
+  requestRender();
 }
 function explainRefusal(why) {
   const now = performance.now();
@@ -458,15 +469,20 @@ export function bindInput(canvas) {
     let j = -1;
     if (horiz) j = dx > 0 ? (x < s.w - 1 ? d.i + 1 : -1) : (x > 0 ? d.i - 1 : -1);
     else j = dy > 0 ? (y < s.h - 1 ? d.i + s.w : -1) : (y > 0 ? d.i - s.w : -1);
-    if (far < th) { showDrag(d.i, j, horiz ? dx : 0, horiz ? 0 : dy, cell); return; }
+    if (far < th) { d.refused = false; showDrag(d.i, j, horiz ? dx : 0, horiz ? 0 : dy, cell); return; }
+    if (j < 0 || !s.mask[j]) { // an edge or a hole: the piece gives a little and the gesture stays open, so the player can aim again without lifting
+      showDrag(d.i, -1, horiz ? dx : 0, horiz ? 0 : dy, cell);
+      if (!d.refused) { d.refused = true; sfx('bounce', 0, { pan: panOf(d.i) }); }
+      return;
+    }
     d.swapped = true;
-    if (j >= 0 && s.mask[j]) { const f = dragFraction(horiz ? dx : dy, cell, j, s, d.i); BOARD.drag = null; setSelected(-1); doSwap(d.i, j, f); } else BOARD.drag = null;
+    const f = dragFraction(horiz ? dx : dy, cell, j, s, d.i); BOARD.drag = null; setSelected(-1); doSwap(d.i, j, f);
   });
   const up = (e) => {
     const d = PLAY.down;
     PLAY.down = null;
     letGo();
-    if (!d || d.swapped || d.id !== e.pointerId) return;
+    if (!d || d.swapped || d.refused || d.id !== e.pointerId) return; // a pull that was refused is not a tap
     const s = PLAY.state;
     if (PLAY.selected >= 0 && PLAY.selected !== d.i && adjacent(s, PLAY.selected, d.i)) { const a = PLAY.selected; setSelected(-1); doSwap(a, d.i); return; }
     if (PLAY.selected === d.i) { setSelected(-1); return; }

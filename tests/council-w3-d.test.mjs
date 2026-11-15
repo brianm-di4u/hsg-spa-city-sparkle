@@ -166,3 +166,67 @@ tests.push({
     t.expect(solo.peak < 0.95, `the loudest cue of all (${loud[0][0]}) over the piece and bed peaks ${solo.peak}, under 0.95`);
   },
 });
+
+// --- S1-04: a refused move sounds and shows it, and a pull past the edge does not use up the gesture --------------------------
+const RULES = ['aL1 b c d e', 'b c d e a', 'c d e a b', 'd bF a b c', 'e S1 T c d']; // a padlocked piece, a fogged piece, tufa and a bath token; no match on the board
+const bounces = async (t) => (await sounds(t)).filter((n) => n === 'bounce').length;
+tests.push({
+  name: 'S1-04 a swap into a blocked piece thuds and the pressed piece gives a little toward it',
+  async run(t) {
+    await board(t, RULES);
+    const before = await bounces(t);
+    // one synchronous step, so the spring (80 ms) cannot have finished when the state is read
+    const r = await t.page.evaluate(() => { const g = window.__game, res = g.act('swap', [0, 0], [1, 0]); const s = g.getState(); return { res, drag: s.drag, reduced: s.reduced }; });
+    t.equal(r.res.reason, 'blocked', 'the engine refuses it');
+    t.equal(await bounces(t), before + 1, 'the thud plays once');
+    t.expect(r.drag && r.drag.i === 0 && r.drag.j === -1 && r.drag.dx > 0 && r.drag.dy === 0 && r.drag.released, `the padlocked piece leans toward the piece it was sent at and springs back (${JSON.stringify(r.drag)})`);
+    await t.page.waitForFunction(() => window.__game.getState().drag === null, null, { timeout: 3000 });
+    t.equal((await t.state()).movesLeft, 40, 'no move was spent');
+  },
+});
+tests.push({
+  name: 'S1-04 a drag onto a blocked piece thuds, spends no move, and leaves the board as it was',
+  async run(t) {
+    await board(t, RULES);
+    const at = await geometry(t), before = await t.state();
+    const from = at(0, 0), to = at(1, 0);
+    if (t.viewport === 'mobile') await t.touchDrag(from, to, { steps: 6 });
+    else { await t.page.mouse.move(...from); await t.page.mouse.down(); await t.page.mouse.move(...to, { steps: 6 }); await t.page.mouse.up(); }
+    await t.page.waitForFunction(() => window.__game.getState().sounds.includes('bounce'), null, { timeout: 5000 });
+    const s = await t.state();
+    t.equal(s.movesLeft, before.movesLeft, 'no move was spent');
+    t.equal(s.hash, before.hash, 'the board is unchanged');
+  },
+});
+tests.push({
+  name: 'S1-04 a pull past the board edge thuds once and the same press can be aimed again',
+  viewports: ['desktop'],
+  async run(t) {
+    await board(t, BOARD);
+    const at = await geometry(t), [x, y] = at(1, 0), cell = (await t.state()).layout.cell;
+    await t.page.mouse.move(x, y);
+    await t.page.mouse.down();
+    await t.page.mouse.move(x, y - cell * 0.6, { steps: 5 }); // up: off the top of the board
+    await t.page.waitForFunction(() => window.__game.getState().sounds.includes('bounce'), null, { timeout: 3000 });
+    await t.page.mouse.move(x + 2, y - cell * 0.7, { steps: 3 }); // still past the edge: no second thud
+    t.equal(await bounces(t), 1, 'one thud for the pull past the edge');
+    t.equal((await t.state()).movesLeft, 40, 'the gesture was not spent as a move');
+    await t.page.mouse.move(x, y + cell * 0.6, { steps: 8 }); // now down, onto the piece below: the swap that wins a stone is made
+    await t.page.waitForFunction(() => window.__game.getState().movesLeft < 40, null, { timeout: 5000 });
+    await t.page.mouse.up();
+    t.expect((await t.state()).lastTimeline && (await t.state()).lastTimeline.valid, 'the re-aimed pull made the swap');
+    await t.waitIdle();
+  },
+});
+tests.push({
+  name: 'S1-04 letting go after a pull past the edge does not pick the piece up',
+  viewports: ['desktop'],
+  async run(t) {
+    await board(t, BOARD);
+    const at = await geometry(t), [x, y] = at(1, 0), cell = (await t.state()).layout.cell;
+    await t.page.mouse.move(x, y); await t.page.mouse.down(); await t.page.mouse.move(x, y - cell * 0.6, { steps: 5 });
+    await t.page.waitForFunction(() => window.__game.getState().sounds.includes('bounce'), null, { timeout: 3000 });
+    await t.page.mouse.up();
+    t.equal((await t.state()).selected, -1, 'the piece is not selected');
+  },
+});
