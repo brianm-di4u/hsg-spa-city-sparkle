@@ -2,7 +2,10 @@
 // Monte Carlo difficulty check: every level played by the casual-player bot (tools/bots.mjs) (default 200 seeds) and the random bot
 // (50 seeds) across worker threads. Writes tools/balance-report.json and prints a table against each
 // level's target band (`band` in data/levels/*.txt). PRD §13, AC24.
-//   node tools/balance.mjs [--seeds 200] [--random 50] [--only w1-01,w2] [--workers 8] [--fix-stars] [--fit-stars baseline.json]
+//   node tools/balance.mjs [--seeds 200] [--random 50] [--greedy 100] [--extra-moves 3] [--only w1-01,w2] [--workers 8] [--fix-stars] [--fit-stars baseline.json]
+// --greedy <n> also plays every level n times with the pure greedy bot, the in-game hint's move every time: a player who follows every hint.
+// Its win rate is the ceiling of that player and goes into the report as greedyWin (0 seeds, the default, leaves it out).
+// --extra-moves <n> plays every level with n more moves (what the "Della lends you a hand" relief gives a stuck player); the report is not written.
 // Stars are counted after the Encore (S3-01), so the bots play the Encore out and `split` is the share of won games
 // that earned 1, 2 and 3 stars. --fit-stars <baseline.json> rewrites the 2- and 3-star thresholds of every level so the
 // bots' split matches the split recorded in that earlier report (the one measured before stars counted the Encore).
@@ -28,11 +31,12 @@ if (!isMainThread) {
 const args = process.argv.slice(2);
 const arg = (n, d) => (args.includes(n) ? args[args.indexOf(n) + 1] : d);
 const seeds = +arg('--seeds', 200), rseeds = +arg('--random', 50), nw = +arg('--workers', Math.max(1, os.cpus().length - 2));
+const gseeds = +arg('--greedy', 0), extra = +arg('--extra-moves', 0);
 const only = arg('--only', '').split(',').filter(Boolean);
 const levelsPath = path.join(here, '..', 'data', 'levels.json');
-const levels = JSON.parse(fs.readFileSync(levelsPath, 'utf8')).filter((l) => !only.length || only.some((o) => l.id.startsWith(o)));
+const levels = JSON.parse(fs.readFileSync(levelsPath, 'utf8')).filter((l) => !only.length || only.some((o) => l.id.startsWith(o))).map((l) => (extra ? { ...l, moves: l.moves + extra } : l));
 const jobs = [];
-for (const l of levels) { jobs.push({ level: l, strategy: 'casual', seeds }); if (rseeds) jobs.push({ level: l, strategy: 'random', seeds: rseeds }); }
+for (const l of levels) { jobs.push({ level: l, strategy: 'casual', seeds }); if (rseeds) jobs.push({ level: l, strategy: 'random', seeds: rseeds }); if (gseeds) jobs.push({ level: l, strategy: 'greedy', seeds: gseeds }); }
 // spread the work: heavy greedy jobs round-robin
 const buckets = Array.from({ length: nw }, () => []);
 jobs.forEach((j, i) => buckets[i % nw].push(j));
@@ -46,9 +50,9 @@ await Promise.all(buckets.filter((b) => b.length).map((b) => new Promise((resolv
 console.log(`\n${jobs.length} jobs in ${((Date.now() - t0) / 1000).toFixed(1)} s`);
 const pct = (a, f) => a.length ? a.filter(f).length / a.length : 0;
 const q = (arr, p) => { const s = arr.slice().sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.floor(p * s.length))] || 0; };
-const report = { generated: new Date().toISOString(), seeds, randomSeeds: rseeds, levelsHash: crypto.createHash('sha1').update(fs.readFileSync(levelsPath)).digest('hex').slice(0, 12), levels: {} };
+const report = { generated: new Date().toISOString(), seeds, randomSeeds: rseeds, ...(gseeds ? { greedySeeds: gseeds } : {}), levelsHash: crypto.createHash('sha1').update(fs.readFileSync(levelsPath)).digest('hex').slice(0, 12), levels: {} };
 let out = 0;
-console.log('level   band        casual  random  3★    p50score  left  resh  rec  cap  verdict');
+console.log('level   band        casual  random  3★    p50score  left  resh  rec  cap  verdict' + (gseeds ? '  greedy' : ''));
 for (const l of levels) {
   const g = results[l.id].casual, r = results[l.id].random || [];
   const win = pct(g, (x) => x.won), rwin = pct(r, (x) => x.won);
@@ -60,13 +64,14 @@ for (const l of levels) {
     leftP50: q(wins.map((x) => x.left || 0), 0.5), winQ: [q(wins.map((x) => x.score), 0.1), q(wins.map((x) => x.score), 0.5), q(wins.map((x) => x.score), 0.85)], reshuffles: g.reduce((a, x) => a + x.reshuffles, 0) / g.length,
     recolorRate: g.reduce((a, x) => a + x.recolors, 0) / Math.max(1, g.reduce((a, x) => a + x.moves, 0)), capped: g.reduce((a, x) => a + x.capped, 0),
   };
+  if (gseeds) row.greedyWin = pct(results[l.id].greedy, (x) => x.won);
   const [lo, hi] = l.band || [0, 1];
   row.verdict = win < lo - 0.15 || win > hi + 0.15 ? 'FAIL' : win < lo - 0.05 || win > hi + 0.05 ? 'warn' : 'ok';
   if (row.capped) row.verdict = 'FAIL';
   if (row.verdict !== 'ok') out++;
   report.levels[l.id] = row;
   const f = (x) => (x * 100).toFixed(0).padStart(4) + '%';
-  console.log(`${l.id.padEnd(7)} ${String(l.band ? l.band.map((x) => (x * 100).toFixed(0)).join('-') : '-').padEnd(10)} ${f(win)}   ${f(rwin)}  ${f(row.star3)}  ${String(row.scoreP50).padStart(8)}  ${String(row.leftP50).padStart(4)}  ${row.reshuffles.toFixed(2)}  ${(row.recolorRate * 100).toFixed(1)}  ${row.capped}  ${row.verdict}`);
+  console.log(`${l.id.padEnd(7)} ${String(l.band ? l.band.map((x) => (x * 100).toFixed(0)).join('-') : '-').padEnd(10)} ${f(win)}   ${f(rwin)}  ${f(row.star3)}  ${String(row.scoreP50).padStart(8)}  ${String(row.leftP50).padStart(4)}  ${row.reshuffles.toFixed(2)}  ${(row.recolorRate * 100).toFixed(1)}  ${row.capped}  ${row.verdict}${gseeds ? f(row.greedyWin) : ''}`);
 }
 if (args.includes('--fit-stars')) {
   const base = JSON.parse(fs.readFileSync(path.resolve(arg('--fit-stars', '')), 'utf8'));
@@ -118,5 +123,5 @@ if (args.includes('--fix-stars')) {
   }
   console.log(`${fixed} star line(s) rewritten; run node tools/build-levels.mjs and re-run balance`);
 }
-if (!only.length) fs.writeFileSync(path.join(here, 'balance-report.json'), JSON.stringify(report, null, 1) + '\n');
-console.log(`${out} level(s) outside band${only.length ? ' (partial run, report not written)' : ''}`);
+if (!only.length && !extra) fs.writeFileSync(path.join(here, 'balance-report.json'), JSON.stringify(report, null, 1) + '\n');
+console.log(`${out} level(s) outside band${only.length || extra ? ' (partial run, report not written)' : ''}`);
