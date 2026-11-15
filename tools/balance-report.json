@@ -1,7 +1,8 @@
 {
- "generated": "2026-11-14T03:26:24.071Z",
+ "generated": "2026-11-15T05:07:57.983Z",
  "seeds": 200,
  "randomSeeds": 0,
+ "greedySeeds": 100,
  "levelsHash": "bbcbb996f748",
  "levels": {
   "w1-01": {
@@ -30,6 +31,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.98,
    "verdict": "ok"
   },
   "w1-02": {
@@ -58,6 +60,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.99,
    "verdict": "ok"
   },
   "w1-03": {
@@ -86,6 +89,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 1,
    "verdict": "ok"
   },
   "w1-04": {
@@ -114,6 +118,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.99,
    "verdict": "ok"
   },
   "w1-05": {
@@ -142,6 +147,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.79,
    "verdict": "ok"
   },
   "w1-06": {
@@ -170,6 +176,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 1,
    "verdict": "ok"
   },
   "w1-07": {
@@ -198,6 +205,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.99,
    "verdict": "ok"
   },
   "w1-08": {
@@ -226,6 +234,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.99,
    "verdict": "ok"
   },
   "w1-09": {
@@ -254,6 +263,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.99,
    "verdict": "ok"
   },
   "w1-10": {
@@ -282,6 +292,7 @@
    "reshuffles": 0.035,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.77,
    "verdict": "ok"
   },
   "w2-01": {
@@ -310,6 +321,7 @@
    "reshuffles": 0.015,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.97,
    "verdict": "ok"
   },
   "w2-02": {
@@ -338,6 +350,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.9,
    "verdict": "ok"
   },
   "w2-03": {
@@ -366,6 +379,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.96,
    "verdict": "ok"
   },
   "w2-04": {
@@ -394,6 +408,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.98,
    "verdict": "ok"
   },
   "w2-05": {
@@ -422,6 +437,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.81,
    "verdict": "ok"
   },
   "w2-06": {
@@ -450,6 +466,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.95,
    "verdict": "ok"
   },
   "w2-07": {
@@ -478,6 +495,7 @@
    "reshuffles": 0.005,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.96,
    "verdict": "ok"
   },
   "w2-08": {
@@ -506,6 +524,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.91,
    "verdict": "ok"
   },
   "w2-09": {
@@ -534,6 +553,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.92,
    "verdict": "ok"
   },
   "w2-10": {
@@ -562,6 +582,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.92,
    "verdict": "ok"
   },
   "w3-01": {
@@ -590,6 +611,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.84,
    "verdict": "ok"
   },
   "w3-02": {
@@ -618,6 +640,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.92,
    "verdict": "ok"
   },
   "w3-03": {
@@ -646,6 +669,7 @@
    "reshuffles": 0.005,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.9,
    "verdict": "ok"
   },
   "w3-04": {
@@ -674,6 +698,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.88,
    "verdict": "ok"
   },
   "w3-05": {
@@ -702,6 +727,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.7,
    "verdict": "ok"
   },
   "w3-06": {
@@ -730,6 +756,7 @@
    "reshuffles": 0.01,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.81,
    "verdict": "ok"
   },
   "w3-07": {
@@ -758,6 +785,7 @@
    "reshuffles": 0.005,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.94,
    "verdict": "ok"
   },
   "w3-08": {
@@ -786,6 +814,7 @@
    "reshuffles": 0.43,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.93,
    "verdict": "ok"
   },
   "w3-09": {
@@ -814,6 +843,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.79,
    "verdict": "ok"
   },
   "w3-10": {
@@ -842,6 +872,7 @@
    "reshuffles": 0.05,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.63,
    "verdict": "ok"
   },
   "w4-01": {
@@ -870,6 +901,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.83,
    "verdict": "ok"
   },
   "w4-02": {
@@ -898,6 +930,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.81,
    "verdict": "ok"
   },
   "w4-03": {
@@ -926,6 +959,7 @@
    "reshuffles": 0.005,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.86,
    "verdict": "ok"
   },
   "w4-04": {
@@ -954,6 +988,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.68,
    "verdict": "ok"
   },
   "w4-05": {
@@ -982,6 +1017,7 @@
    "reshuffles": 0.035,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.55,
    "verdict": "ok"
   },
   "w4-06": {
@@ -1010,6 +1046,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.78,
    "verdict": "ok"
   },
   "w4-07": {
@@ -1038,6 +1075,7 @@
    "reshuffles": 0.005,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.82,
    "verdict": "ok"
   },
   "w4-08": {
@@ -1066,6 +1104,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.81,
    "verdict": "ok"
   },
   "w4-09": {
@@ -1094,6 +1133,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.85,
    "verdict": "ok"
   },
   "w4-10": {
@@ -1122,6 +1162,7 @@
    "reshuffles": 0.005,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.76,
    "verdict": "ok"
   },
   "w5-01": {
@@ -1150,6 +1191,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.74,
    "verdict": "ok"
   },
   "w5-02": {
@@ -1178,6 +1220,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.76,
    "verdict": "ok"
   },
   "w5-03": {
@@ -1206,6 +1249,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.83,
    "verdict": "ok"
   },
   "w5-04": {
@@ -1234,6 +1278,7 @@
    "reshuffles": 0.03,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.73,
    "verdict": "ok"
   },
   "w5-05": {
@@ -1262,6 +1307,7 @@
    "reshuffles": 0.005,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.48,
    "verdict": "ok"
   },
   "w5-06": {
@@ -1290,6 +1336,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.82,
    "verdict": "ok"
   },
   "w5-07": {
@@ -1318,6 +1365,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.82,
    "verdict": "ok"
   },
   "w5-08": {
@@ -1346,6 +1394,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.77,
    "verdict": "ok"
   },
   "w5-09": {
@@ -1374,6 +1423,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.8,
    "verdict": "ok"
   },
   "w5-10": {
@@ -1402,6 +1452,7 @@
    "reshuffles": 0.015,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.57,
    "verdict": "ok"
   },
   "w6-01": {
@@ -1430,6 +1481,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.65,
    "verdict": "ok"
   },
   "w6-02": {
@@ -1458,6 +1510,7 @@
    "reshuffles": 0.005,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.72,
    "verdict": "ok"
   },
   "w6-03": {
@@ -1486,6 +1539,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.73,
    "verdict": "ok"
   },
   "w6-04": {
@@ -1514,6 +1568,7 @@
    "reshuffles": 0.005,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.73,
    "verdict": "ok"
   },
   "w6-05": {
@@ -1542,6 +1597,7 @@
    "reshuffles": 0.41,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.45,
    "verdict": "ok"
   },
   "w6-06": {
@@ -1570,6 +1626,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.76,
    "verdict": "ok"
   },
   "w6-07": {
@@ -1598,6 +1655,7 @@
    "reshuffles": 0.01,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.76,
    "verdict": "ok"
   },
   "w6-08": {
@@ -1626,6 +1684,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.75,
    "verdict": "ok"
   },
   "w6-09": {
@@ -1654,6 +1713,7 @@
    "reshuffles": 0.02,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.76,
    "verdict": "ok"
   },
   "w6-10": {
@@ -1682,6 +1742,7 @@
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
+   "greedyWin": 0.39,
    "verdict": "ok"
   }
  }
