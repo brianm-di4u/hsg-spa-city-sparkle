@@ -240,9 +240,19 @@ body.landscape #tray { left: 24px; bottom: 24px; width: 260px; flex-wrap: wrap; 
 .map-title { font-family: var(--font-display); font-weight: 400; font-size: 1.05rem; line-height: 1.1; max-width: 100%; color: #FFF6DE; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
 .map-sub { font-size: .75rem; color: #E9D9AE; white-space: nowrap; }
 @media (max-width: 599px) { .map-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } }
-.map-pc { flex: none; width: 54px; height: 36px; border-radius: 3px; border: 2px solid #FFF6DE; background: #6B7B70 center / cover; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+.map-pc { flex: none; width: 64px; height: 44px; padding: 0; cursor: pointer; border-radius: 3px; border: 2px solid #FFF6DE; background: #6B7B70 center / cover; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+.map-head { cursor: pointer; }
+.map-head:focus-visible { outline: 3px solid #FFF6DE; outline-offset: 2px; border-radius: 6px; }
 .map-top { gap: 8px; }
 @media (max-width: 440px) { .map-pc { display: none; } }
+.pc-grid { display: grid; grid-template-columns: repeat(var(--cols), 1fr); gap: 2px; aspect-ratio: 3 / 2; margin: 8px 0 4px; padding: 3px; border-radius: 6px; background: #3A2208; box-shadow: inset 0 0 0 2px #D9A23A; }
+.pc-grid i { background: var(--pc) 0 0 / calc(var(--cols) * 100%) calc(var(--rows) * 100%); filter: grayscale(1) brightness(.72) contrast(.9); }
+.pc-grid i.on { filter: none; }
+.pc-count { text-align: center; font-size: .85rem; color: var(--ink-soft); }
+.pc-say { display: flex; gap: 10px; align-items: flex-end; margin-top: 6px; }
+.pc-say .pc-della { flex: none; width: 64px; height: 84px; background: center bottom / contain no-repeat; }
+.pc-say .who { font-family: var(--font-display); color: var(--brick); font-size: .95rem; }
+.pc-say .who small { font-family: var(--font-ui); color: var(--ink-soft); font-size: .7rem; letter-spacing: .06em; }
 .lore { margin-top: 12px; padding: 12px 14px; border-radius: 8px; background: #EFE4C8; border-left: 5px solid var(--brick); }
 .lore.framed { border-radius: 0; border: 22px solid transparent; border-image: var(--card-frame) 120 round; background: #F8F1DF; background-clip: padding-box; padding: 6px 8px; }
 .lore h4 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 400; color: var(--brick); font-size: 1.05rem; }

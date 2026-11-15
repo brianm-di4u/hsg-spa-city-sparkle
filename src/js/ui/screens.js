@@ -109,7 +109,7 @@ export function showTitle() {
     </div>`;
   bindActs(screenEl(), {
     continue: () => enterLevel(null, { continue: true, skipIntro: true }),
-    play: () => showMap(),
+    play: () => showMap(undefined, { premise: true }),
     daily: () => (dailyOpen ? showDaily() : toast('Finish Bathhouse Row to unlock the Daily Challenge', 2200)),
     help: () => showHelp(), settings: () => showSettings(), about: () => showAbout(),
   });
@@ -137,7 +137,7 @@ export function nodePos(level) {
   const y = (6 - w) * MAP_WORLD_H + yInWorld;
   return [x, y];
 }
-export function showMap(focusId) {
+export function showMap(focusId, opts = {}) {
   closeModal(); showGameChrome(false); setMood('map');
   ensurePack('map').then((ok) => { if (ok && UI.scene === 'map' && !UI.mapPainted) { UI.mapPainted = true; showMap(focusId); } });
   setScene('map');
@@ -146,7 +146,7 @@ export function showMap(focusId) {
   el.className = 'screen map';
   el.style.backgroundImage = '';
   const current = LEVELS.find((l) => !SAVE.progress[l.id] && isUnlocked(l)) || LEVELS[LEVELS.length - 1];
-  let html = `<div class="map-top"><button class="round" data-act="home" aria-label="Back to title">${ico('home')}</button><span class="map-pc" id="map-pc" aria-hidden="true"></span><div class="map-head"><b class="map-title" id="map-world"></b><span class="map-sub" id="map-sub"></span></div><span class="totals" aria-label="${totalStars()} stars earned. Next booster at ${nextBoosterAt()} stars" title="Next booster at ${nextBoosterAt()} stars">${ico('star')} ${totalStars()}</span><button class="round" data-act="help" aria-label="How to play">?</button><button class="round" data-act="settings" aria-label="Settings">${ico('gear')}</button></div>`;
+  let html = `<div class="map-top"><button class="round" data-act="home" aria-label="Back to title">${ico('home')}</button><button class="map-pc" id="map-pc" aria-label="Open the postcard"></button><div class="map-head" id="map-headbtn" role="button" tabindex="0"><b class="map-title" id="map-world"></b><span class="map-sub" id="map-sub"></span></div><span class="totals" aria-label="${totalStars()} stars earned. Next booster at ${nextBoosterAt()} stars" title="Next booster at ${nextBoosterAt()} stars">${ico('star')} ${totalStars()}</span><button class="round" data-act="help" aria-label="How to play">?</button><button class="round" data-act="settings" aria-label="Settings">${ico('gear')}</button></div>`;
   html += `<div class="map-canvas" style="height:${6 * MAP_WORLD_H}px">`;
   for (let w = 6; w >= 1; w--) {
     const look = WORLD_LOOK[w], top = (6 - w) * MAP_WORLD_H;
@@ -179,6 +179,7 @@ export function showMap(focusId) {
 
     const narrow = window.innerWidth < 600, label = narrow ? look.short : `World ${w}: ${look.name}`;
     if (a && a.textContent !== label) {
+      el.dataset.w = w; document.getElementById('map-headbtn').setAttribute('aria-label', `World ${w}: ${look.name}, ${done} of 10 postcard pieces restored. Open the postcard`);
       a.textContent = label; a.title = `World ${w}: ${look.name}`; b.textContent = narrow ? `World ${w} · ${done}/10 restored` : `postcard ${done}/10 restored`;
       const img = paint(`map${w}`); if (img) el.style.setProperty('--map-bg', `url(${img})`);
       const pc = document.getElementById('map-pc'), pci = paint(`postcard${w}`);
@@ -190,8 +191,28 @@ export function showMap(focusId) {
   const [, ty] = nodePos(target);
   el.scrollTop = Math.max(0, ty - el.clientHeight * 0.55);
   head();
+  const openPostcard = () => { unlockAudio(); sfx('click'); showPostcard(+el.dataset.w || 1); };
+  $('map-pc').addEventListener('click', openPostcard);
+  $('map-headbtn').addEventListener('click', openPostcard);
+  $('map-headbtn').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPostcard(); } });
   const btn = el.querySelector(`[data-level="${target.id}"]`);
   if (btn) btn.focus({ preventScroll: true });
+  // The first time a player reaches the map from the title, Della says what the postcard is. It waits for the painted map so the card is not closed by the repaint.
+  if (opts.premise && !SAVE.settings.postcardSeen) ensurePack('map').then(() => { if (UI.scene === 'map' && !UI.modalOpen && !SAVE.settings.postcardSeen) showPostcard(target.world); });
+}
+
+// The world's postcard in ten pieces: a piece comes back in colour for every stop won. Della says why, so the goal is told as well as shown.
+export function showPostcard(w) {
+  const look = WORLD_LOOK[w], pc = paint(`postcard${w}`), levels = LEVELS.filter((l) => l.world === w), cols = 5, rows = Math.ceil(levels.length / cols);
+  const done = levels.filter((l) => SAVE.progress[l.id]).length, della = paint('della-wave');
+  const tiles = levels.map((l, j) => `<i class="${SAVE.progress[l.id] ? 'on' : ''}" style="background-position:${(j % cols) * 100 / (cols - 1)}% ${rows > 1 ? Math.floor(j / cols) * 100 / (rows - 1) : 0}%"></i>`).join('');
+  openModal(`<h2>${esc(look.name)}</h2>
+    <div class="pc-grid" role="img" aria-label="The postcard: ${done} of ${levels.length} pieces restored" style="--pc:${pc ? `url(${pc})` : `linear-gradient(135deg, ${look.sky[0]}, ${look.sky[1]})`};--cols:${cols};--rows:${rows}">${tiles}</div>
+    <p class="pc-count">${done} of ${levels.length} pieces restored</p>
+    <div class="pc-say">${della ? `<div class="pc-della" style="background-image:url(${della})"></div>` : ''}<div><div class="who">Della <small>· your bath attendant (fictional)</small></div><p>Time has faded this old postcard. Win the stops on the map to bring it back, one piece at a time.</p></div></div>
+    <div class="actions"><button class="btn" data-act="close" data-focus>Got it</button></div>`, { label: 'The postcard' });
+  if (!SAVE.settings.postcardSeen) changeSettings({ postcardSeen: true });
+  bindActs(modalEl(), { close: () => { closeModal(); if (!document.activeElement || document.activeElement === document.body) document.querySelector('.screen.map .node.current')?.focus({ preventScroll: true }); } });
 }
 
 // --- level intro ---------------------------------------------------------------------------------

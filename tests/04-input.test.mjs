@@ -97,6 +97,9 @@ export const tests = [
       await t.page.keyboard.press('Enter');
       await t.waitIdle();
       t.equal((await t.state()).scene, 'map', 'Enter on the focused Play opens the map');
+      await t.page.waitForSelector('#modal .pc-grid');
+      await t.page.keyboard.press('Enter'); // the first visit has Della's postcard card (S4-02): Enter on its Got it button
+      await t.waitIdle();
       await t.page.keyboard.press('Enter');
       await t.waitIdle();
       t.equal((await t.state()).scene, 'intro', 'Enter on the focused level opens its intro');

@@ -2,6 +2,7 @@
 // Nothing here depends on chance: every board is seeded and every wait is for a condition.
 import assert from 'node:assert/strict';
 import { createSaveStore, freshSave, STAR_STEP } from '../src/js/ui/save.js';
+
 const KEY = 'spa-city-sparkle:v1';
 const stored = (t) => t.page.evaluate((k) => JSON.parse(localStorage.getItem(k)), KEY);
 async function inLevel(t, level = 'w1-01', seed = 3) {
@@ -361,6 +362,55 @@ tests.push({
     s.reserve();
     s.terminal({ levelId: 'w1-01', stars: 1, score: 10, moves: 7, rewardType: 'hammer', worldLevels: ['w1-01'] });
     assert.deepEqual(f.read().stats, { 'w1-01': { tries: 1, wins: 1, bestMoves: 7 } });
+  },
+});
+
+// --- S4-02: the postcard is explained and its progress is something to look at --------------------------------------
+tests.push({
+  name: 'S4-02 the first walk from the title to the map has Della say what the postcard is, once',
+  async run(t) {
+    await t.game('scene', 'title');
+    await t.waitIdle();
+    await t.page.locator('#screen [data-act="play"]').click();
+    await t.page.waitForSelector('#modal .pc-grid', { timeout: 8000 });
+    t.equal(await modalTitle(t), 'Bathhouse Row', 'the card is for the first world');
+    const text = await t.page.locator('#modal .pc-say p').innerText();
+    t.equal(text, 'Time has faded this old postcard. Win the stops on the map to bring it back, one piece at a time.', 'Della\'s line');
+    t.equal(await t.page.locator('#modal .pc-grid i').count(), 10, 'ten pieces');
+    t.equal(await t.page.locator('#modal .pc-grid i.on').count(), 0, 'none restored yet');
+    t.equal((await t.state()).settings.postcardSeen, true, 'remembered in the save');
+    await t.shot('S4-02-postcard-first');
+    await t.page.locator('#modal [data-act="close"]').click();
+    t.equal(await t.page.locator('#modal').evaluate((m) => m.classList.contains('hidden')), true, 'Got it closes the card');
+    await t.reload();
+    await t.waitIdle();
+    await t.page.locator('#screen [data-act="play"]').click();
+    await t.page.waitForSelector('.screen.map .node');
+    await t.waitIdle();
+    t.equal(await t.page.locator('#modal').evaluate((m) => m.classList.contains('hidden')), true, 'the second visit does not show it again');
+  },
+});
+tests.push({
+  name: 'S4-02 the postcard on the map opens the pieces: one in colour for each stop won',
+  async run(t) {
+    await t.game('act', 'save', { settings: { ...(await t.state()).settings, postcardSeen: true } });
+    await t.game('act', 'progress', { 'w1-01': { stars: 1, best: 1 }, 'w1-02': { stars: 2, best: 1 }, 'w1-04': { stars: 3, best: 1 } });
+    await t.game('scene', 'map');
+    await t.waitIdle();
+    t.equal(await t.page.locator('#modal').evaluate((m) => m.classList.contains('hidden')), true, 'a map reached another way shows no card');
+    const open = t.viewport === 'desktop' ? '#map-pc' : '#map-headbtn';
+    await t.page.locator(open).click();
+    await t.page.waitForSelector('#modal .pc-grid');
+    t.equal(await t.page.locator('#modal .pc-grid i.on').count(), 3, 'three pieces in colour');
+    t.equal(await t.page.locator('#modal .pc-count').innerText(), '3 of 10 pieces restored', 'and the count says so');
+    t.equal(await t.page.locator('#modal .pc-grid').getAttribute('aria-label'), 'The postcard: 3 of 10 pieces restored', 'screen readers get the same');
+    await t.shot('S4-02-postcard-pieces');
+    await t.page.keyboard.press('Escape');
+    t.equal(await t.page.locator('#modal').evaluate((m) => m.classList.contains('hidden')), true, 'Esc closes it');
+    await t.page.locator('#map-headbtn').focus();
+    await t.page.keyboard.press('Enter');
+    t.equal(await t.page.locator('#modal .pc-grid').count(), 1, 'the world title opens it from the keyboard');
+    await t.checkLayout({ allowScrollY: true });
   },
 });
 

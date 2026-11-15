@@ -14,8 +14,8 @@ const TYPES = ['hammer', 'line', 'shuffle', 'plus5'];
 // one a first three-star win gives. Was 15 in the first try (about 4 extra over a casual bot's pass of all 60 levels); 12 gives about 5.
 export const STAR_STEP = 12;
 const starsOf = (progress) => Object.values(progress).reduce((n, p) => n + (p && p.stars || 0), 0);
-const SETTING_KEYS = ['sound', 'music', 'ambience', 'volume', 'motion', 'steam', 'hints', 'badges'];
-export const freshSave = () => ({ v: 1, settings: { sound: true, music: true, ambience: true, volume: 0.5, motion: 'auto', steam: true, hints: true, badges: false }, progress: {}, stats: {}, boosters: { hammer: 1, line: 1, shuffle: 1, plus5: 1 }, lore: [], tutorialSeen: [], current: null, soakDay: null, soakBest: 0, daily: freshDaily() });
+const SETTING_KEYS = ['sound', 'music', 'ambience', 'volume', 'motion', 'steam', 'hints', 'badges', 'postcardSeen'];
+export const freshSave = () => ({ v: 1, settings: { sound: true, music: true, ambience: true, volume: 0.5, motion: 'auto', steam: true, hints: true, badges: false, postcardSeen: false }, progress: {}, stats: {}, boosters: { hammer: 1, line: 1, shuffle: 1, plus5: 1 }, lore: [], tutorialSeen: [], current: null, soakDay: null, soakBest: 0, daily: freshDaily() });
 // Settings as read from a save: the defaults under what the save holds. A save from before the Ambience switch gets it
 // where its Sound effects switch is, so a player who had the effects off hears no new sound.
 const readSettings = (saved) => { const st = { ...freshSave().settings, ...(saved || {}) }; if (!saved || typeof saved.ambience !== 'boolean') st.ambience = st.sound !== false; return st; };
