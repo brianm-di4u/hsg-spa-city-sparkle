@@ -197,3 +197,38 @@ tests.push({
     t.expect(/Padlocked/.test(await say([0, 0], [1, 0])), 'the next level explains again');
   },
 });
+
+// --- S2-06: the boosters are named on level 1 and the tray button says what it does ---------------------------------------------
+tests.push({
+  name: 'S2-06 the boosters tip follows the basics tip on level 1, and the +5 button is called +5 moves',
+  async run(t) {
+    await t.waitIdle();
+    await t.game('newGame', { level: 'w1-01', seed: 3 });
+    await t.waitIdle();
+    t.equal(await t.page.locator('#tip').getAttribute('aria-label'), 'Tip: Swap to match', 'the basics tip comes first');
+    await t.page.locator('#tip [data-act="ok"]').click();
+    t.equal(await t.page.locator('#tip').getAttribute('aria-label'), 'Tip: Boosters', 'then the boosters tip');
+    const tip = await t.page.locator('#tip').boundingBox(), tray = await t.page.locator('#tray').boundingBox();
+    t.expect(tip.y + tip.height <= tray.y || tip.y >= tray.y + tray.height || tip.x + tip.width <= tray.x || tip.x >= tray.x + tray.width, 'the tip does not cover the tray');
+    await t.shot('S2-06-boosters-tip');
+    await t.page.locator('#tip [data-act="ok"]').click();
+    t.equal(await t.page.locator('#tip').count(), 0, 'both tips are gone after two Got its');
+    t.expect((await t.state()).tutorialSeen.includes('boosters') && (await t.state()).tutorialSeen.includes('basics'), 'both are marked seen');
+    t.equal(await t.page.locator('.booster[data-booster="plus5"] .b-name').innerText(), '+5 moves', 'the button says what it does, not "Moves" beside the HUD\'s moves');
+    const clipped = await t.page.evaluate(() => [...document.querySelectorAll('.booster')].filter((b) => b.querySelector('.b-name').scrollWidth > b.clientWidth).length);
+    t.equal(clipped, 0, 'no booster name is wider than its button');
+    await t.shot('S2-06-tray');
+  },
+});
+tests.push({
+  name: 'S2-06 a player who has seen the boosters tip is not shown it again',
+  viewports: ['desktop'],
+  async run(t) {
+    await t.waitIdle();
+    await t.game('act', 'save', { tutorialSeen: ['boosters'] });
+    await t.game('newGame', { level: 'w1-01', seed: 3 });
+    await t.waitIdle();
+    await t.page.locator('#tip [data-act="ok"]').click();
+    t.equal(await t.page.locator('#tip').count(), 0, 'one Got it and the tips are done');
+  },
+});

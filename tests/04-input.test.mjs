@@ -106,6 +106,8 @@ export const tests = [
       await t.page.keyboard.press('Enter');
       await t.waitIdle();
       t.equal((await t.state()).scene, 'game', 'Enter plays');
+      await t.page.keyboard.press('Enter'); // the basics tip is followed by the boosters tip on a new profile (S2-06)
+      t.equal(await t.page.locator('#tip').getAttribute('aria-label'), 'Tip: Boosters', 'the boosters tip follows the basics tip');
       await t.page.keyboard.press('Enter');
       t.equal((await t.state()).tip, false, 'Enter dismisses the tip');
       await t.page.keyboard.press('p');

@@ -12,5 +12,5 @@ export const TIPS = {
   fog: { title: 'Steam fog', pose: 'point', html: 'Thick <b>steam</b> hides a piece. Make a match right next to it to clear the air.' },
   tokens: { title: 'Bath tokens', pose: 'cheer', html: 'Bring the brass <b>bath tokens</b> down to the drains at the bottom. Clear the pieces below them to let them fall.' },
   moss: { title: 'Algae', pose: 'think', html: 'The springs grow a rare blue-green <b>algae</b>. Here it is overgrowth to tidy: clear it with nearby matches, because any move that doesn\'t touch it lets it spread.' },
-  boosters: { title: 'Boosters', pose: 'wave', html: 'You earn <b>boosters</b> with three-star wins and finished worlds. Tap one below the board, then tap a cell.' },
+  boosters: { title: 'Boosters', pose: 'wave', html: 'You start with one of each <b>booster</b>, below the board. <b>Hammer</b> and <b>Line</b>: tap one, then a cell. <b>Shuffle</b> and <b>+5</b> work at once.' },
 };
