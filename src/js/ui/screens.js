@@ -326,7 +326,7 @@ export function onWin(s, L) {
   const idx = LEVELS.indexOf(L), next = LEVELS[idx + 1];
   const fresh = newlyEarned(had, SAVE, LEVELS);
   const m = openModal(`
-    <div class="ribbon"><span>Level cleared!</span></div>
+    <div class="ribbon"><span>${WIN_RIBBON[L.world] || 'Level cleared!'}</span></div>
     <p class="fine" style="text-align:center">World ${L.world} · Level ${L.n}</p>
     <h2 style="text-align:center">${esc(L.name)}</h2>
     <div class="stars-big burst" aria-label="${stars} of 3 stars">${[1, 2, 3].map((n) => `<i class="${n <= stars ? 'on pop' : ''}" style="animation-delay:${n * 0.18}s"></i>`).join('')}</div>
@@ -391,13 +391,31 @@ export function onLose(s, L) {
     map: () => (daily ? showTitle() : showMap(L.id)),
   });
 }
+// The town's voice when a stop or a world is finished: the ribbon on a level's results card, and what Della says when a postcard is whole.
+// Only names the game already has (the worlds' own names); nothing here is a claim about the real town.
+const WIN_RIBBON = { 1: 'Row polished!', 2: 'Springs flowing!', 3: 'Avenue lit up!', 4: 'Safe at home!', 5: 'Smooth sailing!', 6: 'In full bloom!' };
+const WORLD_DONE = {
+  1: { head: 'Bathhouse Row shines again', pose: 'cheer', says: 'Look at the Row now! Come along: the mountain springs are next.' },
+  2: { head: 'The mountain springs run clear', pose: 'wave', says: 'Warm water and bright stone. The lights of Central Avenue are next.' },
+  3: { head: 'Central Avenue is lit up', pose: 'point', says: 'What a night on the Avenue! Oaklawn and the ballfields are next.' },
+  4: { head: 'Oaklawn cheers for you', pose: 'cheer', says: 'A fine day at the ballfields. The lakes are waiting for us.' },
+  5: { head: 'The lakes are calm and bright', pose: 'wave', says: 'Water as far as you can see. One more stop: Garvan Gardens.' },
+  6: { head: 'Every postcard is whole again', pose: 'cheer', says: 'Six stops, six postcards, and you restored every one. Thank you from the whole town, and from me.' },
+};
+const dellaSays = (w) => {
+  const d = WORLD_DONE[w], art = paint('della-' + d.pose);
+  return `<div class="pc-say">${art ? `<div class="pc-della" style="background-image:url(${art})"></div>` : ''}<div><div class="who">Della <small>· your bath attendant (fictional)</small></div><p>${d.says}</p></div></div>`;
+};
 export function showWorldComplete(w) {
   setScene('world'); sfx('world'); setTimeout(() => { if (UI.scene === 'world') sfx('earned'); }, 1100);
-  const look = WORLD_LOOK[w], pc = paint(`postcard${w}`);
+  const look = WORLD_LOOK[w], pc = paint(`postcard${w}`), d = WORLD_DONE[w], finale = w === 6;
+  const card = (n) => { const l = WORLD_LOOK[n], img = paint(`postcard${n}`); return `<figure><div class="pc-thumb" style="background:${img ? `url(${img}) center/cover` : `linear-gradient(135deg, ${l.sky[0]}, ${l.sky[1]})`}"></div><figcaption>${esc(l.short)}</figcaption></figure>`; };
   const m = openModal(`
-    <h2 style="text-align:center">World ${w} complete</h2>
-    <p style="text-align:center">${esc(look.name)}: the postcard is restored.</p>
-    <div class="help-demo" style="aspect-ratio:3/2;${pc ? `background:url(${pc}) center/cover` : `background:linear-gradient(135deg, ${look.sky[0]}, ${look.sky[1]})`}"></div>
+    <h2 style="text-align:center">${esc(d.head)}</h2>
+    <p class="fine" style="text-align:center">${finale ? 'World 6 complete: the last postcard is restored.' : `World ${w} complete: ${esc(look.name)}.`}</p>
+    ${finale ? `<div class="pc-six" role="img" aria-label="All six postcards, restored">${[1, 2, 3, 4, 5, 6].map(card).join('')}</div>`
+      : `<div class="help-demo" style="aspect-ratio:3/2;${pc ? `background:url(${pc}) center/cover` : `background:linear-gradient(135deg, ${look.sky[0]}, ${look.sky[1]})`}"></div>`}
+    ${dellaSays(w)}
     <p class="fine" style="text-align:center">+1 of every booster</p>
     <div class="actions">${w < 6 ? '<button class="btn" data-act="map" data-focus>On to the next world</button>' : '<button class="btn" data-act="map" data-focus>Back to the map</button>'}</div>`, { label: `World ${w} complete` });
   m.insertAdjacentHTML('afterbegin', atmosphere('world', w));

@@ -81,3 +81,44 @@ tests.push({
     await t.page.waitForFunction(() => window.__game.getState().legal.length === 0 && window.__game.getState().selected === -1, null, { timeout: 5000 });
   },
 });
+
+// --- S4-04: each world ends in its own words with Della, and world 6 ends with all six postcards ---------------------------------
+const cardText = (t) => t.page.evaluate(() => { const m = document.querySelector('.modal'); return { head: m.querySelector('h2').textContent, text: m.textContent, della: !!m.querySelector('.pc-say p'), six: m.querySelectorAll('.pc-six figure').length, btn: [...m.querySelectorAll('.btn')].map((b) => b.textContent) }; });
+const inside = (t) => t.page.evaluate(() => { const m = document.querySelector('.modal').getBoundingClientRect(); return [...document.querySelectorAll('.modal h2, .modal p, .modal figure, .modal .btn')].every((e) => { const r = e.getBoundingClientRect(); return r.left >= m.left - 1 && r.right <= m.right + 1; }) && document.documentElement.scrollWidth <= window.innerWidth; });
+tests.push({
+  name: 'S4-04 every world card has its own headline and Della speaking, and world 6 shows all six postcards',
+  async run(t) {
+    const heads = new Set(), says = new Set();
+    for (const w of [1, 2, 3, 4, 5, 6]) {
+      await t.game('scene', 'world', w);
+      await t.waitIdle();
+      const c = await cardText(t);
+      heads.add(c.head);
+      says.add(await t.page.evaluate(() => document.querySelector('.modal .pc-say p').textContent));
+      t.expect(c.della, `world ${w}: Della speaks on the card`);
+      t.expect(/Della/.test(c.text), `world ${w}: she is named`);
+      t.equal(c.six, w === 6 ? 6 : 0, `world ${w}: ${w === 6 ? 'all six postcards are shown' : 'one postcard, no gallery'}`);
+      t.expect(c.btn.includes(w === 6 ? 'Back to the map' : 'On to the next world'), `world ${w}: the button is ${c.btn.join(', ')}`);
+      t.expect(await inside(t), `world ${w}: everything sits inside the card and the page does not scroll sideways`);
+      if (w === 2 || w === 6) await t.shot(`S4-04-world-${w}-card`);
+    }
+    t.equal(heads.size, 6, 'six different headlines');
+    t.equal(says.size, 6, 'six different things for Della to say');
+  },
+});
+tests.push({
+  name: 'S4-04 the results card ribbon is in the world\'s own words',
+  async run(t) {
+    const seen = new Set();
+    for (const [id, world] of [['w1-01', 1], ['w2-01', 2], ['w3-01', 3], ['w4-01', 4], ['w5-01', 5], ['w6-01', 6]]) {
+      await t.game('newGame', { level: id, seed: 3, tips: false });
+      await t.game('scene', 'win');
+      await t.page.waitForSelector('.modal .ribbon span');
+      const r = await t.page.evaluate(() => document.querySelector('.modal .ribbon span').textContent);
+      seen.add(r);
+      t.expect(r.length <= 17 && r !== 'Level cleared!', `world ${world}: the ribbon says "${r}"`);
+      if (world === 5) { await t.waitIdle(); await t.shot('S4-04-results-ribbon'); }
+    }
+    t.equal(seen.size, 6, 'six different ribbons');
+  },
+});

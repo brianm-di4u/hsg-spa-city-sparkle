@@ -266,6 +266,10 @@ body.landscape #tray { left: 24px; bottom: 24px; width: 260px; flex-wrap: wrap; 
 .pc-grid { display: grid; grid-template-columns: repeat(var(--cols), 1fr); gap: 2px; aspect-ratio: 3 / 2; margin: 8px 0 4px; padding: 3px; border-radius: 6px; background: #3A2208; box-shadow: inset 0 0 0 2px #D9A23A; }
 .pc-grid i { background: var(--pc) 0 0 / calc(var(--cols) * 100%) calc(var(--rows) * 100%); filter: grayscale(1) brightness(.72) contrast(.9); }
 .pc-grid i.on { filter: none; }
+.pc-six { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 6px; margin: 8px 0 4px; }
+.pc-six figure { margin: 0; text-align: center; }
+.pc-six .pc-thumb { aspect-ratio: 3 / 2; border-radius: 4px; box-shadow: 0 0 0 2px #D9A23A, 0 2px 4px rgba(0,0,0,.3); }
+.pc-six figcaption { margin-top: 3px; font-size: .68rem; line-height: 1.15; color: var(--ink-soft); }
 .pc-count { text-align: center; font-size: .85rem; color: var(--ink-soft); }
 .pc-say { display: flex; gap: 10px; align-items: flex-end; margin-top: 6px; }
 .pc-say .pc-della { flex: none; width: 64px; height: 84px; background: center bottom / contain no-repeat; }
