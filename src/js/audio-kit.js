@@ -13,7 +13,7 @@ export function makeAudioKit(ctx, out, opt = {}) {
   { const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = rnd() * 2 - 1; }
   const noise = (t, dur) => { const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true; s.start(t, rr(0, 1.9)); if (dur) s.stop(t + dur); return s; };
 
-  let mLevel = opt.music ?? 0.5, aLevel = opt.ambience ?? 0.5, inten = 0, held = false, timer = 0;
+  let mLevel = opt.music ?? 0.5, aLevel = opt.ambience ?? 0.5, inten = 0, held = false, silent = false, timer = 0;
   const musicBus = gain(mLevel, out), ambBus = gain(aLevel, out);
   const dead = [];   // { at, nodes }: sub-buses to disconnect once their fade-out has finished
   const retire = (bus, nodes, at, fade) => {
@@ -231,9 +231,10 @@ export function makeAudioKit(ctx, out, opt = {}) {
   // --------------------------------------------------------------------------------------------- scheduler
   function scheduleUntil(T) {
     const now = ctx.currentTime;
+    // A bus whose level is 0 (its switch off, or the volume at 0) is not heard, so its notes are not built; the next call after it comes back picks the piece up from now.
     if (!held) {
-      if (cur) { if (cur.t < now - 0.05) cur.t = now + 0.05; let guard = 0; while (cur.t < T && guard++ < 400) { cur.t += playBar(cur, cur.t); cur.bar++; } }
-      if (scene) for (const sp of scene.spots) {
+      if (cur && mLevel > 0 && !silent) { if (cur.t < now - 0.05) cur.t = now + 0.05; let guard = 0; while (cur.t < T && guard++ < 400) { cur.t += playBar(cur, cur.t); cur.bar++; } }
+      if (scene && aLevel > 0 && !silent) for (const sp of scene.spots) {
         if (sp.next < now - 0.05) sp.next = now + rr(0.2, sp.d.every[1]);
         let guard = 0;
         while (sp.next < T && guard++ < 400) {
@@ -257,6 +258,9 @@ export function makeAudioKit(ctx, out, opt = {}) {
     hold(tc = 0.08) { held = true; const t = ctx.currentTime; musicBus.gain.cancelScheduledValues(t); musicBus.gain.setTargetAtTime(0, t, tc); ambBus.gain.setTargetAtTime(0, t, tc); },
     release(tc = 0.3) { held = false; const t = ctx.currentTime; musicBus.gain.setTargetAtTime(mLevel, t, tc); ambBus.gain.setTargetAtTime(aLevel, t, tc); },
     get held() { return held; },
+    // The master volume is at 0: nothing is built for either bus until it is raised.
+    mute(on) { silent = !!on; },
+    get muted() { return silent; },
     // For tests: the two level buses, to read what the player would hear.
     get buses() { return { music: musicBus, ambience: ambBus }; },
     get intensity() { return inten; },

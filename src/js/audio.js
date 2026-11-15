@@ -41,6 +41,7 @@ export function applyLevels() {
   AUDIO.musicLevel = AUDIO.music ? MUSIC_LEVEL * safeVolume(AUDIO.musicVolume, 1) : 0; // what the music bus is asked for, kept for the tests
   AUDIO.kit.music.level(AUDIO.musicLevel);
   AUDIO.kit.amb.level(AUDIO.ambience ? AMBIENCE_LEVEL : 0);
+  AUDIO.kit.mute(AUDIO.master.gain.value === 0); // at volume 0 nothing is heard, so no music or bed is built
 }
 
 // Cue building. A cue is built inside a small context (CUE): the audio context, where it goes, one draw of
@@ -58,17 +59,28 @@ function tone(freq, dur, { type = 'sine', gain = 0.2, at = 0, attack = 0.005, sl
   g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   o.connect(g); g.connect(CUE.dest); o.start(t); o.stop(t + dur + 0.05);
 }
-// Every noise burst fills its own buffer from this cue's draw plus a counter, so no two swooshes are sample-identical.
+// One buffer of noise per audio context (two seconds, made once) serves every burst. Each burst starts it at its own offset, from this cue's
+// draw plus a counter, so no two swooshes are sample-identical and nothing is allocated per cue.
+const NOISE_SECONDS = 2;
+const noiseBuffers = new WeakMap();
+function noiseBuffer(ctx) {
+  let buf = noiseBuffers.get(ctx);
+  if (!buf) {
+    buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * NOISE_SECONDS), ctx.sampleRate);
+    const d = buf.getChannelData(0), rnd = seeded(0x4E015E);
+    for (let i = 0; i < d.length; i++) d[i] = rnd() * 2 - 1;
+    noiseBuffers.set(ctx, buf);
+  }
+  return buf;
+}
 function noise(dur, { gain = 0.15, at = 0, freq = 1200, q = 0.8, type = 'bandpass', sweep = 0 } = {}) {
   const ctx = CUE.ctx, t = ctx.currentTime + CUE.at + at, fq = freq * CUE.j.f;
-  const n = Math.floor(ctx.sampleRate * dur), buf = ctx.createBuffer(1, n, ctx.sampleRate), d = buf.getChannelData(0);
-  let seed = (Math.floor(CUE.j.o * 0x3fffffff) + (CUE.n = (CUE.n || 0) + 1) * 7919) & 0x7fffffff;
-  for (let i = 0; i < n; i++) { seed = (seed * 1103515245 + 12345) & 0x7fffffff; d[i] = (seed / 0x3fffffff - 1) * (1 - i / n); }
+  const off = ((CUE.j.o + (CUE.n = (CUE.n || 0) + 1) * 0.618034) % 1) * (NOISE_SECONDS - dur);
   const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
-  src.buffer = buf; f.type = type; f.frequency.setValueAtTime(fq, t); f.Q.value = q;
+  src.buffer = noiseBuffer(ctx); f.type = type; f.frequency.setValueAtTime(fq, t); f.Q.value = q;
   if (sweep) f.frequency.exponentialRampToValueAtTime(fq * sweep, t + dur);
   g.gain.setValueAtTime(gain * CUE.j.g * CUE.trim, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  src.connect(f); f.connect(g); g.connect(CUE.dest); src.start(t);
+  src.connect(f); f.connect(g); g.connect(CUE.dest); src.start(t, off, dur + 0.02);
 }
 
 const SCALE = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24];
@@ -210,7 +222,7 @@ export function resumeAudio() {
 // What a player would hear right now, for tests: the mood, whether it is held, and the two buses' levels.
 export function audioState() {
   const k = AUDIO.kit;
-  return { ctx: AUDIO.ctx ? AUDIO.ctx.state : null, master: AUDIO.master ? +AUDIO.master.gain.value.toFixed(3) : null, mood: AUDIO.mood, held: !!(k && k.held), holds: [...AUDIO.holds], music: k ? +k.buses.music.gain.value.toFixed(3) : null, musicLevel: k ? +AUDIO.musicLevel.toFixed(3) : null, sfx: AUDIO.sfxGain ? +AUDIO.sfxGain.gain.value.toFixed(3) : null, ambience: k ? +k.buses.ambience.gain.value.toFixed(3) : null, intensity: k ? k.intensity : null, playing: k ? { music: !!k.music.score, ambience: !!k.amb.scene } : null };
+  return { ctx: AUDIO.ctx ? AUDIO.ctx.state : null, master: AUDIO.master ? +AUDIO.master.gain.value.toFixed(3) : null, mood: AUDIO.mood, held: !!(k && k.held), muted: !!(k && k.muted), holds: [...AUDIO.holds], music: k ? +k.buses.music.gain.value.toFixed(3) : null, musicLevel: k ? +AUDIO.musicLevel.toFixed(3) : null, sfx: AUDIO.sfxGain ? +AUDIO.sfxGain.gain.value.toFixed(3) : null, ambience: k ? +k.buses.ambience.gain.value.toFixed(3) : null, intensity: k ? k.intensity : null, playing: k ? { music: !!k.music.score, ambience: !!k.amb.scene } : null };
 }
 export const audioList = () => ({ music: Object.keys(SCORES), ambience: Object.keys(SCENES), cues: CUE_NAMES });
 // What a render is heard through: the master volume (the shipped default unless a test asks for another, for example the slider at
@@ -223,7 +235,8 @@ export function audioRender(name, seconds = 30, wantWav = false, levels = {}) {
   return measureAudio((ctx, out) => {
     const master = offlineMaster(ctx, out, levels);
     const kit = makeAudioKit(ctx, master, { seed: 0x5EED1 });
-    kit.music.level(MUSIC_LEVEL * safeVolume(levels.musicVolume ?? 1, 1)); kit.amb.level(AMBIENCE_LEVEL);
+    kit.music.level(MUSIC_LEVEL * safeVolume(levels.musicVolume ?? 1, 1)); kit.amb.level(AMBIENCE_LEVEL * safeVolume(levels.ambience ?? 1, 1));
+    kit.mute(safeVolume(levels.volume ?? 0.5) === 0); // the same rule the live game follows: at volume 0 nothing is built
     if (score) kit.music.play(score, { fade: 0.05, at: 0 }); else kit.amb.play(scene, { fade: 0.05, at: 0 });
     kit.scheduleUntil(seconds);
     return () => { const b = score && kit.music.info(); return b && { ...b, formSeconds: +((b.formBars * (score.beats || 4) * 60) / score.bpm).toFixed(1) }; };

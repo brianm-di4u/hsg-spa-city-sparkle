@@ -65,7 +65,8 @@ function recorder() {
   };
   P.createBufferSource = function () {
     const s = cb.call(this), st = s.start.bind(s);
-    s.start = (...a) => { if (window.__rec && s.buffer) { const d = s.buffer.getChannelData(0); let h = 0; for (let i = 0; i < 300; i++) h += d[i] * (i + 1); window.__rec.bufs.push(+h.toFixed(6)); } return st(...a); };
+    // A cue's noise is one shared buffer started at its own offset (S6-14), so what a repeat plays is the 300 samples from where it starts.
+    s.start = (...a) => { if (window.__rec && s.buffer) { const d = s.buffer.getChannelData(0), o = Math.floor((a[1] || 0) * s.buffer.sampleRate); let h = 0; for (let i = 0; i < 300; i++) h += d[(o + i) % d.length] * (i + 1); window.__rec.bufs.push(+h.toFixed(6)); } return st(...a); };
     return s;
   };
   P.createStereoPanner = function () {
