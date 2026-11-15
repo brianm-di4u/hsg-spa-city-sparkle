@@ -2,7 +2,7 @@
 // sprites load. Every piece has its own silhouette so the board reads in grayscale (PRD AC35).
 export const PIECES = [
   { key: 'quartz', name: 'Quartz crystal', hi: '#E3CCFF', mid: '#9B6BDB', lo: '#4E2490', line: '#2E1060' },
-  { key: 'magnolia', name: 'Magnolia', hi: '#FFE1EC', mid: '#F08AB4', lo: '#B13A6E', line: '#6E1A40' },
+  { key: 'magnolia', name: 'Apple blossom', hi: '#FFE1EC', mid: '#F08AB4', lo: '#B13A6E', line: '#6E1A40' },
   { key: 'horseshoe', name: 'Horseshoe', hi: '#FFF0B8', mid: '#E8B443', lo: '#93600F', line: '#5A3A06' },
   { key: 'drop', name: 'Thermal drop', hi: '#D8FBFF', mid: '#4FD0E6', lo: '#11809E', line: '#06485C' },
   { key: 'scallop', name: 'Scallop shell', hi: '#FFE0D2', mid: '#FF8A68', lo: '#C2402E', line: '#6E1D12' },

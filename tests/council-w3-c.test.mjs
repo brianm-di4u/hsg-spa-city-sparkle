@@ -253,3 +253,22 @@ tests.push({
     await t.shot('S2-07-lose-card');
   },
 });
+
+// --- S4-05: the pink piece is the Apple blossom -----------------------------------------------------------------------------------
+tests.push({
+  name: 'S4-05 the pink piece is called Apple blossom in Help and in the goal labels, and Magnolia stays a place',
+  viewports: ['desktop'],
+  async run(t) {
+    await t.game('scene', 'help');
+    const basics = await t.page.locator('#modal [role="tabpanel"]').innerText();
+    t.expect(basics.includes('Apple blossom'), 'Help names the Apple blossom');
+    t.expect(!/Magnolia/.test(basics), 'and no longer a Magnolia piece');
+    await t.game('newGame', { level: 'w1-01', seed: 3, tips: false });
+    await t.game('act', 'board', ['a b a c e', 'b c d e a', 'c d e a b', 'd e a b c', 'e a b c d'], { moves: 10, goals: [{ type: 'collect', kind: 1, need: 6 }], stars: [1, 2, 3] });
+    await t.page.evaluate(() => window.__game.getState());
+    const label = await t.page.locator('#hud-goals li').first().getAttribute('aria-label');
+    t.equal(label, 'Collect 6 more apple blossom', 'the goal label uses the new name');
+    await t.game('scene', 'intro', 'w1-01');
+    t.expect((await t.page.locator('#modal h2').innerText()).length > 0, 'level names such as Magnolia Promenade are places and are not touched');
+  },
+});
