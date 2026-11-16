@@ -4,6 +4,7 @@ import { VIEW, initStage, buildVectorTextures, requestRender } from './view/stag
 import { PLAY, bindInput, handleKey, playFrame, levelById, layoutAndBuild, armBooster } from './ui/play.js';
 import { UI, showTitle, showPause, wireUi, applySettings, enterLevel, showMap, dismissModal, trapTab } from './ui/screens.js';
 import { installHooks, HOOK } from './ui/hooks.js';
+import { initPad } from './ui/pad.js';
 import { unlockAudio, pauseAudio, resumeAudio } from './audio.js';
 import { ensurePack, artBusy, disableArt } from './art.js';
 
@@ -39,6 +40,7 @@ async function boot() {
   VIEW.onFrame = playFrame;
   bindInput(VIEW.app.canvas);
   wireUi();
+  initPad();
   document.querySelectorAll('.booster').forEach((b) => b.addEventListener('click', (e) => { unlockAudio(); armBooster(b.dataset.booster); if (e.detail) b.blur(); })); // a mouse or touch click lets go of the button so Enter goes back to the board; a key press keeps it
   window.addEventListener('pointerdown', unlockAudio, { passive: true, capture: true }); // the first touch anywhere starts the title theme
   window.addEventListener('keydown', (e) => {

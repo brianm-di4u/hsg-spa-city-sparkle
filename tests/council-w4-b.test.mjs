@@ -205,3 +205,132 @@ tests.push({
     t.expect(!/wipe/.test(await t.page.locator('#modal [role="tabpanel"]').innerText()), 'nor does Controls');
   },
 });
+
+// --- S1-09: a gamepad presses the keys the game already has ---------------------------------------------------------------------------
+// No controller was available: a stand-in pad is given to navigator.getGamepads and the test moves its buttons and stick. This proves the mapping and the
+// polling; it does not prove a real controller (a real one needs trying by hand: D-pad and left stick, A, B, Start).
+function fakePad() {
+  const pad = { connected: true, id: 'test pad', index: 0, mapping: 'standard', buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })), axes: [0, 0, 0, 0] };
+  window.__pad = pad;
+  navigator.getGamepads = () => [pad];
+}
+const BTN = { a: 0, b: 1, start: 9, up: 12, down: 13, left: 14, right: 15 };
+const connect = (t) => t.page.evaluate(() => window.dispatchEvent(new Event('gamepadconnected')));
+// Holds one control for two frames (a press is acted on at the first poll, a repeat needs 380 ms), then lets go.
+const press = (t, what) => t.page.evaluate(async ([w, i]) => {
+  const frame = () => new Promise((r) => requestAnimationFrame(r)), p = window.__pad;
+  if (w === 'stickL') p.axes[0] = -1; else if (w === 'stickD') p.axes[1] = 1; else p.buttons[i].pressed = true;
+  await frame(); await frame();
+  p.axes[0] = 0; p.axes[1] = 0; if (i != null) p.buttons[i].pressed = false;
+  await frame();
+}, [what, BTN[what] ?? null]);
+const focused = (t) => t.page.evaluate(() => { const a = document.activeElement; return a ? (a.dataset.act || a.id || a.textContent.trim().slice(0, 20)) : null; });
+
+tests.push({
+  name: 'S1-09 the pad plays the board through the keys: D-pad and stick move the cursor, A picks, a direction swaps, B cancels',
+  viewports: ['desktop'],
+  initScript: fakePad,
+  async run(t) {
+    await t.game('newGame', { level: 'w1-01', seed: 3, tips: false });
+    await t.game('act', 'board', BOARD, { moves: 10, goals: [{ type: 'stone', need: 1 }], stars: [1, 2, 3] });
+    await t.waitIdle();
+    await connect(t);
+    await press(t, 'left'); // the first press wakes the cursor on the centre piece and moves it left: [1,2]
+    let s = await t.state();
+    t.equal(s.cursor, 2 * 5 + 1, 'D-pad left moved the cursor from the centre to [1,2]');
+    await press(t, 'up');
+    t.equal((await t.state()).cursor, 1 * 5 + 1, 'D-pad up moved it to [1,1]');
+    await press(t, 'a');
+    t.equal((await t.state()).selected, 1 * 5 + 1, 'A picked the piece, as Enter does');
+    await press(t, 'b');
+    t.equal((await t.state()).selected, -1, 'B put it down, as Esc does');
+    t.equal((await t.state()).scene, 'game', 'and did not open Pause');
+    await press(t, 'a');
+    await press(t, 'up');
+    s = await t.state();
+    t.equal(s.movesUsed, 1, 'a direction after A swapped the piece: one move used');
+    await t.page.waitForFunction(() => window.__game.getState().encore !== null || window.__game.getState().phase === 'won', null, { timeout: 8000 });
+    t.expect(['encore', 'won'].includes((await t.state()).phase) || (await t.state()).encore !== null, 'the winning swap won the level');
+  },
+});
+tests.push({
+  name: 'S1-09 the left stick moves the cursor like the D-pad, and Start pauses and resumes',
+  viewports: ['desktop'],
+  initScript: fakePad,
+  async run(t) {
+    await t.game('newGame', { level: 'w1-01', seed: 3, tips: false });
+    await t.waitIdle();
+    await connect(t);
+    const w = (await t.state()).board.w;
+    await press(t, 'stickL');
+    const c1 = (await t.state()).cursor;
+    t.expect(c1 >= 0 && c1 % w === (w >> 1) - 1, `the stick pushed left moved the cursor one piece left of the centre column (${c1})`);
+    await press(t, 'stickD');
+    t.equal((await t.state()).cursor, c1 + w, 'the stick pushed down moved it one row down');
+    await press(t, 'start');
+    t.equal((await t.state()).scene, 'pause', 'Start opened the Pause card');
+    await press(t, 'start');
+    t.equal((await t.state()).scene, 'game', 'Start again resumed');
+  },
+});
+tests.push({
+  name: 'S1-09 on a card the pad moves focus, A presses the focused button and B backs out; a slider takes left and right',
+  viewports: ['desktop'],
+  initScript: fakePad,
+  async run(t) {
+    await t.game('newGame', { level: 'w1-01', seed: 3, tips: false });
+    await t.waitIdle();
+    await connect(t);
+    await press(t, 'start');
+    await t.page.waitForSelector('[data-act="resume"]');
+    await press(t, 'down');
+    const first = await focused(t);
+    await press(t, 'down');
+    t.expect((await focused(t)) !== first, `D-pad down moved focus (${first} then ${await focused(t)})`);
+    await press(t, 'up'); await press(t, 'up');
+    t.equal(await focused(t), 'resume', 'up and wrap-around reach Resume');
+    await press(t, 'b');
+    t.equal((await t.state()).scene, 'game', 'B resumed, as Esc does');
+    await press(t, 'start');
+    await t.page.waitForSelector('[data-act="settings"]');
+    await t.page.focus('[data-act="settings"]');
+    await press(t, 'a');
+    await t.page.waitForSelector('#vol');
+    await t.page.focus('#vol');
+    const before = (await t.state()).settings.volume;
+    await press(t, 'left');
+    t.expect(Math.abs((await t.state()).settings.volume - (before - 0.05)) < 1e-6, `left on the Volume slider stepped it down (${before} to ${(await t.state()).settings.volume})`);
+    await t.shot('S1-09-pad-settings');
+  },
+});
+tests.push({
+  name: 'S1-09 on the title the pad moves focus between the buttons and A presses the focused one',
+  viewports: ['desktop'],
+  initScript: fakePad,
+  async run(t) {
+    t.equal((await t.state()).scene, 'title', 'the game starts on the title');
+    await connect(t);
+    t.equal(await focused(t), 'play', 'Play has focus, as it has for the keyboard');
+    await press(t, 'down');
+    t.equal(await focused(t), 'daily', 'D-pad down moved focus to the next button');
+    await press(t, 'up');
+    t.equal(await focused(t), 'play', 'up moved it back');
+    await press(t, 'a');
+    await t.page.waitForFunction(() => window.__game.getState().scene === 'map', null, { timeout: 8000 });
+    t.equal((await t.state()).scene, 'map', 'A pressed Play and the map opened');
+    await t.shot('S1-09-pad-map');
+  },
+});
+tests.push({
+  name: 'S1-09 without a pad the game polls nothing and Help lists the pad',
+  async run(t) {
+    await t.page.evaluate(() => { window.__frames = 0; });
+    const polled = await t.page.evaluate(() => { let calls = 0; const real = navigator.getGamepads.bind(navigator); navigator.getGamepads = () => { calls++; return real(); }; return new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => r(calls))))); });
+    t.equal(polled, 0, 'no pad connected: getGamepads is not polled frame by frame');
+    await t.game('scene', 'help');
+    await t.page.locator('#modal [role="tab"]', { hasText: 'Controls' }).click();
+    t.expect(/Gamepad: the D-pad or left stick moves, A picks, B cancels or skips, Start pauses\./.test(await t.page.locator('#modal [role="tabpanel"]').innerText()), 'Controls names the pad');
+    t.expect(await t.page.evaluate(() => { const c = document.querySelector('#modal .card'); return c.scrollWidth <= c.clientWidth; }), 'Help does not scroll sideways');
+    await t.shot('S1-09-help-controls');
+  },
+});
