@@ -554,6 +554,7 @@ export function bindInput(canvas) {
   canvas.addEventListener('pointerdown', (e) => {
     unlockAudio();
     if (!PLAY.active || !PLAY.state) return;
+    if (e.button > 0) return; // a right or middle click is not a press
     if (skipEncoreWait()) return; // a tap in the beat before the Encore starts it now, as the toast says
     if (PLAY.anim) { // early input is intent: finish the animation now, then treat this touch as a normal one
       skipAnim(); playFrame(performance.now());
@@ -571,6 +572,7 @@ export function bindInput(canvas) {
     PLAY.down = { i, x: e.clientX, y: e.clientY, swapped: false, id: e.pointerId };
     try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* capture is optional */ }
   });
+  canvas.addEventListener('contextmenu', (e) => e.preventDefault()); // no browser menu over the board
   canvas.addEventListener('pointermove', (e) => {
     if (PLAY.armed) { if (!PLAY.anim && (PLAY.aimId === e.pointerId || (PLAY.aimId == null && e.pointerType === 'mouse'))) setAim(cellAt(e.clientX, e.clientY)); return; }
     const d = PLAY.down;

@@ -128,3 +128,23 @@ tests.push({
     t.equal(await encore(t), 'held', 'and holds it');
   },
 });
+
+// --- S6-16: a right or middle click is not a press, and the browser menu does not open over the board -------------------------------
+tests.push({
+  name: 'S6-16 a right or middle click on a piece selects nothing and the context menu is blocked; the left button still selects',
+  viewports: ['desktop'],
+  async run(t) {
+    await t.game('newGame', { level: 'w1-01', seed: 3, tips: false });
+    await t.waitIdle();
+    const at = await geometry(t);
+    const [x, y] = at(2, 2);
+    await t.page.mouse.click(x, y, { button: 'right' });
+    t.equal((await t.state()).selected, -1, 'a right click selects nothing');
+    await t.page.mouse.click(x, y, { button: 'middle' });
+    t.equal((await t.state()).selected, -1, 'a middle click selects nothing');
+    const prevented = await t.page.evaluate(() => { const e = new MouseEvent('contextmenu', { bubbles: true, cancelable: true }); document.querySelector('#stage canvas').dispatchEvent(e); return e.defaultPrevented; });
+    t.equal(prevented, true, 'the context menu is blocked over the board');
+    await t.page.mouse.click(x, y);
+    t.expect((await t.state()).selected >= 0, 'the left button still selects a piece');
+  },
+});
