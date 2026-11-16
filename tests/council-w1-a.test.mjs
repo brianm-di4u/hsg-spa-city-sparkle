@@ -340,7 +340,7 @@ const CORRUPT = {
   'not JSON at all': 'hello',
   'wrong type (array)': '[1,2,3]',
   'wrong type (number)': '42',
-  'version 2': '{"v":2,"progress":{}}',
+  'version 0 (an older save)': '{"v":0,"progress":{}}', // a save from a NEWER version (v 2) is no longer in this table: it is left alone, never reset or backed up (C4-01, council-w4-a)
   'progress is a string': '{"v":1,"progress":"x"}',
   'partial identity': '{"v":1,"resourceId":"only-this"}',
 };
