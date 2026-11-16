@@ -96,6 +96,8 @@ const note = (base, step) => {
 };
 // A fuller win phrase is scaled down by star count so all three peak inside the cue range (measured with cueRender; a plain win is unchanged).
 const WIN_FIT = [1, 1, 0.82, 0.74];
+// The star cues of the results card ring one after another under the win phrase and over the music; each is turned down (measured with mixRender at a delayed start, as it sounds live) so the whole card stays under 0.95 at the maximum volume.
+const STAR_FIT = [1, 0.7, 0.65, 0.6];
 // Level trim per cue, measured with cueRender so gameplay cues peak between 0.2 and 0.45 at the default volume (before this they peaked 0.01 to 0.15).
 const CUE_TRIM = { select: 25, swap: 23, bounce: 24, match: 10.6, cascade: 13.6, stone: 7.4, crystal: 6.6, special: 14, tufa: 29, lock: 37, moss: 33, fog: 17, token: 11, spread: 80, reshuffle: 12, win: 5.4, lose: 5.8, star: 19, click: 59, booster: 24, goal: 5.7, low: 7, world: 5.5, earned: 7.3, intro: 5.7, combo: 7.6, starline: 17, encore: 6.1 };
 export { tuneOf };
@@ -141,7 +143,7 @@ function buildCue(name, arg, opt) {
     }
     case 'encore': tone(note(523.25, 5), 0.18, { type: 'triangle', gain: 0.09 }); tone(note(523.25, 7), 0.3, { type: 'triangle', gain: 0.09, at: 0.1 }); tone(note(1046.5, 9), 0.35, { gain: 0.03, at: 0.12 }); noise(0.3, { gain: 0.03, freq: 5000, type: 'highpass', at: 0.08 }); break;
     case 'lose': [4, 2, 0].forEach((s, j) => { tone(note(261.6, s), 0.5, { gain: 0.08, at: j * 0.18 }); tone(note(261.6, s) / 2, 0.5, { type: 'triangle', gain: 0.03, at: j * 0.18 }); }); break;
-    case 'star': tone(note(523.25, 3 + arg * 2), 0.3, { type: 'triangle', gain: 0.07 }); tone(note(523.25, 3 + arg * 2) * 2, 0.35, { gain: 0.03, at: 0.02 }); break;
+    case 'star': { const k = STAR_FIT[Math.max(1, Math.min(3, arg | 0))]; tone(note(523.25, 3 + arg * 2), 0.3, { type: 'triangle', gain: 0.07 * k }); tone(note(523.25, 3 + arg * 2) * 2, 0.35, { gain: 0.03 * k, at: 0.02 }); break; }
     case 'click': { const f = note(523.25, pick([2, 3, 4])); tone(f, 0.04, { type: 'square', gain: 0.025 }); noise(0.02, { gain: 0.02, freq: 4000, type: 'highpass' }); break; }
     case 'booster': noise(0.3, { gain: 0.1, freq: 800, sweep: 3 }); tone(440, 0.3, { type: 'triangle', gain: 0.04, slide: 2 }); break;
     case 'goal': { const f = note(659.25, 0); tone(f, 0.3, { gain: 0.09 }); tone(f * 2, 0.25, { gain: 0.025 }); tone(note(659.25, 3), 0.5, { gain: 0.1, at: 0.13 }); tone(note(659.25, 3) * 2, 0.4, { gain: 0.03, at: 0.13 }); break; }

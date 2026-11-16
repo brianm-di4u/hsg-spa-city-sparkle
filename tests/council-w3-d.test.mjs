@@ -167,6 +167,22 @@ tests.push({
   },
 });
 
+// The results card: the win phrase at once, a star cue for each star at 380, 560 and 740 ms and the earned chime at 1170 ms (screens.js), over the results piece and the world's bed.
+const RESULTS = (stars) => [{ name: 'win', arg: stars, at: 0, seed: 1 }, ...Array.from({ length: stars }, (_, k) => ({ name: 'star', arg: k + 1, at: 0.2 + (k + 1) * 0.18, seed: 2 + k })), { name: 'earned', arg: 0, at: 1.17, seed: 5 }];
+tests.push({
+  name: 'CL-01 the results card (win phrase, star cues, results music, earned) stays under 0.95 at the maximum volume for 1, 2 and 3 stars',
+  viewports: ['desktop'],
+  async run(t) {
+    const list = await t.game('audioList'), out = [];
+    for (const bed of list.ambience) for (const stars of [1, 2, 3]) {
+      const mix = await t.game('mixRender', { piece: 'results', bed, seconds: 4, levels: MAX, cues: RESULTS(stars) });
+      out.push(`${bed} ${stars}: ${mix.peak}`);
+      t.expect(mix.peak < 0.95, `the results card at ${stars} stars over ${bed} peaks ${mix.peak}, under 0.95`);
+    }
+    t.log(out.join('; '));
+  },
+});
+
 // --- S1-04: a refused move sounds and shows it, and a pull past the edge does not use up the gesture --------------------------
 const RULES = ['aL1 b c d e', 'b c d e a', 'c d e a b', 'd bF a b c', 'e S1 T c d']; // a padlocked piece, a fogged piece, tufa and a bath token; no match on the board
 const bounces = async (t) => (await sounds(t)).filter((n) => n === 'bounce').length;
