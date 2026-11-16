@@ -180,3 +180,28 @@ tests.push({
     t.expect(s.volume === 0.1 && s.musicVolume === 0.1 && s.sfxVolume === 0.1, 'the values are kept across a reload');
   },
 });
+
+// --- S2-12: the special pieces say "swap" like the rest of Help ---------------------------------------------------------------------
+tests.push({
+  name: 'S2-12 Help and the Cascade and Hot Stone tips say to swap a special with a neighbour, and no help text says swipe',
+  async run(t) {
+    await t.game('newGame', { level: 'w1-01', seed: 3, tips: false });
+    await t.waitIdle();
+    for (const kind of ['cascade', 'stone']) {
+      await t.game('act', 'tip', kind);
+      const text = await t.page.locator('#tip').innerText();
+      t.expect(/Swap it with a neighbour/.test(text) && !/wipe/.test(text), `the ${kind} tip says swap (${text.replace(/\n/g, ' ')})`);
+      t.expect(await t.page.evaluate(() => { const r = document.querySelector('#tip').getBoundingClientRect(); return r.left >= 0 && r.right <= window.innerWidth && r.bottom <= window.innerHeight; }), `the ${kind} tip sits inside the screen`);
+      await t.page.locator('#tip [data-act="ok"]').click();
+    }
+    await t.game('scene', 'help');
+    await t.page.locator('#modal [role="tab"]', { hasText: 'Specials' }).click();
+    const panel = await t.page.locator('#modal [role="tabpanel"]').innerText();
+    t.equal((panel.match(/Swap it with a neighbour/g) || []).length, 2, 'both the Cascade and the Hot Stone line say swap');
+    t.expect(!/wipe/.test(panel), 'the Specials tab no longer says swipe');
+    t.expect(await t.page.evaluate(() => { const c = document.querySelector('#modal .card'); return c.scrollWidth <= c.clientWidth; }), 'Help does not scroll sideways');
+    await t.shot('S2-12-help-specials');
+    await t.page.locator('#modal [role="tab"]', { hasText: 'Controls' }).click();
+    t.expect(!/wipe/.test(await t.page.locator('#modal [role="tabpanel"]').innerText()), 'nor does Controls');
+  },
+});
