@@ -248,6 +248,19 @@ tests.push({
   },
 });
 
+// --- C4-13: the older S5-01 test --------------------------------------------------------------------------------------------------------
+tests.push({
+  name: 'C4-13 the older S5-01 save test waits for the buses to reach their level, not for 600 ms',
+  node: true,
+  run() {
+    const src = read('tests/council-w2-a.test.mjs');
+    const i = src.indexOf("name: 'S5-01 a save from before this wave"), j = src.indexOf('\n  },\n', i);
+    assert.ok(i > 0 && j > i, 'the test is there');
+    const body = src.slice(i, j);
+    assert.equal(/waitForTimeout\(/.test(body), false, 'no fixed wait inside it');
+    assert.equal((body.match(/waitAudio\(t, \(x\) =>/g) || []).length, 2, 'it waits for the bus state twice');
+  },
+});
 // --- C4-06: the sound measuring tools start every cue and mix 0.2 s in -----------------------------------------------------------
 // Chromium's offline limiter reads a sound in the first 0.2 s two to four times low (tufa alone at the default volume: 0.28 from time 0, 0.96 from 0.2 s), so a cue
 // rendered at time 0 passed "alone under 0.95" and "0.2 to 0.45" checks that the live game, which never sounds a cue at the instant its context starts, does not.

@@ -251,14 +251,14 @@ tests.push(
       t.equal(s.settings.music, true, 'and the music setting is as it was');
       await unlock(t);
       await waitAudio(t, (a) => a.music > 0.3);
-      await t.page.waitForTimeout(600);   // the buses glide to their levels
+      await waitAudio(t, (x) => x.ambience === 0); // the buses glide to their levels: wait until the ambience bus has reached its target
       t.equal(await bus(t, 'ambience'), 0, 'the ambience bus is silent');
       t.expect(await bus(t, 'music') > 0.3, 'the music this save had on still plays');
       await t.page.evaluate(([k, v]) => localStorage.setItem(k, JSON.stringify(v)), [KEY, { ...old, settings: { ...old.settings, sound: false, music: false } }]);
       await t.reload();
       await t.waitIdle();
       await unlock(t);
-      await t.page.waitForTimeout(600);
+      await waitAudio(t, (x) => x.music === 0 && x.ambience === 0); // wait until both buses have reached zero, not for a time
       t.equal(await bus(t, 'music'), 0, 'effects and music both off: the music bus is silent');
       t.equal(await bus(t, 'ambience'), 0, 'and so is the ambience bus');
       t.equal(s.progress['w1-01'].best, 1500, 'best score untouched');
