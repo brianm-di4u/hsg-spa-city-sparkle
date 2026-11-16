@@ -161,26 +161,26 @@ tests.push({
     for (const cue of loud) t.expect(cue[1] < 0.95, `${cue[0]} alone at full volume peaks ${cue[1]}, under 0.95`);
     const bed = list.ambience.includes('rain') ? 'rain' : list.ambience[0];
     const peaksBy = [];
-    for (let n = 1; n <= top.length; n++) peaksBy.push((await t.game('mixRender', { piece: loudest, bed, seconds: 4, levels: MAX, cues: top.slice(0, n).map((name, k) => ({ name, arg: 3, at: 1 + k * 0.04, seed: 1 + k })) })).peak);
+    for (let n = 1; n <= top.length; n++) peaksBy.push((await t.game('mixRender', { piece: loudest, bed, seconds: 4, levels: { ...MAX, ...FROM_ZERO }, cues: top.slice(0, n).map((name, k) => ({ name, arg: 3, at: 1 + k * 0.04, seed: 1 + k })) })).peak);
     t.log(`peak with 1 to ${top.length} of those cues: ${peaksBy.join(', ')}`);
-    const mix = await t.game('mixRender', { piece: loudest, bed, seconds: 6, levels: MAX, cues: top.slice(0, 3).map((name, k) => ({ name, arg: 3, at: 1 + k * 0.04, seed: 1 + k })) });
+    const mix = await t.game('mixRender', { piece: loudest, bed, seconds: 6, levels: { ...MAX, ...FROM_ZERO }, cues: top.slice(0, 3).map((name, k) => ({ name, arg: 3, at: 1 + k * 0.04, seed: 1 + k })) });
     t.log(`busiest moment: peak ${mix.peak} (${mix.peakDb} dBFS)`);
     t.expect(mix.peak < 0.95, `the piece, a bed and the three loudest cues of one move together peak ${mix.peak}, under 0.95`);
-    const solo = await t.game('mixRender', { piece: loudest, bed, seconds: 6, levels: MAX, cues: [{ name: loud[0][0], arg: 3, at: 2, seed: 1 }] });
+    const solo = await t.game('mixRender', { piece: loudest, bed, seconds: 6, levels: { ...MAX, ...FROM_ZERO }, cues: [{ name: loud[0][0], arg: 3, at: 2, seed: 1 }] });
     t.expect(solo.peak < 0.95, `the loudest cue of all (${loud[0][0]}) over the piece and bed peaks ${solo.peak}, under 0.95`);
   },
 });
 
 // The results card as screens.js plays it: the win phrase at once, a star cue for each star at 380, 560 and 740 ms and the earned chime at 810, 990 or 1170 ms for 1, 2 or 3 stars
 // (200 + (stars + 1) x 180 + 250 ms), over the results piece and the world's bed. The mix starts 0.2 s into the render (C4-06). Was a fixed 1.17 s for the earned chime, which read 0.95 or less.
-const RESULTS = (stars) => [{ name: 'win', arg: stars, at: 0, seed: 1 }, ...Array.from({ length: stars }, (_, k) => ({ name: 'star', arg: k + 1, at: 0.2 + (k + 1) * 0.18, seed: 2 + k })), { name: 'earned', arg: 0, at: (200 + (stars + 1) * 180 + 250) / 1000, seed: 5 }];
+const RESULTS = (stars, card) => [{ name: 'win', arg: stars, at: 0, seed: 1 }, ...Array.from({ length: stars }, (_, k) => ({ name: 'star', arg: k + 1, at: 0.2 + (k + 1) * 0.18, seed: 2 + k, opt: { level: card[k + 1] } })), { name: 'earned', arg: 0, at: (200 + (stars + 1) * 180 + 250) / 1000, seed: 5 }];
 tests.push({
   name: 'CL-01 the results card (win phrase, star cues, results music, earned) stays under 0.95 at the maximum volume for 1, 2 and 3 stars',
   viewports: ['desktop'],
   async run(t) {
     const list = await t.game('audioList'), out = [];
     for (const bed of list.ambience) for (const stars of [1, 2, 3]) {
-      const mix = await t.game('mixRender', { piece: 'results', bed, seconds: 4, levels: MAX, cues: RESULTS(stars) });
+      const mix = await t.game('mixRender', { piece: 'results', bed, seconds: 4, levels: MAX, cues: RESULTS(stars, list.cardStarLevel) }); // the star cues at the levels the card rings them (C4-07)
       out.push(`${bed} ${stars}: ${mix.peak}`);
       t.expect(mix.peak < 0.95, `the results card at ${stars} stars over ${bed} peaks ${mix.peak}, under 0.95`);
     }

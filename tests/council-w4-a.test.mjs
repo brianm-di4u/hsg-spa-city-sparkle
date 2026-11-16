@@ -407,6 +407,11 @@ tests.push({
     t.log(`default volume, median of 5 draws, as heard (from time 0 in brackets): ${rows.map((r) => `${r.name} ${r.heard} (${r.fromZero})`).join('; ')}`);
     t.log(`${out.length} of ${rows.length} cues sit outside 0.2 to 0.45 as heard: ${out.map((r) => r.name).join(', ')}`);
     t.log(`at the maximum volume ${clip.length} cues alone reach 0.95 or more: ${clip.map((r) => `${r.name} ${r.full}`).join(', ')}`);
+    // the busiest moment of the older CL-01 test (the loudest piece, a bed and the three loudest cues of a move struck 40 ms apart), as heard and from time 0
+    const busy = (levels) => t.game('mixRender', { piece: 'avenue', bed: 'rain', seconds: 6, levels: { volume: 1, ...levels }, cues: ['crystal', 'goal', 'combo'].map((name, k) => ({ name, arg: 3, at: 1 + k * 0.04, seed: 1 + k })) });
+    const heard = await busy({}), zero = await busy({ start: 0 });
+    t.log(`the busiest moment at the maximum volume peaks ${heard.peak} as heard and ${zero.peak} from time 0`);
+    t.expect(heard.peak > 0 && zero.peak > 0, 'the busiest moment renders either way');
   },
 });
 

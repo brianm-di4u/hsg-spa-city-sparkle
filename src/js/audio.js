@@ -231,7 +231,7 @@ export function audioState() {
   const k = AUDIO.kit;
   return { ctx: AUDIO.ctx ? AUDIO.ctx.state : null, master: AUDIO.master ? +AUDIO.master.gain.value.toFixed(3) : null, mood: AUDIO.mood, held: !!(k && k.held), muted: !!(k && k.muted), holds: [...AUDIO.holds], music: k ? +k.buses.music.gain.value.toFixed(3) : null, musicLevel: k ? +AUDIO.musicLevel.toFixed(3) : null, sfx: AUDIO.sfxGain ? +AUDIO.sfxGain.gain.value.toFixed(3) : null, ambience: k ? +k.buses.ambience.gain.value.toFixed(3) : null, intensity: k ? k.intensity : null, playing: k ? { music: !!k.music.score, ambience: !!k.amb.scene } : null };
 }
-export const audioList = () => ({ music: Object.keys(SCORES), ambience: Object.keys(SCENES), cues: CUE_NAMES });
+export const audioList = () => ({ music: Object.keys(SCORES), ambience: Object.keys(SCENES), cues: CUE_NAMES, cardStarLevel: CARD_STAR_LEVEL.slice() });
 // What a render is heard through: the master volume (the shipped default unless a test asks for another, for example the slider at
 // its maximum) and the limiter. Every hook below builds it the same way, so a measurement is what the speakers get.
 const offlineMaster = (ctx, out, lv = {}) => { const master = ctx.createGain(); master.gain.value = safeVolume(lv.volume ?? 0.5) * MASTER_SCALE; master.connect(limiter(ctx)).connect(out); return master; };
