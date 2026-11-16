@@ -48,7 +48,7 @@ async function boot() {
       if (e.key === 'Escape') { if (!e.repeat) dismissModal(); e.preventDefault(); } else if (e.key === 'Tab') trapTab(e);
       return;
     }
-    if ((e.key === 'p' || e.key === 'P' || (e.key === 'Escape' && PLAY.selected < 0 && !PLAY.anim && !PLAY.armed)) && UI.scene === 'game') { showPause(); e.preventDefault(); return; }
+    if ((e.key === 'p' || e.key === 'P' || (e.key === 'Escape' && PLAY.selected < 0 && !PLAY.anim && !PLAY.armed && !PLAY.pendingEncore)) && UI.scene === 'game') { showPause(); e.preventDefault(); return; }
     if (handleKey(e)) e.preventDefault();
   });
   document.addEventListener('visibilitychange', () => { if (document.hidden) pauseAudio(); else resumeAudio(); requestRender(); });

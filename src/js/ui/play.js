@@ -18,7 +18,7 @@ import { haptic, pulseFor, PULSE } from './haptics.js';
 export const PLAY = {
   state: null, level: null, world: 1, anim: null, onAnimDone: null, selected: -1, cursor: -1, keyMode: false,
   armed: null, aim: -1, aimId: null, lineDir: 'h', hintTimer: 0, lastResult: null, transitions: 0, active: false, down: null, playedBeat: -1,
-  shownScore: 0, pendingEncore: false, ui: null, // ui callbacks: {onWin, onLose, onTip, announce, toast}
+  shownScore: 0, pendingEncore: false, encoreHeld: false, encoreTimer: null, ui: null, // ui callbacks: {onWin, onLose, onTip, announce, toast}
 };
 
 const $ = (id) => document.getElementById(id);
@@ -31,6 +31,7 @@ export function levelById(id) { return LEVELS.find((l) => l.id === id); }
 const saveMode = (s) => (s.mode === 'soak' || s.mode === 'daily' ? 'soak' : 'journey');
 
 export function startLevel(level, opts = {}) {
+  dropEncore();
   PLAY.level = level; PLAY.world = level.world || 1;
   PLAY.state = opts.state || newGame(level, opts.seed != null ? opts.seed : Date.now() % 1e9, { boosters: { ...SAVE.boosters } });
   if (!opts.state) PLAY.state.boosters = { ...SAVE.boosters };
@@ -65,6 +66,7 @@ export function layoutAndBuild() {
 }
 
 export function showGameChrome(on) {
+  if (!on) dropEncore();
   $('hud').classList.toggle('hidden', !on);
   $('tray').classList.toggle('hidden', !on);
   if ($('board-sr')) $('board-sr').hidden = !on;
@@ -440,6 +442,28 @@ function finishAnim() {
   requestRender();
 }
 
+// The beat between the winning move and the Encore. It can be skipped (a tap, Esc, Space or Enter, as the toast says); Pause holds it until Resume, and leaving the board
+// (the map, the title, a new level) drops it, so the Encore never plays behind a card or opens a win card over another screen (P-N03, S1-10).
+const ENCORE_WAIT_MS = 700, ENCORE_WAIT_REDUCED_MS = 100;
+function armEncore(s, ms) {
+  clearTimeout(PLAY.encoreTimer);
+  PLAY.encoreTimer = setTimeout(() => {
+    PLAY.encoreTimer = null; PLAY.pendingEncore = false; PLAY.encoreHeld = false;
+    if (PLAY.state !== s || s.phase !== 'encore') return;
+    const pre = cloneState(s);
+    const er = apply(s, { type: 'encore' });
+    play(pre, er, () => endLevel('won'));
+  }, ms);
+}
+export function skipEncoreWait() {
+  if (!PLAY.pendingEncore || PLAY.encoreHeld) return false;
+  armEncore(PLAY.state, 0);
+  return true;
+}
+export function holdEncore() { if (!PLAY.pendingEncore) return; clearTimeout(PLAY.encoreTimer); PLAY.encoreTimer = null; PLAY.encoreHeld = true; }
+export function releaseEncore() { if (PLAY.pendingEncore && PLAY.encoreHeld && PLAY.state) { PLAY.encoreHeld = false; armEncore(PLAY.state, VIEW.reduced ? ENCORE_WAIT_REDUCED_MS : ENCORE_WAIT_MS); } }
+export function dropEncore() { clearTimeout(PLAY.encoreTimer); PLAY.encoreTimer = null; PLAY.pendingEncore = false; PLAY.encoreHeld = false; }
+
 function afterMove(r) {
   const s = PLAY.state;
   if (r.valid && PLAY.ui) {
@@ -453,14 +477,8 @@ function afterMove(r) {
   if (s.phase === 'encore') {
     PLAY.ui && PLAY.ui.toast(PLAY.keyMode ? 'Encore! Press Esc to skip' : 'Encore! Tap to skip', 2400);
     sfx('encore');
-    PLAY.pendingEncore = true;
-    setTimeout(() => {
-      PLAY.pendingEncore = false;
-      if (PLAY.state !== s || s.phase !== 'encore') return;
-      const pre = cloneState(s);
-      const er = apply(s, { type: 'encore' });
-      play(pre, er, () => endLevel('won'));
-    }, VIEW.reduced ? 100 : 700);
+    PLAY.pendingEncore = true; PLAY.encoreHeld = false;
+    armEncore(s, VIEW.reduced ? ENCORE_WAIT_REDUCED_MS : ENCORE_WAIT_MS);
     return;
   }
   if (s.phase === 'won') return endLevel('won');
@@ -536,6 +554,7 @@ export function bindInput(canvas) {
   canvas.addEventListener('pointerdown', (e) => {
     unlockAudio();
     if (!PLAY.active || !PLAY.state) return;
+    if (skipEncoreWait()) return; // a tap in the beat before the Encore starts it now, as the toast says
     if (PLAY.anim) { // early input is intent: finish the animation now, then treat this touch as a normal one
       skipAnim(); playFrame(performance.now());
       if (PLAY.anim || PLAY.state.phase !== 'play') return;
@@ -676,6 +695,7 @@ export function handleKey(e) {
   if ((e.key === 'Enter' || e.key === ' ') && onButton()) return false;
   if (BOOSTER_KEYS[e.key] && !e.ctrlKey && !e.metaKey && !e.altKey) { armBooster(BOOSTER_KEYS[e.key]); return true; }
   const dirs = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+  if (PLAY.pendingEncore && (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter')) { skipEncoreWait(); return true; }
   if (PLAY.anim && (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter')) { skipAnim(); return true; }
   if (PLAY.anim && !dirs[e.key]) return false;
   if (dirs[e.key]) {

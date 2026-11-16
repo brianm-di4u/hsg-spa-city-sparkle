@@ -1,6 +1,6 @@
 // DOM screens and dialogs: title, world map, level intro, results, world complete, pause, help,
 // settings, about, Free Soak and tutorial tips. Game logic stays in play.js and the engine.
-import { PLAY, startLevel, showGameChrome, levelById, updateHud, goalLabel, layoutAndBuild, doBooster, showHint, startWith, LOADOUTS } from './play.js';
+import { PLAY, startLevel, showGameChrome, levelById, updateHud, goalLabel, layoutAndBuild, doBooster, showHint, startWith, LOADOUTS, holdEncore, releaseEncore } from './play.js';
 import { SAVE, STAR_STEP, reliefFor, changeSettings, markTutorial, saveDaily, resetSave, saveUnreadable, saveFromNewer, announceNewerSave, startFreshSave, configureSaveEffects, reserveCurrent, adoptCurrent, saveTerminal } from './save.js';
 import { cloneState } from '../engine/game.js';
 import { goalIcon, PIECES, ICON_IMAGES } from '../view/vector-art.js';
@@ -451,11 +451,11 @@ export function showWorldComplete(w) {
 // --- pause ---------------------------------------------------------------------------------------
 export function showPause() {
   if (UI.scene !== 'game') return;
-  setScene('pause'); holdMusic('pause');
+  setScene('pause'); holdMusic('pause'); holdEncore();
   const L = PLAY.level, daily = L.mode === 'daily';
   const m = openModal(`<h2>Paused</h2><p class="fine">${esc(L.name)}</p>
     <div class="menu" style="margin:12px auto 0"><button class="btn" data-act="resume" data-focus>Resume</button><button class="btn alt" data-act="restart">Restart level</button><button class="btn alt" data-act="help">How to play</button><button class="btn alt" data-act="settings">Settings</button><button class="btn alt" data-act="map">${daily ? 'Quit to title' : 'Save &amp; quit to map'}</button></div>`, { label: 'Paused' });
-  bindActs(m, { resume: () => { closeModal(); setScene('game'); releaseMusic('pause'); }, restart: () => (PLAY.state && PLAY.state.movesUsed > 0 ? confirmRestart(L, daily) : daily ? startDaily() : enterLevel(L)), help: () => showHelp('game'), settings: () => showSettings('game'), map: () => (daily ? showTitle() : showMap(L.id)) });
+  bindActs(m, { resume: () => { closeModal(); setScene('game'); releaseMusic('pause'); releaseEncore(); }, restart: () => (PLAY.state && PLAY.state.movesUsed > 0 ? confirmRestart(L, daily) : daily ? startDaily() : enterLevel(L)), help: () => showHelp('game'), settings: () => showSettings('game'), map: () => (daily ? showTitle() : showMap(L.id)) });
 }
 
 // Restart throws the board away, so once a move has been made it asks first; Keep playing is the default and what Esc picks.
