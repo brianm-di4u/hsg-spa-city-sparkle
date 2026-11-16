@@ -1,0 +1,56 @@
+[
+  {
+    "world": 1,
+    "worldId": "bathhouse-row",
+    "id": "hs-0582",
+    "title": "The Classic Routine",
+    "text": "In the classic Hot Springs bath routine, the sitz tub is filled to 108 degrees for ten minutes. The full tub is 98 to 100 degrees.",
+    "source": "National Park Service: Traditional Baths",
+    "sourceUrl": "https://www.nps.gov/hosp/planyourvisit/traditional-baths.htm"
+  },
+  {
+    "world": 2,
+    "worldId": "hot-springs-mountain",
+    "id": "hs-0157",
+    "title": "Hot Water Jug Fountains",
+    "text": "Drinking water in the park comes from several hot water jug fountains. Two cold water springs, Happy Hollow and Whittington, are treated using ozone filtration.",
+    "source": "Wikipedia: Hot Springs National Park",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Hot_Springs_National_Park"
+  },
+  {
+    "world": 3,
+    "worldId": "central-avenue-night",
+    "id": "hs-0487",
+    "title": "A Cigar on the Veranda",
+    "text": "William Pinkerton lost his belongings in the 1923 Arlington fire while smoking a cigar on the veranda. The hotel burned April 5, with a $1.6 million loss.",
+    "source": "Arlington Hotel: History",
+    "sourceUrl": "https://www.arlingtonhotel.com/history/"
+  },
+  {
+    "world": 4,
+    "worldId": "oaklawn-and-ballfields",
+    "id": "hs-0298",
+    "title": "The Alligator Farm",
+    "text": "H. L. Campbell founded Hot Springs' alligator farm in 1902. He wanted a tourist draw beyond the baths.",
+    "source": "Wikipedia: Arkansas Alligator Farm and Petting Zoo",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Arkansas_Alligator_Farm_and_Petting_Zoo"
+  },
+  {
+    "world": 5,
+    "worldId": "lakes",
+    "id": "hs-0042",
+    "title": "A Park Built by the CCC",
+    "text": "Lake Catherine State Park was built in the 1930s by the Civilian Conservation Corps. Three stone-and-wood cabins are on the National Register.",
+    "source": "Wikipedia: Lake Catherine State Park",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Lake_Catherine_State_Park"
+  },
+  {
+    "world": 6,
+    "worldId": "garvan-and-revival",
+    "id": "hs-0378",
+    "title": "Soakers and Water Balloons",
+    "text": "Teams push bathtubs in a race down Hot Springs' Central Avenue each year. Spectators join in with Super Soakers and water balloons.",
+    "source": "Visit Hot Springs: 2020 version of the World Championship Running of the Tubs (press release)",
+    "sourceUrl": "https://hotsprings.org/media-room/press-releases/2020-version-world-championship-running-tubs-batht/"
+  }
+]

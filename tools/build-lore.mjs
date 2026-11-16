@@ -2,6 +2,9 @@
 // (games/trivia/data/questions.json). Card text is a hand-written restatement of each bank
 // item's answer + explanation (no new claims); this script checks every card against the bank:
 // id exists, confidence "confirmed", passes the sensitive-topic filter, title <= 40, text <= 160.
+// It also writes data/bonus-lore.json: one bonus card a world, earned by finishing the world (owner's decision 55). Those six strings are the
+// owner's approved wording, kept exactly as given in _council/owner-review/approved-local-facts.json; they are not in the trivia bank, so the
+// bank cannot audit them (check-facts.mjs checks their shape and says so).
 // Run from the repo root:  node tools/build-lore.mjs
 import fs from 'node:fs';
 import path from 'node:path';
@@ -9,7 +12,9 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..', '..', '..');
-const bank = JSON.parse(fs.readFileSync(path.join(ROOT, 'games', 'trivia', 'data', 'questions.json'), 'utf8'));
+// The monorepo's bank when it is there; otherwise the snapshot this repo carries (research/lore-bank.json), so the tool runs in the standalone repo.
+const bankPath = [path.join(ROOT, 'games', 'trivia', 'data', 'questions.json'), path.join(HERE, '..', 'research', 'lore-bank.json')].find((p) => fs.existsSync(p));
+const bank = JSON.parse(fs.readFileSync(bankPath, 'utf8'));
 const byId = new Map(bank.questions.map((q) => [q.id, q]));
 // Same filter as games/mahjong/tools/extract-facts.mjs (research/00-INDEX.md content rules).
 const SENSITIVE = /lynch|slave|segregat|bomb|murder|kill|racis|riot|massacre|shoot|death|died|fatal|incident|gangster|mob\b/i;
@@ -87,6 +92,16 @@ const cards = [
   [6, 'hs-0384', 'Nearly 5 Million Lights', "Garvan Woodland Gardens' multi-week Holiday Lights display features nearly 5 million lights, Visit Hot Springs says."],
 ];
 
+// Bonus cards: [world, id, title, text, source, sourceUrl].
+const bonus = [
+  [1, "hs-0582", "The Classic Routine", "In the classic Hot Springs bath routine, the sitz tub is filled to 108 degrees for ten minutes. The full tub is 98 to 100 degrees.", "National Park Service: Traditional Baths", "https://www.nps.gov/hosp/planyourvisit/traditional-baths.htm"],
+  [2, "hs-0157", "Hot Water Jug Fountains", "Drinking water in the park comes from several hot water jug fountains. Two cold water springs, Happy Hollow and Whittington, are treated using ozone filtration.", "Wikipedia: Hot Springs National Park", "https://en.wikipedia.org/wiki/Hot_Springs_National_Park"],
+  [3, "hs-0487", "A Cigar on the Veranda", "William Pinkerton lost his belongings in the 1923 Arlington fire while smoking a cigar on the veranda. The hotel burned April 5, with a $1.6 million loss.", "Arlington Hotel: History", "https://www.arlingtonhotel.com/history/"],
+  [4, "hs-0298", "The Alligator Farm", "H. L. Campbell founded Hot Springs' alligator farm in 1902. He wanted a tourist draw beyond the baths.", "Wikipedia: Arkansas Alligator Farm and Petting Zoo", "https://en.wikipedia.org/wiki/Arkansas_Alligator_Farm_and_Petting_Zoo"],
+  [5, "hs-0042", "A Park Built by the CCC", "Lake Catherine State Park was built in the 1930s by the Civilian Conservation Corps. Three stone-and-wood cabins are on the National Register.", "Wikipedia: Lake Catherine State Park", "https://en.wikipedia.org/wiki/Lake_Catherine_State_Park"],
+  [6, "hs-0378", "Soakers and Water Balloons", "Teams push bathtubs in a race down Hot Springs' Central Avenue each year. Spectators join in with Super Soakers and water balloons.", "Visit Hot Springs: 2020 version of the World Championship Running of the Tubs (press release)", "https://hotsprings.org/media-room/press-releases/2020-version-world-championship-running-tubs-batht/"],
+];
+
 const out = [];
 const errors = [];
 const seen = new Set();
@@ -102,7 +117,18 @@ for (const [world, id, title, text] of cards) {
   if (text.length > 160) errors.push(`${id}: text ${text.length} chars`);
   out.push({ world, worldId: W[world], id, title, text, source: q.source, sourceUrl: q.sourceUrl });
 }
+const bonusOut = [];
+for (const [world, id, title, text, source, sourceUrl] of bonus) {
+  if (seen.has(id)) errors.push(`${id}: duplicate`);
+  seen.add(id);
+  if (SENSITIVE.test(title + ' ' + text)) errors.push(`${id}: bonus card text fails sensitive filter`);
+  if (title.length > 40) errors.push(`${id}: title ${title.length} chars`);
+  if (text.length > 160) errors.push(`${id}: text ${text.length} chars`);
+  if (bonusOut.some((c) => c.world === world)) errors.push(`world ${world}: more than one bonus card`);
+  bonusOut.push({ world, worldId: W[world], id, title, text, source, sourceUrl });
+}
 const counts = out.reduce((a, c) => ((a[c.world] = (a[c.world] || 0) + 1), a), {});
 if (errors.length) { console.error(errors.join('\n')); process.exit(1); }
 fs.writeFileSync(path.join(HERE, '..', 'data', 'lore.json'), JSON.stringify(out, null, 2) + '\n');
-console.log(`${out.length} lore cards written; per world:`, counts);
+fs.writeFileSync(path.join(HERE, '..', 'data', 'bonus-lore.json'), JSON.stringify(bonusOut, null, 2) + '\n');
+console.log(`${out.length} lore cards and ${bonusOut.length} bonus cards written; per world:`, counts);

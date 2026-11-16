@@ -1,6 +1,6 @@
 // window.__game: the test-harness contract (shared/test-harness/README.md, DEV-PLAN §3).
 import { PLAY, startLevel, doSwap, doBooster, skipAnim, showHint, layoutAndBuild, updateHud, levelById, armBooster, replayLast, beatAt } from './play.js';
-import { UI, showTitle, showMap, showIntro, enterLevel, showHelp, showSettings, showAbout, showScrapbook, showRecords, showPause, onWin, onLose, showWorldComplete, showDaily, startDaily, startSoak, todayKey, closeModal, showTip, closeTip } from './screens.js';
+import { UI, showTitle, showMap, showIntro, enterLevel, showHelp, showSettings, showAbout, showScrapbook, showRecords, showPause, onWin, onLose, showWorldComplete, showDaily, startDaily, startSoak, bonusEarned, todayKey, closeModal, showTip, closeTip } from './screens.js';
 import { SAVE, arrangeSaveFixture, adoptCurrent } from './save.js';
 import { VIEW, requestRender } from '../view/stage.js';
 import { dailyLevel } from './daily.js';
@@ -33,7 +33,7 @@ function summary() {
     movesLeft: s ? s.movesLeft : null, movesUsed: s ? s.movesUsed : 0, score: s ? s.score : 0, encoreScore: s ? s.encoreScore : 0,
     goals: s ? s.goals.map((g) => ({ ...g })) : [], phase: s ? s.phase : null, stars: s ? s.starsWon : 0, starThresholds: s ? s.stars : [],
     boosters: s ? { ...s.boosters } : {}, saveBoosters: { ...SAVE.boosters }, progress: JSON.parse(JSON.stringify(SAVE.progress)), settings: { ...SAVE.settings },
-    lore: SAVE.lore.slice(), daily: JSON.parse(JSON.stringify(SAVE.daily)), levelStats: JSON.parse(JSON.stringify(SAVE.stats)), soakBest: SAVE.soakBest, soakDay: SAVE.soakDay, tutorialSeen: SAVE.tutorialSeen.slice(), storageOk: SAVE.storageOk, current: SAVE.current ? SAVE.current.levelId : null,
+    lore: SAVE.lore.slice(), bonus: bonusEarned().map((c) => c.id), daily: JSON.parse(JSON.stringify(SAVE.daily)), levelStats: JSON.parse(JSON.stringify(SAVE.stats)), soakBest: SAVE.soakBest, soakDay: SAVE.soakDay, tutorialSeen: SAVE.tutorialSeen.slice(), storageOk: SAVE.storageOk, current: SAVE.current ? SAVE.current.levelId : null,
     lastTimeline: PLAY.lastResult, anim: { playing: !!PLAY.anim, frozen: VIEW.frozenMs }, encore: PLAY.pendingEncore ? (PLAY.encoreHeld ? 'held' : 'waiting') : null, hash: s ? hashState(s) : null,
     selected: PLAY.selected, legal: BOARD.legalDrawn.slice(), aim: BOARD.aimDrawn.slice(), fx: { ...BOARD.extras }, cursor: PLAY.cursor, hint: BOARD.hint, hintArrow: hintArrow(), drag: BOARD.drag ? { i: BOARD.drag.i, j: BOARD.drag.j, dx: BOARD.drag.dx, dy: BOARD.drag.dy, released: !!BOARD.drag.rel } : null, motes: visibleMotes(), armed: PLAY.armed, art: VIEW.artSource, renderer: VIEW.renderer, quality: VIEW.quality, resolution: VIEW.app ? VIEW.app.renderer.resolution : null, steamOn: VIEW.steam,
     layout: { ...VIEW.layout }, reduced: VIEW.reduced, modal: UI.modalOpen, tip: UI.tipOpen, sounds: AUDIO.played.slice(-20), calls: AUDIO.calls.slice(-20),

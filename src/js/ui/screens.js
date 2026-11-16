@@ -26,6 +26,10 @@ export function isUnlocked(level) {
   return idx <= 0 || !!SAVE.progress[LEVELS[idx - 1].id];
 }
 const worldDone = (w) => LEVELS.filter((l) => l.world === w).every((l) => SAVE.progress[l.id]);
+// Bonus cards (data/bonus-lore.json), at most one a world, are earned by finishing the world: all ten stops cleared, the rule the postcard and the world's booster use.
+// They are worked out from the progress the save already holds, so a save that finished a world before this card existed has it, and nothing new is stored.
+export const bonusFor = (w) => BONUS.find((c) => c.world === w) || null;
+export const bonusEarned = () => BONUS.filter((c) => worldDone(c.world));
 // Small drawn icons (brass-button style) in place of system glyphs, which look different on every OS.
 const ICONS = {
   home: '<path d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z"/>',
@@ -438,15 +442,19 @@ export function showWorldComplete(w) {
   setScene('world'); sfx('world'); setTimeout(() => { if (UI.scene === 'world') sfx('earned'); }, 1100);
   const look = WORLD_LOOK[w], pc = paint(`postcard${w}`), d = WORLD_DONE[w], finale = w === 6;
   const card = (n) => { const l = WORLD_LOOK[n], img = paint(`postcard${n}`); return `<figure><div class="pc-thumb" style="background:${img ? `url(${img}) center/cover` : `linear-gradient(135deg, ${l.sky[0]}, ${l.sky[1]})`}"></div><figcaption>${esc(l.short)}</figcaption></figure>`; };
+  const bonus = bonusFor(w), frame = paint('card-frame');
+  const bonusCard = bonus ? `<div class="bonus-card${frame ? ' framed' : ''}" style="${frame ? `--card-frame: url(${frame})` : ''}" aria-label="Scrapbook bonus card"><span class="tag">New bonus card</span><h4>${esc(bonus.title)}</h4><p>${esc(bonus.text)}</p><p class="src">Source: ${esc(bonus.source)}</p></div>` : '';
   const m = openModal(`
     <h2 style="text-align:center">${esc(d.head)}</h2>
     <p class="fine" style="text-align:center">${finale ? 'World 6 complete: the last postcard is restored.' : `World ${w} complete: ${esc(look.name)}.`}</p>
     ${finale ? `<div class="pc-six" role="img" aria-label="All six postcards, restored">${[1, 2, 3, 4, 5, 6].map(card).join('')}</div>`
       : `<div class="help-demo" style="aspect-ratio:3/2;${pc ? `background:url(${pc}) center/cover` : `background:linear-gradient(135deg, ${look.sky[0]}, ${look.sky[1]})`}"></div>`}
     ${dellaSays(w)}
+    ${bonusCard}
     <p class="fine" style="text-align:center">+1 of every booster</p>
     <div class="actions">${w < 6 ? '<button class="btn" data-act="map" data-focus>On to the next world</button>' : '<button class="btn" data-act="map" data-focus>Back to the map</button>'}</div>`, { label: `World ${w} complete` });
   m.insertAdjacentHTML('afterbegin', atmosphere('world', w));
+  if (bonus) announce(`New Scrapbook bonus card: ${bonus.title}.`);
   bindActs(m, { map: () => showMap() });
 }
 
@@ -633,10 +641,14 @@ export function showScrapbook(world) {
     const items = cards.map((c, j) => (got.has(c.id)
       ? `<li class="lore"><span class="tag">Stop ${j + 1}</span><h4>${esc(c.title)}</h4><p>${esc(c.text)}</p><p class="src">Source: ${esc(c.source)}</p></li>`
       : `<li class="lore blank"><h4>Card ${j + 1}: not found yet</h4><p>Win stop ${cur}-${j + 1}${stops[j] ? `, ${esc(stops[j].name)}` : ''}, to find it.</p></li>`)).join('');
-    const m = openModal(`<h2>Scrapbook</h2><p class="fine">${got.size} of ${LORE.length} cards found</p>
+    const b = bonusFor(cur), bonusOn = bonusEarned().length;
+    const bonusItem = b ? (worldDone(cur)
+      ? `<li class="bonus-card"><span class="tag">Bonus</span><h4>${esc(b.title)}</h4><p>${esc(b.text)}</p><p class="src">Source: ${esc(b.source)}</p></li>`
+      : `<li class="bonus-card blank"><span class="tag">Bonus</span><h4>Bonus card: not found yet</h4><p>Finish all ten stops of this world to find it.</p></li>`) : '';
+    const m = openModal(`<h2>Scrapbook</h2><p class="fine">${got.size} of ${LORE.length} cards found${BONUS.length ? ` · ${bonusOn} of ${BONUS.length} bonus cards` : ''}</p>
       <div class="tabs" role="tablist">${worlds.map((k) => `<button class="tab" role="tab" aria-selected="${k === cur}" data-tab="${k}"${k === cur ? ' data-focus' : ''} aria-label="${esc(WORLD_LOOK[k].name)}, ${have(k)} of ${inWorld(k).length} found">${k} · ${have(k)}/${inWorld(k).length}</button>`).join('')}</div>
       <p class="fine">${esc(WORLD_LOOK[cur].name)}</p>
-      <ul class="scrap" role="tabpanel" aria-label="${esc(WORLD_LOOK[cur].name)} cards">${items}</ul>
+      <ul class="scrap" role="tabpanel" aria-label="${esc(WORLD_LOOK[cur].name)} cards">${items}${bonusItem}</ul>
       <div class="actions"><button class="btn small" data-act="close">Close</button></div>`, { label: 'Scrapbook' });
     m.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => { unlockAudio(); sfx('click'); render(+b.dataset.tab); m.querySelector(`[data-tab="${b.dataset.tab}"]`).focus(); }));
     bindActs(m, { close: () => { closeModal(); setScene(prev === 'scrapbook' ? 'title' : prev); } });

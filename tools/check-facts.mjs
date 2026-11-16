@@ -31,12 +31,26 @@ export function checkFacts() {
     if (c.text.length > 160) problems.push(`${c.id}: text over 160 chars`);
   }
   for (let w = 1; w <= 6; w++) if (perWorld[w] !== 10) problems.push(`world ${w}: ${perWorld[w] || 0} cards, want 10`);
-  return { problems, count: lore.length, bank: path.relative(process.cwd(), bankPath) };
+  // Bonus cards are a separate list (data/bonus-lore.json): at most one a world, never one of the sixty stop cards. They are the owner's approved wording and are
+  // not in the trivia bank, so the bank cannot audit them: only their shape is checked here.
+  const bonusFile = path.join(here, '..', 'data', 'bonus-lore.json');
+  const bonus = fs.existsSync(bonusFile) ? JSON.parse(fs.readFileSync(bonusFile, 'utf8')) : [];
+  const seenBonus = new Set();
+  for (const c of bonus) {
+    if (seenBonus.has(c.world)) problems.push(`bonus ${c.id}: world ${c.world} has more than one bonus card`);
+    seenBonus.add(c.world);
+    if (!(c.world >= 1 && c.world <= 6)) problems.push(`bonus ${c.id}: no such world`);
+    if (lore.some((x) => x.id === c.id)) problems.push(`bonus ${c.id}: is also one of the sixty stop cards`);
+    if (!c.title || !c.text || !c.source || !c.sourceUrl) problems.push(`bonus ${c.id}: missing a title, text, source or link`);
+    if (c.title.length > 40) problems.push(`bonus ${c.id}: title over 40 chars`);
+    if (c.text.length > 160) problems.push(`bonus ${c.id}: text over 160 chars`);
+  }
+  return { problems, count: lore.length, bonusCount: bonus.length, bank: path.relative(process.cwd(), bankPath) };
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const r = checkFacts();
   if (r.skipped) { console.log('check-facts: audited bank not found, skipped'); process.exit(0); }
   r.problems.forEach((p) => console.log('FAIL', p));
-  console.log(`check-facts: ${r.count} cards, ${r.problems.length} problems (bank ${r.bank})`);
+  console.log(`check-facts: ${r.count} cards and ${r.bonusCount} bonus cards, ${r.problems.length} problems (bank ${r.bank})`);
   process.exit(r.problems.length ? 1 : 0);
 }
