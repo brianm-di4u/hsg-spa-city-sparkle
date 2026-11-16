@@ -95,9 +95,9 @@ const note = (base, step) => {
   return C4 * 2 ** ((semis + CUE.shift) / 12);
 };
 // A fuller win phrase is scaled down by star count so all three peak inside the cue range (measured with cueRender; a plain win is unchanged).
-const WIN_FIT = [1, 1, 0.82, 0.74];
+const WIN_FIT = [1, 1, 0.6, 0.38];
 // The star cues of the results card ring one after another under the win phrase and over the music; each is turned down (measured with mixRender at a delayed start, as it sounds live) so the whole card stays under 0.95 at the maximum volume.
-const STAR_FIT = [1, 0.7, 0.65, 0.6];
+const STAR_FIT = [1, 0.8, 0.78, 0.78];
 // Level trim per cue, measured with cueRender so gameplay cues peak between 0.2 and 0.45 at the default volume (before this they peaked 0.01 to 0.15).
 const CUE_TRIM = { select: 25, swap: 23, bounce: 24, match: 10.6, cascade: 13.6, stone: 7.4, crystal: 6.6, special: 14, tufa: 29, lock: 37, moss: 33, fog: 17, token: 11, spread: 80, reshuffle: 12, win: 5.4, lose: 5.8, star: 19, click: 59, booster: 24, goal: 5.7, low: 7, world: 5.5, earned: 7.3, intro: 5.7, combo: 7.6, starline: 17, encore: 6.1 };
 export { tuneOf };
