@@ -81,7 +81,8 @@ function buildHud() {
   $('hud-world').textContent = look.short || look.name;
   $('hud-world').title = `World ${PLAY.world}`;
   if (L.mode === 'daily') dailyHud(L);
-  const nm = L.mode === 'daily' ? L.name : `${L.n}. ${L.name}`;
+  if (L.mode === 'soak') { $('hud-world').textContent = 'Endless board'; $('hud-world').title = 'Free Soak: no goals, no move limit'; }
+  const nm = L.mode === 'daily' || L.mode === 'soak' ? L.name : `${L.n}. ${L.name}`;
   $('hud-name').textContent = nm;
   $('hud-name').style.fontSize = nm.length > 22 ? '0.95rem' : nm.length > 17 ? '1.08rem' : '';
   const ul = $('hud-goals');

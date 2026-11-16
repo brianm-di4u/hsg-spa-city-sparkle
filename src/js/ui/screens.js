@@ -104,7 +104,8 @@ export function showTitle() {
       <div class="menu">
         ${cont ? `<button class="btn" data-act="continue" data-focus>Continue ${esc(cont.n)}. ${esc(cont.name)}</button>` : ''}
         <button class="btn${cont ? ' alt' : ''}" data-act="play" ${cont ? '' : 'data-focus'}>${Object.keys(SAVE.progress).length ? 'World map' : 'Play'}</button>
-        <button class="btn alt" data-act="daily" ${dailyOpen ? '' : 'aria-disabled="true"'}>Daily Challenge${dailyOpen ? '' : ' ' + ico('lock')}</button><p class="menu-note">${dailyOpen ? esc(dailyNote()) : 'Finish Bathhouse Row to unlock the Daily Challenge.'}</p>
+        <button class="btn alt" data-act="daily" ${dailyOpen ? '' : 'aria-disabled="true"'}>Daily Challenge${dailyOpen ? '' : ' ' + ico('lock')}</button>${dailyOpen ? `<p class="menu-note">${esc(dailyNote())}</p>` : ''}
+        <button class="btn alt" data-act="soak" ${dailyOpen ? '' : 'aria-disabled="true"'}>Free Soak${dailyOpen ? '' : ' ' + ico('lock')}</button>${dailyOpen ? '' : '<p class="menu-note">Finish Bathhouse Row to unlock the Daily Challenge and Free Soak.</p>'}
         <div class="menu-row">
           <button class="btn small alt" data-act="help">Help</button>
           <button class="btn small alt" data-act="settings">Settings</button>
@@ -118,6 +119,7 @@ export function showTitle() {
     continue: () => enterLevel(null, { continue: true, skipIntro: true }),
     play: () => showMap(undefined, { premise: true }),
     daily: () => (dailyOpen ? showDaily() : toast('Finish Bathhouse Row to unlock the Daily Challenge', 2200)),
+    soak: () => (dailyOpen ? startSoak() : toast('Finish Bathhouse Row to unlock Free Soak', 2200)),
     help: () => showHelp(), settings: () => showSettings(), scrapbook: () => showScrapbook(), records: () => showRecords(), about: () => showAbout(),
   });
   const f = screenEl().querySelector('[data-focus]');
@@ -394,7 +396,7 @@ function celebrate(m, world = 1) {
 }
 
 export function onLose(s, L) {
-  const daily = L.mode === 'daily';
+  const daily = L.mode === 'daily', solo = daily || L.mode === 'soak';
   if (daily) saveDaily({ key: L.dayKey, score: s.score, stars: 0, won: false });
   else if (s.mode !== 'soak') saveTerminal(null, { levelId: L.id, state: cloneState(s) }, L.id);
   closeTip();
@@ -409,12 +411,12 @@ export function onLose(s, L) {
     <h2 style="text-align:center">${s.stuck ? 'No moves left' : 'Out of moves'}</h2>
     <p style="text-align:center">${s.stuck ? (s.moss.some(Boolean) ? 'The algae took over the board!' : 'No swaps are possible.') : frac >= 0.5 ? 'So close! Still to do:' : 'Still to do:'}</p>
     <div class="goals-big" aria-label="${esc(left.map((g) => goalLabel(g, remain(g))).join('; '))}">${pills}</div>
-    <div class="actions lose-actions">${plus ? `<button class="btn" data-act="plus" data-focus>+5 moves (${SAVE.boosters.plus5} left)</button>` : ''}<button class="btn${plus ? ' alt' : ''}" data-act="retry" ${plus ? '' : 'data-focus'}>Retry</button><button class="btn alt small" data-act="map">${daily ? 'Home' : 'Map'}</button></div>${daily ? '' : '<p class="fine" style="text-align:center">Earn boosters with three-star wins, finished worlds and every ' + STAR_STEP + ' stars.</p>'}`, { label: 'Out of moves' });
+    <div class="actions lose-actions">${plus ? `<button class="btn" data-act="plus" data-focus>+5 moves (${SAVE.boosters.plus5} left)</button>` : ''}<button class="btn${plus ? ' alt' : ''}" data-act="retry" ${plus ? '' : 'data-focus'}>Retry</button><button class="btn alt small" data-act="map">${solo ? 'Home' : 'Map'}</button></div>${solo ? '' : '<p class="fine" style="text-align:center">Earn boosters with three-star wins, finished worlds and every ' + STAR_STEP + ' stars.</p>'}`, { label: 'Out of moves' });
   fillIcons(m);
   bindActs(m, {
     plus: () => { closeModal(); setScene('game'); doBooster('plus5'); },
-    retry: () => (daily ? startDaily() : enterLevel(L)),
-    map: () => (daily ? showTitle() : showMap(L.id)),
+    retry: () => restartRun(L),
+    map: () => (solo ? showTitle() : showMap(L.id)),
   });
 }
 // The town's voice when a stop or a world is finished: the ribbon on a level's results card, and what Della says when a postcard is whole.
@@ -452,18 +454,19 @@ export function showWorldComplete(w) {
 export function showPause() {
   if (UI.scene !== 'game') return;
   setScene('pause'); holdMusic('pause'); holdEncore();
-  const L = PLAY.level, daily = L.mode === 'daily';
+  const L = PLAY.level, solo = L.mode === 'daily' || L.mode === 'soak';
   const m = openModal(`<h2>Paused</h2><p class="fine">${esc(L.name)}</p>
-    <div class="menu" style="margin:12px auto 0"><button class="btn" data-act="resume" data-focus>Resume</button><button class="btn alt" data-act="restart">Restart level</button><button class="btn alt" data-act="help">How to play</button><button class="btn alt" data-act="settings">Settings</button><button class="btn alt" data-act="map">${daily ? 'Quit to title' : 'Save &amp; quit to map'}</button></div>`, { label: 'Paused' });
-  bindActs(m, { resume: () => { closeModal(); setScene('game'); releaseMusic('pause'); releaseEncore(); }, restart: () => (PLAY.state && PLAY.state.movesUsed > 0 ? confirmRestart(L, daily) : daily ? startDaily() : enterLevel(L)), help: () => showHelp('game'), settings: () => showSettings('game'), map: () => (daily ? showTitle() : showMap(L.id)) });
+    <div class="menu" style="margin:12px auto 0"><button class="btn" data-act="resume" data-focus>Resume</button><button class="btn alt" data-act="restart">Restart level</button><button class="btn alt" data-act="help">How to play</button><button class="btn alt" data-act="settings">Settings</button><button class="btn alt" data-act="map">${solo ? 'Quit to title' : 'Save &amp; quit to map'}</button></div>`, { label: 'Paused' });
+  bindActs(m, { resume: () => { closeModal(); setScene('game'); releaseMusic('pause'); releaseEncore(); }, restart: () => (PLAY.state && PLAY.state.movesUsed > 0 ? confirmRestart(L) : restartRun(L)), help: () => showHelp('game'), settings: () => showSettings('game'), map: () => (solo ? showTitle() : showMap(L.id)) });
 }
 
 // Restart throws the board away, so once a move has been made it asks first; Keep playing is the default and what Esc picks.
-function confirmRestart(L, daily) {
+const restartRun = (L) => (L.mode === 'daily' ? startDaily() : L.mode === 'soak' ? startSoak() : enterLevel(L));
+function confirmRestart(L) {
   const used = PLAY.state.movesUsed;
   const m = openModal(`<h2>Restart this level?</h2><p>Your ${used === 1 ? 'move' : used + ' moves'} so far will be lost. Boosters you used stay spent.</p>
     <div class="actions"><button class="btn small" data-act="back" data-focus>Keep playing</button><button class="btn alt small" data-act="restart">Restart</button></div>`, { label: 'Confirm restart' });
-  bindActs(m, { back: () => { setScene('game'); showPause(); }, restart: () => (daily ? startDaily() : enterLevel(L)) });
+  bindActs(m, { back: () => { setScene('game'); showPause(); }, restart: () => restartRun(L) });
 }
 
 // --- help ----------------------------------------------------------------------------------------
@@ -472,7 +475,7 @@ const HELP = [
   ['specials', 'Specials', `<div class="help-pieces" data-pieces="p0h,p2b,crystal"></div><ul class="help-list"><li><b>Cascade</b>: match 4 in a line. It sweeps its row or column (it follows the direction you swapped). <b>Swap it with a neighbour</b>, or match it, to fire it.</li><li><b>Hot Stone</b>: match an L, T or + shape. <b>Swap it with a neighbour</b> or match it: it bursts the cells around it, then gives one aftershock.</li><li><b>Spring Crystal</b>: match 5 in a line. Swap it with a piece to clear every piece of that kind.</li></ul><p class="fine">The names are game flavour: the town has a real Hot Water Cascade, but no geysers or hot stones.</p>`],
   ['combos', 'Combos', `<ul class="help-list"><li>Cascade + Cascade: a row and a column.</li><li>Cascade + Hot Stone: three rows and three columns.</li><li>Hot Stone + Hot Stone: a huge burst.</li><li>Crystal + Cascade or Hot Stone: every piece of that kind becomes that special and fires.</li><li>Crystal + Crystal: clears the whole board.</li></ul>`],
   ['blockers', 'Blockers', `<ul class="help-list"><li><b>Tufa</b> (1-3 layers): break it with matches beside it or with specials.</li><li><b>Mineral crust</b> under pieces: clear the piece above it.</li><li><b>Padlocked safe</b>: the piece can match but can't move.</li><li><b>Algae</b>: clear it with nearby matches, or it spreads after any move that doesn't touch it.</li><li><b>Steam fog</b>: hides a piece until a match beside it lifts the fog.</li></ul>`],
-  ['goals', 'Goals', `<ul class="help-list"><li>Reach a score · collect pieces · clear the crust · break tufa · clear algae · open padlocks.</li><li><b>Bath tokens</b> fall like pieces: bring them down to the brass drains.</li><li><b>Daily Challenge</b>: one board a day, the same for every player. Clear it on consecutive days to build a streak.</li><li>Boosters (earned, never bought: three-star wins, finished worlds and every ${STAR_STEP} stars): Hammer, Line (tap the booster again to switch row and column), Shuffle, +5 moves.</li></ul>`],
+  ['goals', 'Goals', `<ul class="help-list"><li>Reach a score · collect pieces · clear the crust · break tufa · clear algae · open padlocks.</li><li><b>Bath tokens</b> fall like pieces: bring them down to the brass drains.</li><li><b>Daily Challenge</b>: one board a day, the same for every player. Clear it on consecutive days to build a streak.</li><li><b>Free Soak</b>: an endless board with no goals, no move limit and no score kept. Play as long as you like.</li><li>Boosters (earned, never bought: three-star wins, finished worlds and every ${STAR_STEP} stars): Hammer, Line (tap the booster again to switch row and column), Shuffle, +5 moves.</li></ul>`],
   ['controls', 'Controls', `<ul class="help-list"><li><b>Mouse or touch</b>: drag a piece toward a neighbour, or tap one piece and then its neighbour.</li><li><b>Keyboard</b>: <span class="kbd">←</span><span class="kbd">↑</span><span class="kbd">→</span><span class="kbd">↓</span> move the cursor, <span class="kbd">Enter</span> or <span class="kbd">Space</span> picks a piece, then an arrow swaps it. <span class="kbd">1</span>–<span class="kbd">4</span> Hammer, Line, Shuffle, +5 Moves, <span class="kbd">H</span> hint, <span class="kbd">P</span> pause, <span class="kbd">Esc</span> cancels or skips.</li><li><b>Gamepad</b>: the D-pad or left stick moves, <span class="kbd">A</span> picks, <span class="kbd">B</span> cancels or skips, <span class="kbd">Start</span> pauses.</li><li>Tap or press a key during a chain to skip the animation.</li></ul>`],
 ];
 export function showHelp(back, tab = 'basics') {
@@ -708,6 +711,18 @@ export function startDaily() {
   setScene('game');
   startLevel(L, { seed });
   toast(`Daily challenge: ${L.moves} moves`);
+}
+// Free Soak: the endless board with no goals, no move limit and no score kept. It runs outside the journey, like the Daily.
+export const soakSeed = (date = new Date()) => date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate();
+export function startSoak() {
+  const reserved = reserveCurrent('soak');
+  if (!reserved.ok && reserved.reason !== 'storage-unavailable') return;
+  const L = { id: 'soak', world: 2, n: 0, name: 'Free Soak', mode: 'soak', moves: null, goals: [], stars: [5000, 15000, 30000], grid: { cells: Array(8).fill('........') } };
+  closeModal();
+  screenEl().innerHTML = ''; screenEl().className = 'screen';
+  setScene('game');
+  startLevel(L, { seed: soakSeed() });
+  toast('Relax: no goals, no move limit');
 }
 function onDailyWin(s, L) {
   const total = s.score + (s.encoreScore || 0), stars = s.starsWon;

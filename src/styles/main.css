@@ -77,6 +77,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .logo { font-size: 2.6rem; }
   .tagline { display: none; }
   .menu { gap: 8px; width: min(300px, 44vw); }
+  .menu-row .btn { flex-basis: calc(33.33% - 8px); }
 }
 
 /* world map */
