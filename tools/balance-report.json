@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-15T05:07:57.983Z",
+ "generated": "2026-11-16T22:11:15.332Z",
  "seeds": 200,
- "randomSeeds": 0,
+ "randomSeeds": 50,
  "greedySeeds": 100,
- "levelsHash": "bbcbb996f748",
+ "levelsHash": "a79b25babb57",
  "levels": {
   "w1-01": {
    "band": [
@@ -11,7 +11,7 @@
     1
    ],
    "win": 0.945,
-   "randomWin": 0,
+   "randomWin": 0.42,
    "star3": 0.13,
    "star2": 0.53,
    "scoreP25": 11880,
@@ -39,28 +39,28 @@
     0.9,
     1
    ],
-   "win": 0.97,
-   "randomWin": 0,
-   "star3": 0.085,
-   "star2": 0.495,
-   "scoreP25": 16400,
-   "scoreP50": 20780,
-   "scoreP90": 34200,
+   "win": 0.9,
+   "randomWin": 0.28,
+   "star3": 0.08,
+   "star2": 0.45,
+   "scoreP25": 18680,
+   "scoreP50": 23880,
+   "scoreP90": 37880,
    "split": [
-    0.4896907216494845,
-    0.422680412371134,
-    0.08762886597938144
+    0.5,
+    0.4111111111111111,
+    0.08888888888888889
    ],
-   "leftP50": 8,
+   "leftP50": 6,
    "winQ": [
-    13360,
-    20860,
-    31100
+    15980,
+    25060,
+    35460
    ],
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
-   "greedyWin": 0.99,
+   "greedyWin": 0.95,
    "verdict": "ok"
   },
   "w1-03": {
@@ -68,28 +68,28 @@
     0.9,
     1
    ],
-   "win": 0.98,
-   "randomWin": 0,
-   "star3": 0.085,
-   "star2": 0.41,
-   "scoreP25": 15820,
-   "scoreP50": 19500,
-   "scoreP90": 31380,
+   "win": 0.91,
+   "randomWin": 0.38,
+   "star3": 0.105,
+   "star2": 0.53,
+   "scoreP25": 20340,
+   "scoreP50": 24500,
+   "scoreP90": 42200,
    "split": [
-    0.5816326530612245,
-    0.33163265306122447,
-    0.08673469387755102
+    0.4175824175824176,
+    0.46703296703296704,
+    0.11538461538461539
    ],
-   "leftP50": 9,
+   "leftP50": 7,
    "winQ": [
-    12980,
-    19500,
-    28780
+    17100,
+    25220,
+    36980
    ],
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
-   "greedyWin": 1,
+   "greedyWin": 0.98,
    "verdict": "ok"
   },
   "w1-04": {
@@ -97,28 +97,28 @@
     0.9,
     1
    ],
-   "win": 0.95,
-   "randomWin": 0,
-   "star3": 0.175,
-   "star2": 0.54,
-   "scoreP25": 12540,
-   "scoreP50": 15780,
-   "scoreP90": 26580,
+   "win": 0.92,
+   "randomWin": 0.44,
+   "star3": 0.24,
+   "star2": 0.585,
+   "scoreP25": 14880,
+   "scoreP50": 18220,
+   "scoreP90": 32160,
    "split": [
-    0.43157894736842106,
-    0.38421052631578945,
-    0.18421052631578946
+    0.3641304347826087,
+    0.375,
+    0.2608695652173913
    ],
-   "leftP50": 7,
+   "leftP50": 5,
    "winQ": [
-    9960,
-    15880,
-    23520
+    12080,
+    18480,
+    28860
    ],
    "reshuffles": 0,
    "recolorRate": 0,
    "capped": 0,
-   "greedyWin": 0.99,
+   "greedyWin": 0.96,
    "verdict": "ok"
   },
   "w1-05": {
@@ -127,7 +127,7 @@
     0.8
    ],
    "win": 0.71,
-   "randomWin": 0,
+   "randomWin": 0.18,
    "star3": 0.085,
    "star2": 0.36,
    "scoreP25": 22500,
@@ -156,7 +156,7 @@
     1
    ],
    "win": 0.945,
-   "randomWin": 0,
+   "randomWin": 0.44,
    "star3": 0.105,
    "star2": 0.485,
    "scoreP25": 19780,
@@ -185,7 +185,7 @@
     1
    ],
    "win": 0.97,
-   "randomWin": 0,
+   "randomWin": 0.54,
    "star3": 0.065,
    "star2": 0.39,
    "scoreP25": 18520,
@@ -214,7 +214,7 @@
     1
    ],
    "win": 0.94,
-   "randomWin": 0,
+   "randomWin": 0.44,
    "star3": 0.155,
    "star2": 0.46,
    "scoreP25": 19000,
@@ -243,7 +243,7 @@
     1
    ],
    "win": 0.955,
-   "randomWin": 0,
+   "randomWin": 0.46,
    "star3": 0.12,
    "star2": 0.42,
    "scoreP25": 23460,
@@ -272,7 +272,7 @@
     0.8
    ],
    "win": 0.725,
-   "randomWin": 0,
+   "randomWin": 0.36,
    "star3": 0.145,
    "star2": 0.42,
    "scoreP25": 11460,
@@ -301,7 +301,7 @@
     0.95
    ],
    "win": 0.85,
-   "randomWin": 0,
+   "randomWin": 0.26,
    "star3": 0.16,
    "star2": 0.515,
    "scoreP25": 23200,
@@ -330,7 +330,7 @@
     0.95
    ],
    "win": 0.78,
-   "randomWin": 0,
+   "randomWin": 0.12,
    "star3": 0.14,
    "star2": 0.43,
    "scoreP25": 39140,
@@ -359,7 +359,7 @@
     0.95
    ],
    "win": 0.905,
-   "randomWin": 0,
+   "randomWin": 0.24,
    "star3": 0.11,
    "star2": 0.395,
    "scoreP25": 28580,
@@ -388,7 +388,7 @@
     0.95
    ],
    "win": 0.88,
-   "randomWin": 0,
+   "randomWin": 0.2,
    "star3": 0.145,
    "star2": 0.44,
    "scoreP25": 42740,
@@ -417,7 +417,7 @@
     0.75
    ],
    "win": 0.705,
-   "randomWin": 0,
+   "randomWin": 0.08,
    "star3": 0.11,
    "star2": 0.345,
    "scoreP25": 32860,
@@ -446,7 +446,7 @@
     0.95
    ],
    "win": 0.83,
-   "randomWin": 0,
+   "randomWin": 0.1,
    "star3": 0.14,
    "star2": 0.41,
    "scoreP25": 50320,
@@ -475,7 +475,7 @@
     0.95
    ],
    "win": 0.745,
-   "randomWin": 0,
+   "randomWin": 0.22,
    "star3": 0.145,
    "star2": 0.4,
    "scoreP25": 20580,
@@ -504,7 +504,7 @@
     0.95
    ],
    "win": 0.74,
-   "randomWin": 0,
+   "randomWin": 0.16,
    "star3": 0.08,
    "star2": 0.39,
    "scoreP25": 25100,
@@ -533,7 +533,7 @@
     0.95
    ],
    "win": 0.895,
-   "randomWin": 0,
+   "randomWin": 0.12,
    "star3": 0.17,
    "star2": 0.435,
    "scoreP25": 38340,
@@ -562,7 +562,7 @@
     0.75
    ],
    "win": 0.74,
-   "randomWin": 0,
+   "randomWin": 0.02,
    "star3": 0.1,
    "star2": 0.355,
    "scoreP25": 39020,
@@ -591,7 +591,7 @@
     0.85
    ],
    "win": 0.66,
-   "randomWin": 0,
+   "randomWin": 0.18,
    "star3": 0.075,
    "star2": 0.3,
    "scoreP25": 24980,
@@ -620,7 +620,7 @@
     0.85
    ],
    "win": 0.73,
-   "randomWin": 0,
+   "randomWin": 0.04,
    "star3": 0.05,
    "star2": 0.295,
    "scoreP25": 23560,
@@ -649,7 +649,7 @@
     0.85
    ],
    "win": 0.78,
-   "randomWin": 0,
+   "randomWin": 0.16,
    "star3": 0.09,
    "star2": 0.355,
    "scoreP25": 29860,
@@ -678,7 +678,7 @@
     0.85
    ],
    "win": 0.805,
-   "randomWin": 0,
+   "randomWin": 0.1,
    "star3": 0.07,
    "star2": 0.455,
    "scoreP25": 38760,
@@ -707,7 +707,7 @@
     0.65
    ],
    "win": 0.57,
-   "randomWin": 0,
+   "randomWin": 0.06,
    "star3": 0.14,
    "star2": 0.235,
    "scoreP25": 32680,
@@ -736,7 +736,7 @@
     0.85
    ],
    "win": 0.725,
-   "randomWin": 0,
+   "randomWin": 0.08,
    "star3": 0.11,
    "star2": 0.355,
    "scoreP25": 32820,
@@ -765,7 +765,7 @@
     0.85
    ],
    "win": 0.805,
-   "randomWin": 0,
+   "randomWin": 0.18,
    "star3": 0.1,
    "star2": 0.405,
    "scoreP25": 30720,
@@ -793,28 +793,28 @@
     0.6,
     0.85
    ],
-   "win": 0.77,
-   "randomWin": 0,
-   "star3": 0.11,
-   "star2": 0.485,
-   "scoreP25": 47960,
-   "scoreP50": 58660,
-   "scoreP90": 89380,
+   "win": 0.745,
+   "randomWin": 0.2,
+   "star3": 0.12,
+   "star2": 0.435,
+   "scoreP25": 45220,
+   "scoreP50": 56700,
+   "scoreP90": 94640,
    "split": [
-    0.37012987012987014,
-    0.487012987012987,
-    0.14285714285714285
+    0.4161073825503356,
+    0.4228187919463087,
+    0.1610738255033557
    ],
-   "leftP50": 9,
+   "leftP50": 8,
    "winQ": [
-    39700,
-    61380,
-    85420
+    36560,
+    58460,
+    80940
    ],
-   "reshuffles": 0.43,
+   "reshuffles": 0.14,
    "recolorRate": 0,
    "capped": 0,
-   "greedyWin": 0.93,
+   "greedyWin": 0.89,
    "verdict": "ok"
   },
   "w3-09": {
@@ -823,7 +823,7 @@
     0.85
    ],
    "win": 0.695,
-   "randomWin": 0,
+   "randomWin": 0.04,
    "star3": 0.055,
    "star2": 0.215,
    "scoreP25": 30340,
@@ -881,7 +881,7 @@
     0.75
    ],
    "win": 0.7,
-   "randomWin": 0,
+   "randomWin": 0.06,
    "star3": 0.11,
    "star2": 0.335,
    "scoreP25": 29100,
@@ -910,7 +910,7 @@
     0.75
    ],
    "win": 0.695,
-   "randomWin": 0,
+   "randomWin": 0.02,
    "star3": 0.065,
    "star2": 0.335,
    "scoreP25": 28500,
@@ -939,7 +939,7 @@
     0.75
    ],
    "win": 0.69,
-   "randomWin": 0,
+   "randomWin": 0.04,
    "star3": 0.07,
    "star2": 0.375,
    "scoreP25": 28040,
@@ -968,7 +968,7 @@
     0.75
    ],
    "win": 0.545,
-   "randomWin": 0,
+   "randomWin": 0.04,
    "star3": 0.08,
    "star2": 0.295,
    "scoreP25": 33380,
@@ -997,7 +997,7 @@
     0.55
    ],
    "win": 0.4,
-   "randomWin": 0,
+   "randomWin": 0.02,
    "star3": 0.08,
    "star2": 0.21,
    "scoreP25": 37740,
@@ -1026,7 +1026,7 @@
     0.75
    ],
    "win": 0.54,
-   "randomWin": 0,
+   "randomWin": 0.02,
    "star3": 0.055,
    "star2": 0.19,
    "scoreP25": 57760,
@@ -1084,7 +1084,7 @@
     0.75
    ],
    "win": 0.6,
-   "randomWin": 0,
+   "randomWin": 0.06,
    "star3": 0.125,
    "star2": 0.255,
    "scoreP25": 39080,
@@ -1142,7 +1142,7 @@
     0.55
    ],
    "win": 0.46,
-   "randomWin": 0,
+   "randomWin": 0.02,
    "star3": 0.09,
    "star2": 0.16,
    "scoreP25": 24720,
@@ -1171,7 +1171,7 @@
     0.65
    ],
    "win": 0.525,
-   "randomWin": 0,
+   "randomWin": 0.02,
    "star3": 0.085,
    "star2": 0.205,
    "scoreP25": 43920,
@@ -1200,7 +1200,7 @@
     0.65
    ],
    "win": 0.455,
-   "randomWin": 0,
+   "randomWin": 0.04,
    "star3": 0.07,
    "star2": 0.19,
    "scoreP25": 28240,
@@ -1229,7 +1229,7 @@
     0.65
    ],
    "win": 0.665,
-   "randomWin": 0,
+   "randomWin": 0.02,
    "star3": 0.155,
    "star2": 0.32,
    "scoreP25": 71040,
@@ -1258,7 +1258,7 @@
     0.65
    ],
    "win": 0.59,
-   "randomWin": 0,
+   "randomWin": 0.06,
    "star3": 0.07,
    "star2": 0.275,
    "scoreP25": 44100,
@@ -1287,7 +1287,7 @@
     0.45
    ],
    "win": 0.205,
-   "randomWin": 0,
+   "randomWin": 0.02,
    "star3": 0.025,
    "star2": 0.085,
    "scoreP25": 46140,
@@ -1316,7 +1316,7 @@
     0.65
    ],
    "win": 0.625,
-   "randomWin": 0,
+   "randomWin": 0.02,
    "star3": 0.135,
    "star2": 0.315,
    "scoreP25": 35500,
@@ -1345,7 +1345,7 @@
     0.65
    ],
    "win": 0.605,
-   "randomWin": 0,
+   "randomWin": 0.02,
    "star3": 0.115,
    "star2": 0.345,
    "scoreP25": 55920,
@@ -1374,7 +1374,7 @@
     0.65
    ],
    "win": 0.47,
-   "randomWin": 0,
+   "randomWin": 0.02,
    "star3": 0.085,
    "star2": 0.295,
    "scoreP25": 51760,
@@ -1403,7 +1403,7 @@
     0.65
    ],
    "win": 0.685,
-   "randomWin": 0,
+   "randomWin": 0.02,
    "star3": 0.1,
    "star2": 0.375,
    "scoreP25": 33220,
@@ -1461,7 +1461,7 @@
     0.55
    ],
    "win": 0.375,
-   "randomWin": 0,
+   "randomWin": 0.02,
    "star3": 0.09,
    "star2": 0.14,
    "scoreP25": 86580,
@@ -1490,7 +1490,7 @@
     0.55
    ],
    "win": 0.53,
-   "randomWin": 0,
+   "randomWin": 0.02,
    "star3": 0.075,
    "star2": 0.29,
    "scoreP25": 42460,
@@ -1519,7 +1519,7 @@
     0.55
    ],
    "win": 0.42,
-   "randomWin": 0,
+   "randomWin": 0.02,
    "star3": 0.06,
    "star2": 0.185,
    "scoreP25": 49320,
@@ -1576,25 +1576,25 @@
     0.15,
     0.35
    ],
-   "win": 0.21,
+   "win": 0.225,
    "randomWin": 0,
-   "star3": 0.07,
-   "star2": 0.145,
-   "scoreP25": 48280,
-   "scoreP50": 36700,
-   "scoreP90": 65760,
+   "star3": 0.045,
+   "star2": 0.135,
+   "scoreP25": 44740,
+   "scoreP50": 40840,
+   "scoreP90": 66120,
    "split": [
-    0.30952380952380953,
-    0.35714285714285715,
-    0.3333333333333333
+    0.4,
+    0.4,
+    0.2
    ],
-   "leftP50": 3,
+   "leftP50": 2,
    "winQ": [
-    43620,
-    57760,
-    73980
+    37680,
+    54880,
+    75180
    ],
-   "reshuffles": 0.41,
+   "reshuffles": 0.015,
    "recolorRate": 0,
    "capped": 0,
    "greedyWin": 0.45,
@@ -1606,7 +1606,7 @@
     0.55
    ],
    "win": 0.47,
-   "randomWin": 0,
+   "randomWin": 0.02,
    "star3": 0.11,
    "star2": 0.275,
    "scoreP25": 61380,
@@ -1693,7 +1693,7 @@
     0.55
    ],
    "win": 0.6,
-   "randomWin": 0,
+   "randomWin": 0.14,
    "star3": 0.11,
    "star2": 0.195,
    "scoreP25": 21200,

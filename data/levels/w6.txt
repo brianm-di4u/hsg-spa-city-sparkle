@@ -164,7 +164,7 @@ l.l.l.l.l
 .........
 
 == w6-05 | Hotel Hale
-moves 23
+moves 20
 goal stone all
 goal crust all
 goal moss all
@@ -201,6 +201,16 @@ under
 .2222222.
 .2222222.
 .2222222.
+flow
+...vvv...
+.........
+..v...v..
+.v.....v.
+v.......v
+.vvvvvvv.
+.........
+.........
+.........
 
 == w6-06 | Maurice Restoration
 moves 21

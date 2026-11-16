@@ -18,8 +18,8 @@ cells
 .......
 
 == w1-02 | Superior
-moves 17
-goal collect a 26
+moves 16
+goal collect a 30
 stars 12000 32500 55000
 weights abcde
 band 0.90 1.00
@@ -37,7 +37,7 @@ cells
 
 == w1-03 | Hale
 moves 17
-goal collect b 26
+goal collect b 33
 goal score 5500
 stars 14000 34000 56000
 weights abcde
@@ -56,7 +56,7 @@ cells
 
 == w1-04 | Maurice
 moves 15
-goal collect c 22
+goal collect c 26
 stars 10000 23500 33500
 weights abcde
 band 0.90 1.00

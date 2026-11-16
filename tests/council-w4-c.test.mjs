@@ -2,6 +2,7 @@
 // Nothing here depends on chance or the clock: boards and levels are seeded, waits are for conditions, and the level checks run the engine in Node.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 export const tests = [];
 const same = (t, a, b, m) => t.equal(JSON.stringify(a), JSON.stringify(b), m);
@@ -270,5 +271,58 @@ tests.push({
     await t.waitIdle();
     t.equal(await t.page.locator('#modal .bonus-card').count(), 0, 'the postcard card has none');
     t.expect(!(await t.state()).bonus.includes('hs-0582'), 'and none is earned');
+  },
+});
+
+// --- S3-07 and S3-09: the first levels test a little, and two levels no longer reshuffle every other game -------------------------------
+// The engine and both bots are seeded (seed 1000 + n), so the same numbers come out every run: nothing here depends on luck. The thresholds
+// sit between what the old levels gave and what the new ones give on these very seeds (the figures are in the batch report).
+const LEVELS = JSON.parse(fs.readFileSync(new URL('../data/levels.json', import.meta.url), 'utf8'));
+const levelOf = (id) => LEVELS.find((l) => l.id === id);
+async function played(id, strategy, n) {
+  const { playLevel } = await import('../tools/bots.mjs');
+  let won = 0, reshuffles = 0;
+  for (let s = 1; s <= n; s++) { const r = playLevel(levelOf(id), 1000 + s, strategy); if (r.won) won++; reshuffles += r.reshuffles; }
+  return { win: won / n, reshuffles: reshuffles / n };
+}
+tests.push({
+  name: 'S3-07 a random-swap bot wins w1-02 to w1-04 well under 45 percent of 300 seeded games (it won 56 to 64 percent before)',
+  node: true,
+  async run() {
+    for (const id of ['w1-02', 'w1-03', 'w1-04']) {
+      const r = await played(id, 'random', 300);
+      assert.ok(r.win < 0.45, `${id}: random bot won ${(r.win * 100).toFixed(1)}%, want under 45%`);
+    }
+  },
+});
+tests.push({
+  name: 'S3-07 a player who matches on purpose still wins w1-02 to w1-04 nine times in ten, by the balance report',
+  node: true,
+  run() {
+    const r = JSON.parse(fs.readFileSync(new URL('../tools/balance-report.json', import.meta.url), 'utf8'));
+    for (const id of ['w1-02', 'w1-03', 'w1-04']) {
+      assert.ok(r.levels[id].win >= 0.88, `${id}: casual win ${r.levels[id].win}`);
+      assert.ok(r.levels[id].randomWin < 0.5 && r.randomSeeds >= 50, `${id}: the report measured the random bot (${r.randomSeeds} seeds) and it won ${r.levels[id].randomWin}`);
+    }
+  },
+});
+tests.push({
+  name: 'S3-09 w3-08 and w6-05 reshuffle far less than one game in two: the cells under their blockers refill',
+  node: true,
+  async run() {
+    const a = await played('w3-08', 'casual', 30), b = await played('w6-05', 'casual', 25);
+    assert.ok(a.reshuffles <= 0.3, `w3-08: ${a.reshuffles.toFixed(2)} reshuffles a game, want 0.3 or less (0.43 before)`);
+    assert.ok(b.reshuffles <= 0.1, `w6-05: ${b.reshuffles.toFixed(2)} reshuffles a game, want 0.1 or less (0.41 before)`);
+  },
+});
+tests.push({
+  name: 'S3-09 the level check finds no starved cell on w6-05 and only the two walled-in ones on w3-08',
+  node: true,
+  async run() {
+    const { execFileSync } = await import('node:child_process');
+    const out = execFileSync(process.execPath, [new URL('../tools/check-levels.mjs', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1').replace(/%20/g, ' ')], { encoding: 'utf8' });
+    assert.ok(!/w6-05: \d+ cells refill/.test(out), 'w6-05 has no cell that waits for a blocker to break');
+    assert.match(out, /w3-08: 2 cells refill only after blockers break/, 'w3-08 keeps its two walled-in cells');
+    assert.match(out, /0 errors/);
   },
 });
