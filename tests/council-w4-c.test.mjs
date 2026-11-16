@@ -326,3 +326,40 @@ tests.push({
     assert.match(out, /0 errors/);
   },
 });
+
+// --- C4-12: the card's inner frame line stays on the card's edge when a long card scrolls ---------------------------------------------
+// The line is read from real pixels: a thin strip at the card's bottom-left and top-left corners (seven pixels in from the edge, where the line runs)
+// against the paper just above and below it. Before the fix the line was a pseudo-element inside the scroller and scrolled away with the content.
+async function linePixels(t, where) {
+  const box = await t.page.evaluate(() => { const r = document.querySelector('#modal .card').getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; });
+  const y = where === 'bottom' ? box.y + box.h - 14 : box.y + 1;
+  const png = await t.page.screenshot({ clip: { x: box.x + 30, y, width: 40, height: 13 }, scale: 'css' });
+  return t.page.evaluate(async (b64) => {
+    const bmp = await createImageBitmap(await (await fetch('data:image/png;base64,' + b64)).blob());
+    const c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height;
+    const g = c.getContext('2d'); g.drawImage(bmp, 0, 0);
+    const rows = [];
+    for (let row = 0; row < bmp.height; row++) { const d = g.getImageData(0, row, bmp.width, 1).data; let sum = 0; for (let i = 0; i < d.length; i += 4) sum += d[i + 1]; rows.push(sum / (d.length / 4)); } // the green channel: the line is reddish, so green drops
+    return rows;
+  }, png.toString('base64'));
+}
+tests.push({
+  name: 'C4-12 a long Settings card keeps its frame line on the card edge at the top and the bottom of its scroll',
+  async run(t) {
+    await t.game('scene', 'settings');
+    await t.waitIdle();
+    const css = await t.page.evaluate(() => { const c = document.querySelector('#modal .card'); const cs = getComputedStyle(c), af = getComputedStyle(c, '::after'); return { outline: cs.outlineWidth, offset: cs.outlineOffset, after: af.content, scrolls: c.scrollHeight > c.clientHeight }; });
+    t.equal(css.after === 'none' || css.after === 'normal', true, 'no pseudo-element line left inside the scroller');
+    t.equal(parseFloat(css.outline) >= 1 && parseFloat(css.offset) < 0, true, 'the line is the card outline, drawn inside its edge');
+    if (t.viewport === 'mobile') t.expect(css.scrolls, 'at phone size the Settings card does scroll (the case this is about)');
+    await t.page.locator('#modal .card').evaluate((e) => { e.scrollTop = e.scrollHeight; });
+    const bottom = await linePixels(t, 'bottom');
+    const hasLine = (rows) => rows.some((v, i) => i >= 2 && i < rows.length - 2 && Math.min(rows[i - 2], rows[i + 2]) - v > 12); // a row clearly less green than the paper two rows either side
+    t.expect(hasLine(bottom), `the line runs along the bottom edge after scrolling down (rows ${bottom.map((v) => Math.round(v)).join(' ')})`);
+    await t.page.locator('#modal .card').evaluate((e) => { e.scrollTop = 0; });
+    const top = await linePixels(t, 'top');
+    t.expect(hasLine(top), `and along the top edge at the top (rows ${top.map((v) => Math.round(v)).join(' ')})`);
+    await t.page.locator('#modal .card').evaluate((e) => { e.scrollTop = e.scrollHeight; });
+    await t.shot('C4-12-settings-scrolled');
+  },
+});
