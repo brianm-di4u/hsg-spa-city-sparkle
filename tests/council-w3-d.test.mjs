@@ -171,8 +171,9 @@ tests.push({
   },
 });
 
-// The results card: the win phrase at once, a star cue for each star at 380, 560 and 740 ms and the earned chime at 1170 ms (screens.js), over the results piece and the world's bed.
-const RESULTS = (stars) => [{ name: 'win', arg: stars, at: 0, seed: 1 }, ...Array.from({ length: stars }, (_, k) => ({ name: 'star', arg: k + 1, at: 0.2 + (k + 1) * 0.18, seed: 2 + k })), { name: 'earned', arg: 0, at: 1.17, seed: 5 }];
+// The results card as screens.js plays it: the win phrase at once, a star cue for each star at 380, 560 and 740 ms and the earned chime at 810, 990 or 1170 ms for 1, 2 or 3 stars
+// (200 + (stars + 1) x 180 + 250 ms), over the results piece and the world's bed. The mix starts 0.2 s into the render (C4-06). Was a fixed 1.17 s for the earned chime, which read 0.95 or less.
+const RESULTS = (stars) => [{ name: 'win', arg: stars, at: 0, seed: 1 }, ...Array.from({ length: stars }, (_, k) => ({ name: 'star', arg: k + 1, at: 0.2 + (k + 1) * 0.18, seed: 2 + k })), { name: 'earned', arg: 0, at: (200 + (stars + 1) * 180 + 250) / 1000, seed: 5 }];
 tests.push({
   name: 'CL-01 the results card (win phrase, star cues, results music, earned) stays under 0.95 at the maximum volume for 1, 2 and 3 stars',
   viewports: ['desktop'],

@@ -199,3 +199,54 @@ tests.push({
     t.log(`at the maximum volume ${clip.length} cues alone reach 0.95 or more: ${clip.map((r) => `${r.name} ${r.full}`).join(', ')}`);
   },
 });
+
+// --- C4-07: the results card at full volume, with the timing screens.js really uses -----------------------------------------------
+tests.push({
+  name: 'C4-07 the results cards ring the stars (at the card levels) and the earned chime at the times the test below uses (380, 560, 740 ms; 810, 990, 1170 ms)',
+  node: true,
+  run() {
+    const src = read('src/js/ui/screens.js');
+    assert.equal((src.match(/sfx\('star', (n|k), \{ level: CARD_STAR_LEVEL\[(n|k)\] \}\), 200 \+ (n|k) \* 180\)/g) || []).length, 2, 'both result cards ring star n at its card level at 200 + n x 180 ms');
+    assert.equal((src.match(/sfx\('earned'\); \}, 200 \+ \(stars \+ 1\) \* 180 \+ 250\)/g) || []).length, 2, 'and the earned chime at 200 + (stars + 1) x 180 + 250 ms');
+  },
+});
+const MAX = { volume: 1 };
+// What the game really asks for on its results card: the level of each star cue, read from the calls the card makes (so a card that stopped passing its levels is seen).
+async function liveStarLevels(t) {
+  await t.game('newGame', { level: 'w1-01', seed: 3, tips: false });
+  await t.waitIdle();
+  await t.page.evaluate(() => { const s = window.__game.engineState(); s.phase = 'won'; s.starsWon = 3; s.movesLeft = 0; for (const g of s.goals) g.have = g.type === 'score' ? s.score : g.need; window.__game.setState(s); window.__game.act('win'); });
+  await t.page.waitForFunction(() => [1, 2, 3].every((n) => window.__game.getState().calls.some((c) => c.name === 'star' && c.arg === n)), null, { timeout: 8000 });
+  const calls = (await t.state()).calls, level = {};
+  for (const n of [1, 2, 3]) level[n] = calls.filter((c) => c.name === 'star' && c.arg === n).pop().level;
+  return level;
+}
+tests.push({
+  name: 'C4-07 the results card stays under 0.95 at the maximum volume for 1, 2 and 3 stars over every bed, with the stars and the earned chime struck up to 50 ms early or late',
+  viewports: ['desktop'],
+  async run(t) {
+    const L = await t.game('audioList'), worst = { 1: 0, 2: 0, 3: 0 }, at = {}, live = await liveStarLevels(t);
+    t.log(`the card's own star levels: ${JSON.stringify(live)}`);
+    t.expect(live[1] < 1 && live[2] < 1 && live[3] < 1, 'the card rings its stars turned down');
+    for (const stars of [1, 2, 3]) for (const bed of [null, ...L.ambience]) for (const shift of [-0.05, 0, 0.05]) for (const seed of [1, 7]) {
+      const cues = [{ name: 'win', arg: stars, at: 0, seed }, ...Array.from({ length: stars }, (_, k) => ({ name: 'star', arg: k + 1, at: 0.2 + (k + 1) * 0.18 + shift, seed: seed + 1 + k, opt: { level: live[k + 1] } })), { name: 'earned', arg: 0, at: (200 + (stars + 1) * 180 + 250) / 1000 + shift, seed: seed + 9 }];
+      const p = (await t.game('mixRender', { piece: 'results', bed, seconds: 4, levels: MAX, cues })).peak;
+      if (p > worst[stars]) { worst[stars] = p; at[stars] = `${bed || 'no bed'}, shift ${shift}, seed ${seed}`; }
+    }
+    t.log(`worst card at the maximum volume: 1 star ${worst[1]} (${at[1]}), 2 stars ${worst[2]} (${at[2]}), 3 stars ${worst[3]} (${at[3]})`);
+    for (const stars of [1, 2, 3]) t.expect(worst[stars] < 0.95, `the ${stars} star card peaks ${worst[stars]} at worst (${at[stars]}), under 0.95`);
+  },
+});
+tests.push({
+  name: 'C4-07 the first star cue, struck at its card level, is as heard inside the gameplay range, and a 3 star win is still the fuller card',
+  viewports: ['desktop'],
+  async run(t) {
+    const live = await liveStarLevels(t), med = (xs) => xs.slice().sort((a, b) => a - b)[Math.floor(xs.length / 2)], star = {};
+    for (const arg of [1, 2, 3]) { const xs = []; for (const seed of [1, 2, 3, 4, 5]) xs.push((await t.game('cueRender', 'star', arg, { level: live[arg] }, 3, false, seed)).peak); star[arg] = med(xs); }
+    t.log(`star cues as heard at their card levels, default volume, median of 5: 1 ${star[1]}, 2 ${star[2]}, 3 ${star[3]}`);
+    t.expect(star[1] >= 0.2 && star[1] <= 0.45, `the first star cue peaks ${star[1]} as heard on the card, inside 0.2 to 0.45`);
+    const card = (stars) => t.game('mixRender', { piece: 'results', seconds: 4, levels: { volume: 0.5 }, cues: [{ name: 'win', arg: stars, at: 0, seed: 1 }, ...Array.from({ length: stars }, (_, k) => ({ name: 'star', arg: k + 1, at: 0.2 + (k + 1) * 0.18, seed: 2 + k, opt: { level: live[k + 1] } }))] });
+    const one = await card(1), three = await card(3);
+    t.expect(three.rms > one.rms, `the 3 star card carries more sound than the 1 star card (rms ${three.rms} against ${one.rms})`);
+  },
+});

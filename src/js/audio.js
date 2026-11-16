@@ -98,6 +98,11 @@ const note = (base, step) => {
 const WIN_FIT = [1, 1, 0.6, 0.38];
 // The star cues of the results card ring one after another under the win phrase and over the music; each is turned down (measured with mixRender at a delayed start, as it sounds live) so the whole card stays under 0.95 at the maximum volume.
 const STAR_FIT = [1, 0.8, 0.8, 0.83];
+// The results cards ring the stars a second time at these levels (screens.js), measured with the card's real timing (win at 0, stars at 380, 560 and 740 ms, the earned chime at 810, 990 or 1170 ms,
+// the mix starting 0.2 s in) over every bed, with the stars and the chime struck 50 ms early or late and two draws of each cue, at the maximum volume. The first star rings in every card and over the
+// win phrase, and the cards read 0.99 (1 star), 0.95 (2) and 0.96 (3) over the worst bed; with these they read 0.91, 0.91 and 0.92. Alone, a star cue keeps the level STAR_FIT gives it, so the
+// fitting of a cue by itself (S5-02) is untouched. Was [1, 1, 1, 1].
+export const CARD_STAR_LEVEL = [1, 0.55, 0.85, 0.72];
 // Level trim per cue, measured with cueRender so gameplay cues peak between 0.2 and 0.45 at the default volume (before this they peaked 0.01 to 0.15).
 const CUE_TRIM = { select: 25, swap: 23, bounce: 24, match: 10.6, cascade: 13.6, stone: 7.4, crystal: 6.6, special: 14, tufa: 29, lock: 37, moss: 33, fog: 17, token: 11, spread: 80, reshuffle: 12, win: 5.4, lose: 5.8, star: 19, click: 59, booster: 24, goal: 5.7, low: 7, world: 5.5, earned: 7.3, intro: 5.7, combo: 7.6, starline: 17, encore: 6.1 };
 export { tuneOf };

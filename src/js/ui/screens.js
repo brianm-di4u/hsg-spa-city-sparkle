@@ -5,7 +5,7 @@ import { SAVE, STAR_STEP, reliefFor, changeSettings, markTutorial, saveDaily, re
 import { cloneState } from '../engine/game.js';
 import { goalIcon, PIECES, ICON_IMAGES } from '../view/vector-art.js';
 import { VIEW, WORLD_LOOK, requestRender, setQuality } from '../view/stage.js';
-import { sfx, setMood, holdMusic, releaseMusic, AUDIO, applyLevels, unlockAudio } from '../audio.js';
+import { sfx, setMood, holdMusic, releaseMusic, AUDIO, applyLevels, unlockAudio, CARD_STAR_LEVEL } from '../audio.js';
 import { TIPS } from './tips.js';
 import { atmosphere } from './atmos.js';
 import { dailyLevel, dayKey, addDays, streakNow, cleanDaily } from './daily.js';
@@ -362,7 +362,7 @@ export function onWin(s, L) {
     ${achievementLines(fresh)}
     ${card ? `<div class="lore${paint('card-frame') ? ' framed' : ''}" style="${paint('card-frame') ? `--card-frame: url(${paint('card-frame')})` : ''}" aria-label="Lore card"><span class="tag">Real history</span><h4>${esc(card.title)}</h4><p>${esc(card.text)}</p><p class="src">Source: ${esc(card.source)}</p></div>` : ''}
     <div class="actions">${next && !worldComplete ? '<button class="btn" data-act="next" data-focus>Next level</button>' : ''}${worldComplete ? '<button class="btn" data-act="world" data-focus>Postcard restored!</button>' : ''}<button class="btn alt small" data-act="replay">Replay</button><button class="btn alt small" data-act="map">Map</button></div>`, { label: 'Level cleared' });
-  stars && [1, 2, 3].slice(0, stars).forEach((n) => setTimeout(() => sfx('star', n), 200 + n * 180));
+  stars && [1, 2, 3].slice(0, stars).forEach((n) => setTimeout(() => sfx('star', n, { level: CARD_STAR_LEVEL[n] }), 200 + n * 180));
   if (rewards.length || fresh.length) setTimeout(() => { if (UI.scene === 'win') sfx('earned'); }, 200 + (stars + 1) * 180 + 250);
   if (fresh.length) announce(`New achievement: ${fresh.map((a) => a.name).join(', ')}.`);
   celebrate(m, L.world);
@@ -713,7 +713,7 @@ function onDailyWin(s, L) {
     <p class="daily-line" style="text-align:center"><b>${plural(o.streak != null ? o.streak : streakNow(d, L.dayKey), 'day')}</b> in a row · best ever ${n(SAVE.soakBest || total)}</p>
     ${achievementLines(fresh)}
     <div class="actions"><button class="btn" data-act="again" data-focus>Play again</button><button class="btn alt small" data-act="back">Home</button></div>`, { label: 'Daily cleared' });
-  stars && [1, 2, 3].slice(0, stars).forEach((k) => setTimeout(() => sfx('star', k), 200 + k * 180));
+  stars && [1, 2, 3].slice(0, stars).forEach((k) => setTimeout(() => sfx('star', k, { level: CARD_STAR_LEVEL[k] }), 200 + k * 180));
   if (fresh.length) { setTimeout(() => { if (UI.scene === 'win') sfx('earned'); }, 200 + (stars + 1) * 180 + 250); announce(`New achievement: ${fresh.map((a) => a.name).join(', ')}.`); }
   celebrate(m, L.world);
   bindActs(m, { again: () => startDaily(), back: () => showTitle() });
