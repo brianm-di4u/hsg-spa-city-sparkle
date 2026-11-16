@@ -231,39 +231,45 @@ export const audioList = () => ({ music: Object.keys(SCORES), ambience: Object.k
 // its maximum) and the limiter. Every hook below builds it the same way, so a measurement is what the speakers get.
 const offlineMaster = (ctx, out, lv = {}) => { const master = ctx.createGain(); master.gain.value = safeVolume(lv.volume ?? 0.5) * MASTER_SCALE; master.connect(limiter(ctx)).connect(out); return master; };
 const offlineSfx = (ctx, master, lv = {}) => { const g = ctx.createGain(); g.gain.value = safeVolume(lv.sfxVolume ?? 1, 1); g.connect(master); return g; };
+// Everything a render measures starts RENDER_START seconds into it, as it does in the live game (a cue never sounds at the instant the context
+// starts). The offline limiter reads a sound in its first 0.2 s two to four times low: tufa alone at the default volume reads 0.28 from time 0 and 0.91
+// from 0.2 s. levels.start moves the start (0 gives the old reading, which the older fitting tests of waves 2 and 3 were written against).
+export const RENDER_START = 0.2;
+const startOf = (lv = {}) => (Number.isFinite(lv.start) && lv.start >= 0 ? lv.start : RENDER_START);
 export function audioRender(name, seconds = 30, wantWav = false, levels = {}) {
-  const score = SCORES[name], scene = SCENES[name];
+  const score = SCORES[name], scene = SCENES[name], t0 = startOf(levels);
   if (!score && !scene) return Promise.reject(new Error('unknown audio: ' + name));
   return measureAudio((ctx, out) => {
     const master = offlineMaster(ctx, out, levels);
     const kit = makeAudioKit(ctx, master, { seed: 0x5EED1 });
     kit.music.level(MUSIC_LEVEL * safeVolume(levels.musicVolume ?? 1, 1)); kit.amb.level(AMBIENCE_LEVEL * safeVolume(levels.ambience ?? 1, 1));
     kit.mute(safeVolume(levels.volume ?? 0.5) === 0); // the same rule the live game follows: at volume 0 nothing is built
-    if (score) kit.music.play(score, { fade: 0.05, at: 0 }); else kit.amb.play(scene, { fade: 0.05, at: 0 });
-    kit.scheduleUntil(seconds);
+    if (score) kit.music.play(score, { fade: 0.05, at: t0 }); else kit.amb.play(scene, { fade: 0.05, at: t0 });
+    kit.scheduleUntil(t0 + seconds);
     return () => { const b = score && kit.music.info(); return b && { ...b, formSeconds: +((b.formBars * (score.beats || 4) * 60) / score.bpm).toFixed(1) }; };
-  }, seconds, { wav: wantWav });
+  }, t0 + seconds, { wav: wantWav });
 }
-// One cue on its own offline context at the shipping level (default volume, master and limiter). seed picks the random
+// One cue on its own offline context at the shipping level (default volume, master and limiter), struck RENDER_START seconds in. seed picks the random
 // variation, so a test can render the same cue twice with different draws. Never touches the live audio.
 export function cueRender(name, arg = 0, opt = {}, seconds = 2.5, wantWav = false, seed = 1, levels = {}) {
   if (!CUE_NAMES.includes(name)) return Promise.reject(new Error('unknown cue: ' + name));
+  const t0 = startOf(levels);
   return measureAudio((ctx, out) => {
     const master = offlineMaster(ctx, out, levels);
-    runCue(name, arg, { tune: tuneOf(opt.score), ...opt }, ctx, offlineSfx(ctx, master, levels), seeded(seed));
-  }, seconds, { wav: wantWav });
+    runCue(name, arg, { tune: tuneOf(opt.score), ...opt, at: t0 + (opt.at || 0) }, ctx, offlineSfx(ctx, master, levels), seeded(seed));
+  }, t0 + seconds, { wav: wantWav });
 }
 // The busiest moment: a piece at full intensity, a bed and a run of cues struck together, as one render. spec = { piece, bed, cues: [{ name, arg, opt, at, seed }],
-// seconds, levels }. The big cues' ducking of the music is left out, which is the louder, safer case to measure.
+// seconds, levels }; every time is counted from RENDER_START. The big cues' ducking of the music is left out, which is the louder, safer case to measure.
 export function mixRender(spec) {
-  const { piece, bed, cues = [], seconds = 6, levels = {} } = spec;
+  const { piece, bed, cues = [], seconds = 6, levels = {} } = spec, t0 = startOf(levels);
   return measureAudio((ctx, out) => {
     const master = offlineMaster(ctx, out, levels), sfxBus = offlineSfx(ctx, master, levels);
     const kit = makeAudioKit(ctx, master, { seed: 0x5EED1 });
     kit.music.level(MUSIC_LEVEL * safeVolume(levels.musicVolume ?? 1, 1)); kit.amb.level(AMBIENCE_LEVEL); kit.music.intensity(1);
-    if (piece) kit.music.play(SCORES[piece], { fade: 0.05, at: 0 });
-    if (bed) kit.amb.play(SCENES[bed], { fade: 0.05, at: 0 });
-    kit.scheduleUntil(seconds);
-    for (const c of cues) runCue(c.name, c.arg || 0, { ...(c.opt || {}), at: c.at || 0 }, ctx, sfxBus, seeded(c.seed || 1));
-  }, seconds, {});
+    if (piece) kit.music.play(SCORES[piece], { fade: 0.05, at: t0 });
+    if (bed) kit.amb.play(SCENES[bed], { fade: 0.05, at: t0 });
+    kit.scheduleUntil(t0 + seconds);
+    for (const c of cues) runCue(c.name, c.arg || 0, { ...(c.opt || {}), at: t0 + (c.at || 0) }, ctx, sfxBus, seeded(c.seed || 1));
+  }, t0 + seconds, {});
 }

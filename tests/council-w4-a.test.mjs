@@ -152,3 +152,50 @@ tests.push({
     t.equal(await rawOf(t, KEY + ':corrupt'), bad, 'the old text is kept');
   },
 });
+
+// --- C4-06: the sound measuring tools start every cue and mix 0.2 s in -----------------------------------------------------------
+// Chromium's offline limiter reads a sound in the first 0.2 s two to four times low (tufa alone at the default volume: 0.28 from time 0, 0.96 from 0.2 s), so a cue
+// rendered at time 0 passed "alone under 0.95" and "0.2 to 0.45" checks that the live game, which never sounds a cue at the instant its context starts, does not.
+tests.push({
+  name: 'C4-06 cueRender, mixRender and audioRender start their sound 0.2 s into the render, and levels.start puts it back at 0',
+  viewports: ['desktop'],
+  async run(t) {
+    const honest = await t.game('cueRender', 'tufa', 0, {}, 2.5, false, 1), legacy = await t.game('cueRender', 'tufa', 0, {}, 2.5, false, 1, { start: 0 });
+    t.expect(honest.peak > legacy.peak * 1.5, `tufa alone reads ${honest.peak} from 0.2 s and ${legacy.peak} from time 0: the old reading was far too low`);
+    t.equal(honest.seconds, 2.7, 'the render is 0.2 s longer than asked, so the whole cue is inside it');
+    t.equal(legacy.seconds, 2.5, 'and start: 0 gives the old length');
+    const silent = await t.game('cueRender', 'tufa', 0, {}, 0, false, 1);
+    t.equal(silent.peak, 0, 'nothing sounds in the first 0.2 s');
+    const mix = await t.game('mixRender', { seconds: 2.5, cues: [{ name: 'tufa', arg: 0, at: 0, seed: 1 }] });
+    t.expect(Math.abs(mix.peak - honest.peak) < 0.005, `the same cue in mixRender at 0 reads ${mix.peak}, as cueRender (${honest.peak})`);
+    t.equal(mix.seconds, 2.7, 'a mix starts 0.2 s in as well');
+    const piece = await t.game('audioRender', 'title', 3, false);
+    t.equal(piece.seconds, 3.2, 'a piece starts 0.2 s in');
+    t.equal((await t.game('audioRender', 'title', 3, false, { start: 0 })).seconds, 3, 'and start: 0 puts it back');
+    const full = await t.game('cueRender', 'tufa', 0, {}, 2.5, false, 1, { volume: 1 });
+    t.expect(full.peak > honest.peak, `at the maximum volume the same cue reads ${full.peak}, above ${honest.peak}: the hook takes the volume the full-volume tool needs`);
+  },
+});
+tests.push({
+  name: 'C4-06 every cue re-read as heard (0.2 s in): the gameplay range and the full-volume reading, with the older reading beside them',
+  viewports: ['desktop'],
+  async run(t) {
+    const L = await t.game('audioList'), rows = [];
+    const med = (xs) => xs.slice().sort((a, b) => a - b)[Math.floor(xs.length / 2)];
+    for (const name of L.cues) {
+      const arg = { match: 3, token: 2, star: 2, starline: 2, low: 3 }[name] || 0, opt = name === 'match' ? { size: 5 } : {}, d = [], o = [], f = [];
+      for (const seed of [1, 2, 3, 4, 5]) {
+        d.push((await t.game('cueRender', name, arg, opt, 3, false, seed)).peak);
+        o.push((await t.game('cueRender', name, arg, opt, 3, false, seed, { start: 0 })).peak);
+        f.push((await t.game('cueRender', name, arg, opt, 3, false, seed, { volume: 1 })).peak);
+      }
+      rows.push({ name, heard: med(d), fromZero: med(o), full: Math.max(...f) });
+      t.expect(med(d) >= med(o) * 0.9, `${name}: heard ${med(d)} is not below the time-0 reading ${med(o)}`);
+      t.expect(Math.max(...f) > med(d), `${name}: the full-volume reading ${Math.max(...f)} is above the default ${med(d)}`);
+    }
+    const out = rows.filter((r) => r.heard < 0.2 || r.heard > 0.45), clip = rows.filter((r) => r.full >= 0.95);
+    t.log(`default volume, median of 5 draws, as heard (from time 0 in brackets): ${rows.map((r) => `${r.name} ${r.heard} (${r.fromZero})`).join('; ')}`);
+    t.log(`${out.length} of ${rows.length} cues sit outside 0.2 to 0.45 as heard: ${out.map((r) => r.name).join(', ')}`);
+    t.log(`at the maximum volume ${clip.length} cues alone reach 0.95 or more: ${clip.map((r) => `${r.name} ${r.full}`).join(', ')}`);
+  },
+});

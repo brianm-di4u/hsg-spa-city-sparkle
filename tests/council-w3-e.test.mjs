@@ -3,6 +3,10 @@
 // Nothing here depends on chance: boards are seeded, waits are for conditions, and the sound checks count what the audio graph builds
 // (the offline render uses a seeded kit) instead of listening to a timer.
 export const tests = [];
+// Fitted from time 0 (wave 2 and 3): cueRender now starts a cue at 0.2 s by default (C4-06), where the offline limiter reads a cue two to four times
+// louder, so the fitting checks below pass start: 0 to keep reading what they were fitted against. The reading as heard is in council-w4-a; the trims that
+// bring it into range wait for the owner's loudness pass.
+const FROM_ZERO = { start: 0 };
 
 // --- S6-14: one shared noise buffer, and nothing built for a bus nobody can hear -----------------------------------------------
 const NOISY = ['swap', 'tufa', 'fog', 'cascade', 'bounce', 'match', 'crystal', 'combo', 'stone', 'moss'];
@@ -30,7 +34,7 @@ tests.push({
   async run(t) {
     for (const name of ['swap', 'tufa', 'fog']) {
       const peaks = [];
-      for (let seed = 1; seed <= 8; seed++) peaks.push((await t.game('cueRender', name, 0, {}, 2, false, seed)).peak);
+      for (let seed = 1; seed <= 8; seed++) peaks.push((await t.game('cueRender', name, 0, {}, 2, false, seed, FROM_ZERO)).peak);
       const sorted = peaks.slice().sort((a, b) => a - b), median = sorted[4];
       t.expect(median >= 0.2 && median <= 0.45, `${name} median peak ${median.toFixed(3)} is inside 0.2 to 0.45`);
       t.expect(new Set(peaks.map((p) => p.toFixed(4))).size >= 4, `${name}: repeats differ (${peaks.map((p) => p.toFixed(3)).join(' ')})`);
