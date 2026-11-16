@@ -163,8 +163,8 @@ export function runCue(name, arg, opt, ctx, dest, rnd) {
   try { buildCue(name, arg, opt); } finally { CUE = prev; }
 }
 // Cues struck together (the sounds of one beat, or of every beat a skip folds into one) get quieter as they pile up, so even at the maximum
-// volume they stay under 0.95 at the speakers (measured in tests/council-w3-d). Up to three together are as loud as one.
-export const crowdLevel = (n) => (n <= 3 ? 1 : Math.max(0.3, 2.5 / n));
+// volume a folded set (goal, combo, crystal, match, stone ...) stays under 0.95 at the speakers, summed (tests/council-w3-d). Up to three together are as loud as one.
+export const crowdLevel = (n) => (n <= 3 ? 1 : Math.max(0.2, 1.5 / n));
 // The big cues pull the music down for a moment so they are heard over it.
 const DUCKS = { win: [6, 700], lose: [6, 700], world: [6, 1100] };
 

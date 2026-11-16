@@ -432,23 +432,22 @@ tests.push({
     t.expect(Object.values(once).every((k) => k <= 2), `no cue is played more than twice (${JSON.stringify(once)})`);
   },
 });
+// A skipped move folds the cues of every beat it skipped into one set (play.js skippedSounds), so a long chain can strike a goal, a combo, a crystal, a match and a stone together. The sets below add one cue at a time in the order of the verifier's loudest realistic fold; each is measured as a SUM (all cues together over the loudest piece and a bed, delayed so the limiter has warmed up), each cue at the crowd level for the set's size.
+const FOLD = ['goal', 'combo', 'crystal', 'match', 'stone', 'tufa', 'lock', 'special'];
 tests.push({
-  name: 'S5-03 even the most cues a move can pile up stay under 0.95 at the maximum volume',
+  name: 'S5-03 the folded cues of a skipped move, summed, stay under 0.95 at the maximum volume',
   viewports: ['desktop'],
   async run(t) {
     const list = await t.game('audioList');
     const pieces = [];
     for (const name of list.music) pieces.push([name, (await t.game('audioRender', name, 12, false, MAX)).peak]);
     pieces.sort((a, b) => b[1] - a[1]);
-    const loud = [];
-    for (const name of ONE_MOVE) loud.push([name, (await t.game('cueRender', name, 3, {}, 2.5, false, 1, MAX)).peak]);
-    loud.sort((a, b) => b[1] - a[1]);
     const out = [];
-    for (const n of [4, 5, 6, 7, 8]) {
+    for (let n = 4; n <= FOLD.length; n++) {
       const level = await t.game('crowdLevel', n);
-      const mix = await t.game('mixRender', { piece: pieces[0][0], bed: 'rain', seconds: 4, levels: MAX, cues: loud.slice(0, n).map(([name], k) => ({ name, arg: 3, at: 1 + k * 0.04, seed: 1 + k, opt: { level } })) });
-      out.push(`${n} cues at level ${level}: ${mix.peak}`);
-      t.expect(mix.peak < 0.95, `${n} cues together, each at ${level}, peak ${mix.peak}, under 0.95`);
+      const mix = await t.game('mixRender', { piece: pieces[0][0], bed: 'rain', seconds: 4, levels: MAX, cues: FOLD.slice(0, n).map((name, k) => ({ name, arg: 3, at: 1 + k * 0.04, seed: 1 + k, opt: { level } })) });
+      out.push(`${n} cues at level ${level.toFixed(2)}: ${mix.peak}`);
+      t.expect(mix.peak < 0.95, `the first ${n} folded cues (${FOLD.slice(0, n).join(', ')}) summed at level ${level.toFixed(2)} peak ${mix.peak}, under 0.95`);
     }
     t.log(out.join('; '));
     t.equal(await t.game('crowdLevel', 3), 1, 'three cues or fewer are as loud as one');
