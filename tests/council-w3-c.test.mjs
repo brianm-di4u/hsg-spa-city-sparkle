@@ -292,7 +292,7 @@ tests.push({
     const c = recordCounts(save, LEVELS_NODE);
     t.equal(c.cleared, 3, 'three levels cleared'); t.equal(c.stars, 6, 'six stars'); t.equal(c.threeStar, 1, 'one three-star win');
     t.equal(c.worlds, 1, 'world 1 is whole'); t.equal(c.worldCount, 2, 'of two');
-    t.equal(c.runs, 4, 'four runs'); t.equal(c.wins, 2, 'two wins'); t.equal(c.comebacks, 1, 'one level was won after a loss');
+    t.equal(c.runs, 5, 'five runs: the four recorded, and w1-03, cleared with no record, counts as one try (C4-09)'); t.equal(c.wins, 3, 'three wins: the two recorded and that cleared level'); t.equal(c.comebacks, 1, 'one level was won after a loss');
     t.equal(c.boosters, 3, 'three boosters held'); t.equal(c.bestStreak, 3, 'best streak'); t.equal(c.bestDaily, 4000, 'best Daily score');
     const got = [...earnedSet(save, LEVELS_NODE)];
     t.equal(got.join(','), 'first-dip,sparkling,second-wind,postcard,three-days', `earned ${got.join(', ')}`);

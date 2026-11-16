@@ -17,11 +17,15 @@ export const ACHIEVEMENTS = [
   { id: 'six-postcards', name: 'All Six Postcards', how: 'Restore every world.', test: (c) => c.worlds >= c.worldCount },
 ];
 
-// The numbers the card shows. levels: the shipped level list (journey levels have a world).
+const played = (save, id) => { const e = (save.stats || {})[id] || {}, wins = Math.max(e.wins || 0, level(save, id) ? 1 : 0); return { tries: Math.max(e.tries || 0, wins), wins }; };
+// The numbers the card shows. A level the save has cleared counts as at least one try and one win even where its stats record is empty (a save from before the
+// tries record began), so a returning player's Games played and Games won are never zero beside Levels cleared. Worked out for display only; nothing is written.
+// levels: the shipped level list (journey levels have a world).
 export function recordCounts(save, levels) {
   const journey = levels.filter((l) => l.world), ids = journey.map((l) => l.id);
   const stats = save.stats || {};
   const worldIds = [...new Set(journey.map((l) => l.world))];
+  const counted = [...new Set([...Object.keys(stats), ...ids.filter((id) => level(save, id))])];
   return {
     levels: journey.length,
     cleared: ids.filter((id) => level(save, id)).length,
@@ -30,8 +34,8 @@ export function recordCounts(save, levels) {
     worlds: worldIds.filter((w) => journey.filter((l) => l.world === w).every((l) => level(save, l.id))).length,
     worldCount: worldIds.length,
     lore: (save.lore || []).length,
-    runs: sum(Object.values(stats).map((e) => e.tries || 0)),
-    wins: sum(Object.values(stats).map((e) => e.wins || 0)),
+    runs: sum(counted.map((id) => played(save, id).tries)),
+    wins: sum(counted.map((id) => played(save, id).wins)),
     comebacks: Object.values(stats).filter((e) => e.wins > 0 && e.tries > e.wins).length,
     boosters: sum(Object.values(save.boosters || {})),
     bestStreak: (save.daily && save.daily.bestStreak) || 0,

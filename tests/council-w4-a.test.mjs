@@ -153,6 +153,43 @@ tests.push({
   },
 });
 
+// --- C4-09: a returning player's Records do not read zero games ------------------------------------------------------------------
+tests.push({
+  name: 'C4-09 a cleared level counts as at least one try and one win, and real records are never lowered',
+  node: true,
+  run() {
+    const none = recordCounts(OLD_WAVE2, LEVELS);
+    assert.equal(none.cleared, 10); assert.equal(none.runs, 10, 'ten cleared levels, ten tries'); assert.equal(none.wins, 10, 'and ten wins');
+    const mixed = recordCounts({ ...OLD_WAVE2, stats: { 'w1-01': { tries: 5, wins: 2, bestMoves: 9 }, 'w1-02': { tries: 3, wins: 0, bestMoves: 0 } } }, LEVELS);
+    assert.equal(mixed.runs, 5 + 3 + 8, 'the recorded levels keep their numbers (w1-02 recorded 3 tries and no win, and reads as 3 tries and one win), and the eight with no record count one each');
+    assert.equal(mixed.wins, 2 + 1 + 8, 'a cleared level with no recorded win counts one');
+    assert.equal(mixed.comebacks, 1, 'achievements still read the real record: only w1-01 won after losing');
+    const fresh = recordCounts(freshSave(), LEVELS);
+    assert.equal(fresh.runs, 0); assert.equal(fresh.wins, 0);
+    const lost = recordCounts({ progress: {}, stats: { 'w1-03': { tries: 4, wins: 0, bestMoves: 0 } } }, LEVELS);
+    assert.equal(lost.runs, 4, 'tries on a level never cleared are counted as recorded'); assert.equal(lost.wins, 0);
+    const before = JSON.stringify(OLD_WAVE2); recordCounts(OLD_WAVE2, LEVELS);
+    assert.equal(JSON.stringify(OLD_WAVE2), before, 'the save object is not changed');
+  },
+});
+tests.push({
+  name: 'C4-09 a wave-2 save shows Games played and Games won beside Levels cleared, and opening Records writes nothing',
+  async run(t) {
+    const text = JSON.stringify(OLD_WAVE2);
+    await t.page.evaluate(([k, v]) => localStorage.setItem(k, v), [KEY, text]);
+    await t.reload();
+    await t.waitIdle();
+    await t.game('scene', 'records');
+    await t.waitIdle();
+    const cells = await t.page.locator('.rec-stats div').evaluateAll((ds) => Object.fromEntries(ds.map((d) => [d.querySelector('dt').textContent, d.querySelector('dd').textContent])));
+    t.equal(cells['Levels cleared'], '10 of 60', 'levels cleared');
+    t.equal(cells['Games played'], '10', 'games played is not zero');
+    t.equal(cells['Games won'], '10', 'games won is not zero');
+    t.equal(await rawOf(t), text, 'display only: the stored save is untouched');
+    await t.shot('C4-09-records');
+  },
+});
+
 // --- C4-06: the sound measuring tools start every cue and mix 0.2 s in -----------------------------------------------------------
 // Chromium's offline limiter reads a sound in the first 0.2 s two to four times low (tufa alone at the default volume: 0.28 from time 0, 0.96 from 0.2 s), so a cue
 // rendered at time 0 passed "alone under 0.95" and "0.2 to 0.45" checks that the live game, which never sounds a cue at the instant its context starts, does not.
