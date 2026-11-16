@@ -261,6 +261,23 @@ tests.push({
     assert.equal((body.match(/waitAudio\(t, \(x\) =>/g) || []).length, 2, 'it waits for the bus state twice');
   },
 });
+// --- C4-14: the merged comment -----------------------------------------------------------------------------------------------------------
+tests.push({
+  name: 'C4-14 the spray comment in the board view is two comments on their own lines, and no source line carries two run-together comments',
+  node: true,
+  run() {
+    const src = read('src/js/view/board-view.js').split('\n');
+    const k = src.findIndex((l) => l.includes('const lift = rise * p'));
+    assert.ok(k > 1);
+    assert.equal(src[k].includes('//'), false, 'the code line has no trailing comment');
+    assert.match(src[k - 2], /^\s*\/\/ a throw: up first, then down under its own weight$/);
+    assert.match(src[k - 1], /^\s*\/\/ dir: up or down off the sheet, then back toward it$/);
+    const merged = [];
+    for (const f of ['src/js/view/board-view.js', 'src/js/ui/play.js', 'src/js/ui/screens.js', 'src/js/audio.js', 'src/js/ui/save.js']) read(f).split('\n').forEach((l, n) => { if (/\S.*[^:'"`]\/\/[^'"`]*[^:'"`]\/\/ /.test(l.replace(/https?:\/\/\S+/g, ''))) merged.push(`${f}:${n + 1}`); });
+    assert.deepEqual(merged, [], 'no line has two comments run together');
+  },
+});
+
 // --- C4-06: the sound measuring tools start every cue and mix 0.2 s in -----------------------------------------------------------
 // Chromium's offline limiter reads a sound in the first 0.2 s two to four times low (tufa alone at the default volume: 0.28 from time 0, 0.96 from 0.2 s), so a cue
 // rendered at time 0 passed "alone under 0.95" and "0.2 to 0.45" checks that the live game, which never sounds a cue at the instant its context starts, does not.
