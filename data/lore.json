@@ -22,7 +22,7 @@
     "worldId": "bathhouse-row",
     "id": "hs-0062",
     "title": "Baths Since 1912",
-    "text": "The Buckstaff opened on February 1, 1912, and NPS says it has offered baths in continuous operation ever since.",
+    "text": "The Buckstaff opened on February 1, 1912. It has offered baths in continuous operation ever since.",
     "source": "NPS: Buckstaff Bathhouse",
     "sourceUrl": "https://www.nps.gov/hosp/learn/historyculture/buckstaff-bathhouse.htm"
   },
@@ -85,7 +85,7 @@
     "worldId": "bathhouse-row",
     "id": "hs-0077",
     "title": "The Row Completed",
-    "text": "The final change to Bathhouse Row was completed when the Lamar opened in 1923, NPS says. The Lamar closed in 1985.",
+    "text": "The Lamar opened in 1923, and that was the final change to Bathhouse Row. It closed in 1985.",
     "source": "NPS: History & Culture",
     "sourceUrl": "https://www.nps.gov/hosp/learn/historyculture/index.htm"
   },
@@ -94,7 +94,7 @@
     "worldId": "hot-springs-mountain",
     "id": "hs-0148",
     "title": "Forty-Seven Springs",
-    "text": "USGS says the park is best known for its 47 hot springs, which emerge from Hot Springs Mountain at an average temperature of 143°F.",
+    "text": "The park is best known for its 47 hot springs. They emerge from Hot Springs Mountain at an average temperature of 143°F.",
     "source": "USGS: Hot Springs National Park",
     "sourceUrl": "https://www.usgs.gov/geology-and-ecology-of-national-parks/hot-springs-national-park"
   },
@@ -130,7 +130,7 @@
     "worldId": "hot-springs-mountain",
     "id": "hs-0151",
     "title": "The Alpha and Beta Faults",
-    "text": "NPS says two faults, named alpha and beta, help direct the heated water back up to the surface.",
+    "text": "Two faults help direct the heated water back up to the surface. They are named alpha and beta.",
     "source": "NPS: Maurice Historic Display Spring",
     "sourceUrl": "https://www.nps.gov/places/maurice-historic-display-spring.htm"
   },
@@ -139,7 +139,7 @@
     "worldId": "hot-springs-mountain",
     "id": "hs-0146",
     "title": "700,000 Gallons a Day",
-    "text": "The National Park Service says the thermal springs produce over 700,000 gallons of water a day.",
+    "text": "The thermal springs produce over 700,000 gallons of water a day.",
     "source": "NPS: Maurice Historic Display Spring",
     "sourceUrl": "https://www.nps.gov/places/maurice-historic-display-spring.htm"
   },
@@ -292,7 +292,7 @@
     "worldId": "oaklawn-and-ballfields",
     "id": "hs-0183",
     "title": "Into the Alligator Farm",
-    "text": "Babe Ruth's famous long home run of March 17, 1918, at Whittington Park landed in the Arkansas Alligator Farm, Wikipedia says.",
+    "text": "Babe Ruth hit his famous long home run at Whittington Park on March 17, 1918. It landed in the Arkansas Alligator Farm.",
     "source": "Wikipedia: Hot Springs, Arkansas",
     "sourceUrl": "https://en.wikipedia.org/wiki/Hot_Springs,_Arkansas"
   },
@@ -409,7 +409,7 @@
     "worldId": "lakes",
     "id": "hs-0127",
     "title": "Two Hundred Islands",
-    "text": "Lake Ouachita has about 200 islands, according to Wikipedia's infobox for the lake.",
+    "text": "Lake Ouachita has about 200 islands.",
     "source": "Wikipedia: Lake Ouachita",
     "sourceUrl": "https://en.wikipedia.org/wiki/Lake_Ouachita"
   },
@@ -481,7 +481,7 @@
     "worldId": "garvan-and-revival",
     "id": "hs-0101",
     "title": "Hotel Hale",
-    "text": "NPS says the Hale Bathhouse is now Hotel Hale, with nine suites whose soaking tubs get hot springs mineral water.",
+    "text": "The Hale Bathhouse is now Hotel Hale. It has nine suites, and their soaking tubs get hot springs mineral water.",
     "source": "NPS: Hale Bathhouse",
     "sourceUrl": "https://www.nps.gov/places/hale-bathhouse.htm"
   },
@@ -535,7 +535,7 @@
     "worldId": "garvan-and-revival",
     "id": "hs-0384",
     "title": "Nearly 5 Million Lights",
-    "text": "Garvan Woodland Gardens' multi-week Holiday Lights display features nearly 5 million lights, Visit Hot Springs says.",
+    "text": "Garvan Woodland Gardens puts on a multi-week Holiday Lights display. It features nearly 5 million lights.",
     "source": "Visit Hot Springs: A reason to visit every season",
     "sourceUrl": "https://hotsprings.org/blog/dont-miss-a-reason-to-visit-for-every-season/"
   }

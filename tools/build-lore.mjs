@@ -92,6 +92,20 @@ const cards = [
   [6, 'hs-0384', 'Nearly 5 Million Lights', "Garvan Woodland Gardens' multi-week Holiday Lights display features nearly 5 million lights, Visit Hot Springs says."],
 ];
 
+// Card texts the owner reworded (decisions 40 and 56, _council/owner-review/approved-local-facts.json): the card says only what its own source line already says.
+// The bank and the hand-written lines above stay as they were; a rebuild applies these over them, so the wording survives running this tool again. Character for character.
+const REWORDED = {
+  "hs-0062": "The Buckstaff opened on February 1, 1912. It has offered baths in continuous operation ever since.",
+  "hs-0077": "The Lamar opened in 1923, and that was the final change to Bathhouse Row. It closed in 1985.",
+  "hs-0148": "The park is best known for its 47 hot springs. They emerge from Hot Springs Mountain at an average temperature of 143°F.",
+  "hs-0151": "Two faults help direct the heated water back up to the surface. They are named alpha and beta.",
+  "hs-0146": "The thermal springs produce over 700,000 gallons of water a day.",
+  "hs-0183": "Babe Ruth hit his famous long home run at Whittington Park on March 17, 1918. It landed in the Arkansas Alligator Farm.",
+  "hs-0127": "Lake Ouachita has about 200 islands.",
+  "hs-0101": "The Hale Bathhouse is now Hotel Hale. It has nine suites, and their soaking tubs get hot springs mineral water.",
+  "hs-0384": "Garvan Woodland Gardens puts on a multi-week Holiday Lights display. It features nearly 5 million lights.",
+};
+
 // Bonus cards: [world, id, title, text, source, sourceUrl].
 const bonus = [
   [1, "hs-0582", "The Classic Routine", "In the classic Hot Springs bath routine, the sitz tub is filled to 108 degrees for ten minutes. The full tub is 98 to 100 degrees.", "National Park Service: Traditional Baths", "https://www.nps.gov/hosp/planyourvisit/traditional-baths.htm"],
@@ -114,8 +128,8 @@ for (const [world, id, title, text] of cards) {
   if (SENSITIVE.test(q.question + ' ' + q.answer + ' ' + q.explanation)) errors.push(`${id}: fails sensitive filter`);
   if (SENSITIVE.test(title + ' ' + text)) errors.push(`${id}: card text fails sensitive filter`);
   if (title.length > 40) errors.push(`${id}: title ${title.length} chars`);
-  if (text.length > 160) errors.push(`${id}: text ${text.length} chars`);
-  out.push({ world, worldId: W[world], id, title, text, source: q.source, sourceUrl: q.sourceUrl });
+  if ((REWORDED[id] ?? text).length > 160) errors.push(`${id}: text ${(REWORDED[id] ?? text).length} chars`);
+  out.push({ world, worldId: W[world], id, title, text: REWORDED[id] ?? text, source: q.source, sourceUrl: q.sourceUrl });
 }
 const bonusOut = [];
 for (const [world, id, title, text, source, sourceUrl] of bonus) {

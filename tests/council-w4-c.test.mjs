@@ -419,3 +419,48 @@ tests.push({
     t.equal(bad.length, 0, `every envelope starts from silence (${bad.slice(0, 3).join('; ')}${bad.length > 3 ? ` and ${bad.length - 3} more` : ''})`);
   },
 });
+
+// --- C4-04: nine lore cards no longer cite their source in the middle of the sentence ---------------------------------------------------
+// The wording is the owner's, copied character for character from _council/owner-review/approved-local-facts.json.
+const REWORDED = {
+  "hs-0062": "The Buckstaff opened on February 1, 1912. It has offered baths in continuous operation ever since.",
+  "hs-0077": "The Lamar opened in 1923, and that was the final change to Bathhouse Row. It closed in 1985.",
+  "hs-0148": "The park is best known for its 47 hot springs. They emerge from Hot Springs Mountain at an average temperature of 143°F.",
+  "hs-0151": "Two faults help direct the heated water back up to the surface. They are named alpha and beta.",
+  "hs-0146": "The thermal springs produce over 700,000 gallons of water a day.",
+  "hs-0183": "Babe Ruth hit his famous long home run at Whittington Park on March 17, 1918. It landed in the Arkansas Alligator Farm.",
+  "hs-0127": "Lake Ouachita has about 200 islands.",
+  "hs-0101": "The Hale Bathhouse is now Hotel Hale. It has nine suites, and their soaking tubs get hot springs mineral water.",
+  "hs-0384": "Garvan Woodland Gardens puts on a multi-week Holiday Lights display. It features nearly 5 million lights.",
+};
+const WAS = [
+  "The Buckstaff opened on February 1, 1912, and NPS says it has offered baths in continuous operation ever since.",
+  "The final change to Bathhouse Row was completed when the Lamar opened in 1923, NPS says. The Lamar closed in 1985.",
+  "USGS says the park is best known for its 47 hot springs, which emerge from Hot Springs Mountain at an average temperature of 143°F.",
+  "NPS says two faults, named alpha and beta, help direct the heated water back up to the surface.",
+  "The National Park Service says the thermal springs produce over 700,000 gallons of water a day.",
+  "Babe Ruth's famous long home run of March 17, 1918, at Whittington Park landed in the Arkansas Alligator Farm, Wikipedia says.",
+  "Lake Ouachita has about 200 islands, according to Wikipedia's infobox for the lake.",
+  "NPS says the Hale Bathhouse is now Hotel Hale, with nine suites whose soaking tubs get hot springs mineral water.",
+  "Garvan Woodland Gardens' multi-week Holiday Lights display features nearly 5 million lights, Visit Hot Springs says.",
+];
+tests.push({
+  name: 'C4-04 the nine reworded cards read as approved, the other fifty-one come out exactly as before, and a rebuild keeps it',
+  node: true,
+  async run() {
+    const crypto = await import('node:crypto');
+    const { execFileSync } = await import('node:child_process');
+    const file = new URL('../data/lore.json', import.meta.url);
+    const before = fs.readFileSync(file, 'utf8');
+    execFileSync(process.execPath, [fileURLToPath(new URL('../tools/build-lore.mjs', import.meta.url))], { stdio: 'ignore' });
+    assert.equal(fs.readFileSync(file, 'utf8'), before, 'running tools/build-lore.mjs again writes the same file');
+    const lore = JSON.parse(before);
+    for (const [id, text] of Object.entries(REWORDED)) assert.equal(lore.find((c) => c.id === id).text, text, id + ' reads as approved');
+    for (const was of WAS) assert.ok(!lore.some((c) => c.text === was), 'the old text is gone: ' + was.slice(0, 40));
+    assert.equal(lore.find((c) => c.id === 'hs-0398').text, 'Sources disagree on when Oaklawn opened: Wikipedia says Feb. 24, 1904; the Encyclopedia of Arkansas says Feb. 15, 1905.', 'the opening-year card keeps its hedge');
+    assert.equal(lore.find((c) => c.id === 'hs-0470').text, 'Wikipedia says the Oaklawn race meet, held December through May, is sometimes called the "Fifth Season."', 'the Fifth Season card keeps its hedge');
+    const rest = lore.map((c) => (REWORDED[c.id] ? { ...c, text: '' } : c));
+    assert.equal(crypto.createHash('sha1').update(JSON.stringify(rest)).digest('hex'), '29d50f83de4dc54aa7e83a4c7cddc8b13a705bf3', 'every other field of every card, and the other 51 cards whole, are as they were');
+    for (const c of lore) assert.ok(c.text.length <= 160 && c.title.length <= 40, c.id + ' is within the length limits');
+  },
+});
