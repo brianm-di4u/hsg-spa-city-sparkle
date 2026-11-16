@@ -148,3 +148,35 @@ tests.push({
     t.expect((await t.state()).selected >= 0, 'the left button still selects a piece');
   },
 });
+
+// --- S6-13: dragging a volume slider does not write the save on every step ------------------------------------------------------------
+tests.push({
+  name: 'S6-13 a drag along a volume slider moves the level without a write; letting go writes the save once and it is kept',
+  async run(t) {
+    await t.game('scene', 'settings');
+    await t.page.waitForSelector('#vol');
+    await t.page.mouse.click(5, 5); // the first touch starts the audio
+    await t.page.waitForFunction(() => window.__game.audioState().master !== null, null, { timeout: 5000 });
+    for (const [id, key] of [['vol', 'volume'], ['vol-music', 'musicVolume'], ['vol-sfx', 'sfxVolume']]) {
+      const out = await t.page.evaluate(([sel, k]) => {
+        const real = Storage.prototype.setItem; let writes = 0;
+        Storage.prototype.setItem = function (...a) { writes++; return real.apply(this, a); };
+        const el = document.querySelector(sel), seen = [];
+        try {
+          for (let v = 0.9; v >= 0.1; v -= 0.1) { el.value = String(v.toFixed(2)); el.dispatchEvent(new Event('input', { bubbles: true })); seen.push(window.__game.audioState()); }
+          const during = writes, saved = window.__game.getState().settings[k];
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+          return { during, afterRelease: writes, saved, savedAfter: window.__game.getState().settings[k], seen, last: el.value };
+        } finally { Storage.prototype.setItem = real; }
+      }, ['#' + id, key]);
+      t.equal(out.during, 0, `${key}: nine steps of a drag wrote nothing`);
+      t.expect(out.saved !== +out.last, `${key}: the save still holds the old value during the drag`);
+      t.expect(out.afterRelease >= 1 && out.afterRelease <= 2, `${key}: letting go writes (${out.afterRelease} writes for the settings)`);
+      t.equal(out.savedAfter, +out.last, `${key}: and the value is saved`);
+      if (key === 'volume') t.expect(new Set(out.seen.map((a) => a.master)).size > 5, 'the master level followed every step of the drag');
+    }
+    await t.reload();
+    const s = (await t.state()).settings;
+    t.expect(s.volume === 0.1 && s.musicVolume === 0.1 && s.sfxVolume === 0.1, 'the values are kept across a reload');
+  },
+});

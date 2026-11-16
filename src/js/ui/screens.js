@@ -563,11 +563,12 @@ export function showSettings(back) {
   m.querySelectorAll('[data-speed]').forEach((b) => b.addEventListener('click', () => {
     changeSettings({ animSpeed: +b.dataset.speed }); applySettings(); m.querySelectorAll('[data-speed]').forEach((x) => x.setAttribute('aria-pressed', VIEW.speed === +x.dataset.speed));
   }));
-  // Each slider moves its level as it is dragged; letting go plays the click, so the level can be judged by ear (the music is its own preview).
+  // Each slider moves its level as it is dragged, in memory only; the save is written once, when the slider is let go (a key press is a change too), and letting go plays the click,
+  // so the level can be judged by ear (the music is its own preview). Dragging used to read and write the whole save on every step.
   for (const [id, key, hear] of [['vol', 'volume', true], ['vol-music', 'musicVolume', false], ['vol-sfx', 'sfxVolume', true]]) {
     const el = m.querySelector('#' + id);
-    el.addEventListener('input', (e) => { changeSettings({ [key]: +e.target.value }); applySettings(); });
-    el.addEventListener('change', () => { unlockAudio(); applyLevels(); if (hear) sfx('click'); });
+    el.addEventListener('input', (e) => { AUDIO[key] = +e.target.value; applyLevels(); });
+    el.addEventListener('change', (e) => { changeSettings({ [key]: +e.target.value }); applySettings(); unlockAudio(); applyLevels(); if (hear) sfx('click'); });
   }
   bindActs(m, {
     fresh: () => { const r = startFreshSave(); toast(r.ok ? 'Started fresh. Your old save is kept.' : 'Could not start fresh. Storage is unavailable.'); if (r.ok) m.querySelector('#fresh-row')?.remove(); },
