@@ -248,6 +248,90 @@ tests.push({
   },
 });
 
+// --- S5-10: a mute button in the play HUD -----------------------------------------------------------------------------------------
+const settingsOf = async (t) => (await t.state()).settings;
+const boxes = (t) => t.page.evaluate(() => Object.fromEntries([...document.querySelectorAll('#tray .booster, #tray .round')].map((e) => { const r = e.getBoundingClientRect(); return [e.id || e.dataset.booster, { x: r.x, y: r.y, r: r.right, b: r.bottom, w: r.width, h: r.height }]; })));
+const overlap = (a, b) => a.x < b.r - 0.5 && b.x < a.r - 0.5 && a.y < b.b - 0.5 && b.y < a.b - 0.5;
+async function layoutOk(t, w, h) {
+  const bx = await boxes(t), names = Object.keys(bx);
+  t.expect(names.includes('btn-mute') && names.includes('btn-pause'), 'the tray has Mute and Pause');
+  for (const n of names) t.expect(bx[n].x >= -0.5 && bx[n].r <= w + 0.5 && bx[n].y >= -0.5 && bx[n].b <= h + 0.5, `${n} is on the screen (${Math.round(bx[n].x)}-${Math.round(bx[n].r)}, ${Math.round(bx[n].y)}-${Math.round(bx[n].b)} of ${w}x${h})`);
+  for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++) t.expect(!overlap(bx[names[i]], bx[names[j]]), `${names[i]} and ${names[j]} do not overlap`);
+  t.expect(bx['btn-mute'].w >= 44 && bx['btn-mute'].h >= 44, `the Mute button is at least 44 px (${bx['btn-mute'].w}x${bx['btn-mute'].h})`);
+  const hud = await t.page.evaluate(() => { const r = document.getElementById('hud').getBoundingClientRect(), tr = document.getElementById('tray').getBoundingClientRect(); return { hud: { x: r.x, y: r.y, r: r.right, b: r.bottom }, tray: { x: tr.x, y: tr.y, r: tr.right, b: tr.bottom } }; });
+  t.expect(!overlap(hud.hud, hud.tray), 'the HUD and the tray do not overlap');
+}
+tests.push({
+  name: 'S5-10 the play HUD has a 44 px Mute button beside Pause that fits with the boosters on a phone, a desktop and a short landscape screen',
+  async run(t) {
+    await inLevel(t);
+    await layoutOk(t, t.vp.width, t.vp.height);
+    t.equal(await t.page.locator('#btn-mute').getAttribute('aria-pressed'), 'false', 'it starts as sound on');
+    await t.shot('S5-10-hud-mute');
+    for (const [w, h] of [[360, 640], [844, 390]]) {
+      await t.page.setViewportSize({ width: w, height: h });
+      await t.page.waitForFunction((n) => window.innerWidth === n, w);
+      await t.waitIdle();
+      await layoutOk(t, w, h);
+      if (w === 844) await t.shot('S5-10-hud-mute-landscape');
+    }
+    await t.page.setViewportSize({ width: t.vp.width, height: t.vp.height });
+  },
+});
+tests.push({
+  name: 'S5-10 one tap silences the effects, music and ambience, saves it, shows the muted icon, and the next tap brings back what was on',
+  async run(t) {
+    // music was already off by the player's choice: the speaker must not turn it on
+    await t.page.evaluate(([k, v]) => localStorage.setItem(k, v), [KEY, JSON.stringify({ v: 1, settings: { sound: true, music: false, ambience: true, volume: 0.5 } })]);
+    await t.reload();
+    await inLevel(t);
+    t.equal(await t.page.locator('#btn-mute').getAttribute('aria-pressed'), 'false', 'sound is on');
+    await press(t, '#btn-mute');
+    let st = await settingsOf(t);
+    t.expect(!st.sound && !st.music && !st.ambience, `all three switches are off (${JSON.stringify([st.sound, st.music, st.ambience])})`);
+    t.equal(await t.page.locator('#btn-mute').getAttribute('aria-pressed'), 'true', 'the button shows it is muted');
+    t.equal(await t.page.locator('#btn-mute .mute-on').isVisible(), false, 'the sound waves are gone');
+    t.equal(await t.page.locator('#btn-mute .mute-off').isVisible(), true, 'and the cross is there');
+    const saved = JSON.parse(await rawOf(t)).settings;
+    t.expect(saved.sound === false && saved.music === false && saved.ambience === false, 'the choice is saved with the other settings');
+    await t.waitForAnimations();
+    await t.shot('S5-10-muted');
+    await t.page.waitForFunction(() => { const a = window.__game.audioState(); return a.ctx !== null && a.sfx === 0 && a.music === 0 && a.ambience === 0; }, null, { timeout: 5000 });
+    // it survives a reload as muted, and the Settings card agrees
+    await t.reload();
+    await inLevel(t);
+    t.equal(await t.page.locator('#btn-mute').getAttribute('aria-pressed'), 'true', 'still muted after a reload');
+    await press(t, '#btn-mute');
+    st = await settingsOf(t);
+    t.expect(st.sound && st.ambience, 'the next tap brings back the effects and the ambience');
+    t.equal(st.music, false, 'but not the music the player had turned off');
+    t.equal(await t.page.locator('#btn-mute').getAttribute('aria-pressed'), 'false', 'the icon is back');
+    await t.page.waitForFunction(() => { const a = window.__game.audioState(); return a.ctx !== null && a.sfx === 1 && a.music === 0 && a.ambience > 0.3; }, null, { timeout: 5000 });
+  },
+});
+tests.push({
+  name: 'S5-10 Mute works from the keyboard and tells a screen reader its state; Settings and the button stay in step',
+  viewports: ['desktop'],
+  async run(t) {
+    await inLevel(t);
+    await t.page.focus('#btn-mute');
+    await t.page.keyboard.press('Enter');
+    t.equal(await t.page.locator('#btn-mute').getAttribute('aria-pressed'), 'true', 'Enter on the focused button mutes');
+    t.equal(await active(t), 'btn-mute', 'focus stays on the button after a key press');
+    t.equal(await t.page.locator('#btn-mute').getAttribute('aria-label'), 'Mute', 'its name stays Mute and aria-pressed carries the state');
+    await t.page.keyboard.press('Space');
+    t.equal(await t.page.locator('#btn-mute').getAttribute('aria-pressed'), 'false', 'Space unmutes');
+    // Settings changes reach the button: turning all three off there reads as muted
+    await t.page.keyboard.press('Enter');
+    await t.game('scene', 'pause');
+    await t.page.locator('#modal [data-act="settings"]').click();
+    t.equal(await t.page.locator('[data-toggle="sound"]').getAttribute('aria-pressed'), 'false', 'Settings shows the effects off after the mute');
+    await t.page.locator('[data-act="close"]').click();
+    await t.page.locator('#modal [data-act="resume"]').click();
+    t.equal(await t.page.locator('#btn-mute').getAttribute('aria-pressed'), 'true', 'the button still reads muted');
+  },
+});
+
 // --- C4-13: the older S5-01 test --------------------------------------------------------------------------------------------------------
 tests.push({
   name: 'C4-13 the older S5-01 save test waits for the buses to reach their level, not for 600 ms',

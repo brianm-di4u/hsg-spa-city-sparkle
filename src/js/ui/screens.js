@@ -501,6 +501,20 @@ export function showHelp(back, tab = 'basics') {
 // --- settings ------------------------------------------------------------------------------------
 // The Move speed setting: how fast a move's animation plays. 1 is the pace the game was made at.
 const SPEEDS = [1, 1.5, 2];
+// The play HUD's speaker button: one tap silences the effects, the music and the ambience together, the next brings back the ones that were on.
+// The three switches in Settings stay as they are (separate); this is a shortcut over all three, and the saved result is what Settings shows.
+const MUTE_KEY = 'spa-city-sparkle:unmute'; // what to bring back, kept for this tab only so a reload does not forget what the player had turned off
+const rememberMute = (v) => { try { if (v) sessionStorage.setItem(MUTE_KEY, JSON.stringify(v)); else sessionStorage.removeItem(MUTE_KEY); } catch (_) { /* a private window: the next tap brings back all three */ } };
+const remembered = () => { try { const v = JSON.parse(sessionStorage.getItem(MUTE_KEY)); return v && typeof v === 'object' ? { sound: v.sound !== false, music: v.music !== false, ambience: v.ambience !== false } : null; } catch (_) { return null; } };
+const isMuted = () => !SAVE.settings.sound && !SAVE.settings.music && !SAVE.settings.ambience;
+function syncMute() { const b = $('btn-mute'); if (b) b.setAttribute('aria-pressed', String(isMuted())); }
+function toggleMute() {
+  const st = SAVE.settings;
+  if (isMuted()) { changeSettings(remembered() || { sound: true, music: true, ambience: true }); rememberMute(null); }
+  else { rememberMute({ sound: st.sound, music: st.music, ambience: st.ambience }); changeSettings({ sound: false, music: false, ambience: false }); }
+  applySettings();
+  if (isMuted()) toast('Sound off'); else { unlockAudio(); sfx('click'); toast('Sound on'); }
+}
 export function applySettings() {
   const st = SAVE.settings;
   AUDIO.sound = st.sound; AUDIO.music = st.music; AUDIO.ambience = st.ambience; AUDIO.volume = st.volume; AUDIO.musicVolume = st.musicVolume; AUDIO.sfxVolume = st.sfxVolume; applyLevels();
@@ -511,6 +525,7 @@ export function applySettings() {
   VIEW.steam = st.steam && VIEW.quality !== 'low'; // Low image quality draws no ambient steam, whatever the Ambient steam switch says
   document.body.classList.toggle('no-steam', !VIEW.steam);
   VIEW.badges = !!st.badges;
+  syncMute();
   document.body.classList.toggle('reduced', VIEW.reduced);
   document.body.classList.toggle('badges', st.badges);
   requestRender();
@@ -727,6 +742,7 @@ export function wireUi() {
   PLAY.ui = { onWin, onLose, toast, announce };
   // A mouse or touch click lets go of the button so Enter goes back to the board; a key press keeps it (detail is 0 for a key).
   $('btn-pause').addEventListener('click', (e) => { if (e.detail) e.currentTarget.blur(); sfx('click'); showPause(); });
+  $('btn-mute').addEventListener('click', (e) => { if (e.detail) e.currentTarget.blur(); toggleMute(); });
   window.addEventListener('resize', () => {
     if (UI.scene === 'game' || UI.scene === 'pause') layoutAndBuild();
   });

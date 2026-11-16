@@ -152,6 +152,12 @@ body.landscape .hud-next { text-align: right; padding-right: 14px; }
 .booster .b-name { font-size: .72rem; font-weight: 800; line-height: 1; }
 .booster .b-count { position: absolute; top: -6px; right: -6px; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 11px; background: var(--brick); color: #fff; font-size: .78rem; display: grid; place-items: center; }
 .booster[disabled] { filter: grayscale(1) opacity(.6); }
+/* the mute button sits beside Pause: 44 px, and the speaker loses its waves and gains a cross when everything is muted */
+.round-mute { width: 44px; height: 44px; flex: none; display: grid; place-items: center; padding: 0; }
+.round-mute .mute-off, .round-mute[aria-pressed="true"] .mute-on { display: none; }
+.round-mute[aria-pressed="true"] .mute-off { display: inline; }
+/* a narrow portrait phone: the four boosters shrink a little so the row of boosters, Mute and Pause fits */
+body.portrait .booster { width: min(64px, calc((100vw - 156px) / 4)); }
 .booster.armed { box-shadow: 0 0 0 3px #FFF, 0 0 0 6px var(--algae), 0 3px 8px rgba(0,0,0,.35); }
 
 /* layout: portrait (default) and landscape */
@@ -193,6 +199,7 @@ body.landscape #tray { left: 24px; bottom: 24px; width: 260px; flex-wrap: wrap; 
   body.landscape .booster .b-name { font-size: .62rem; }
   body.landscape .booster .b-count { top: -6px; right: -4px; }
   body.landscape #tray .round { width: 44px; height: 44px; flex: none; }
+  body.landscape #tray { width: 310px; }
 }
 
 /* ---------- modal & dialogs ---------- */
