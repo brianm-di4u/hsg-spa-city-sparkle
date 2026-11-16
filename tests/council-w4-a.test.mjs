@@ -211,6 +211,43 @@ tests.push({
   },
 });
 
+// --- C4-11: a mouse or touch click on Pause or a booster does not leave focus on the button ----------------------------------------
+tests.push({
+  name: 'C4-11 after a click on Pause the keyboard goes back to the board: Enter wakes the board cursor and does not pause again',
+  async run(t) {
+    await inLevel(t);
+    await press(t, '#btn-pause');
+    t.equal((await t.state()).scene, 'pause', 'the click opened Pause');
+    await press(t, '#modal [data-act="resume"]');
+    t.equal((await t.state()).scene, 'game', 'Resume returned to the game');
+    t.expect(!['btn-pause'].includes(await active(t)), `focus is not on the Pause button (it is on ${await active(t)})`);
+    await t.page.keyboard.press('Enter');
+    const s = await t.state();
+    t.equal(s.scene, 'game', 'Enter did not press Pause again');
+    t.expect(s.cursor >= 0, 'it woke the board cursor instead');
+  },
+});
+tests.push({
+  name: 'C4-11 after a click on a booster the keyboard goes back to the board, and a key press keeps focus where it put it',
+  async run(t) {
+    await inLevel(t);
+    await press(t, '.booster[data-booster="hammer"]');
+    t.equal((await t.state()).armed, 'hammer', 'the click armed the Hammer');
+    t.expect(!(await active(t)).toString().includes('booster'), `focus is not left on the booster (it is on ${await active(t)})`);
+    await t.page.keyboard.press('Enter');
+    const s = await t.state();
+    t.equal(s.armed, 'hammer', 'Enter did not press the Hammer again');
+    t.expect(s.cursor >= 0, 'it woke the board cursor');
+    if (t.viewport === 'desktop') {
+      await t.page.keyboard.press('Escape');
+      await t.page.focus('.booster[data-booster="line"]');
+      await t.page.keyboard.press('Enter');
+      t.equal((await t.state()).armed, 'line', 'Enter on a focused booster still arms it');
+      t.expect((await active(t)).toString().includes('booster'), 'and focus stays on it after a key press');
+    }
+  },
+});
+
 // --- C4-06: the sound measuring tools start every cue and mix 0.2 s in -----------------------------------------------------------
 // Chromium's offline limiter reads a sound in the first 0.2 s two to four times low (tufa alone at the default volume: 0.28 from time 0, 0.96 from 0.2 s), so a cue
 // rendered at time 0 passed "alone under 0.95" and "0.2 to 0.45" checks that the live game, which never sounds a cue at the instant its context starts, does not.

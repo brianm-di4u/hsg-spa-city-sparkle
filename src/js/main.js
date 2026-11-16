@@ -39,7 +39,7 @@ async function boot() {
   VIEW.onFrame = playFrame;
   bindInput(VIEW.app.canvas);
   wireUi();
-  document.querySelectorAll('.booster').forEach((b) => b.addEventListener('click', () => { unlockAudio(); armBooster(b.dataset.booster); }));
+  document.querySelectorAll('.booster').forEach((b) => b.addEventListener('click', (e) => { unlockAudio(); armBooster(b.dataset.booster); if (e.detail) b.blur(); })); // a mouse or touch click lets go of the button so Enter goes back to the board; a key press keeps it
   window.addEventListener('pointerdown', unlockAudio, { passive: true, capture: true }); // the first touch anywhere starts the title theme
   window.addEventListener('keydown', (e) => {
     unlockAudio();

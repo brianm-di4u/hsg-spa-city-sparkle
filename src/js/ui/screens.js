@@ -725,7 +725,8 @@ export function wireUi() {
   configureSaveEffects({ onChange: applySettings, onNewer: () => toast(NEWER_NOTE, 7000), onUnsaved: () => toast('Not saved: storage is unavailable. Keep this tab open.', 4200), onConflict: (reason) => toast(reason.includes(' ') ? reason : 'Your progress changed in another tab. Choose Continue or a new level.', 3200) });
   announceNewerSave();
   PLAY.ui = { onWin, onLose, toast, announce };
-  $('btn-pause').addEventListener('click', () => { sfx('click'); showPause(); });
+  // A mouse or touch click lets go of the button so Enter goes back to the board; a key press keeps it (detail is 0 for a key).
+  $('btn-pause').addEventListener('click', (e) => { if (e.detail) e.currentTarget.blur(); sfx('click'); showPause(); });
   window.addEventListener('resize', () => {
     if (UI.scene === 'game' || UI.scene === 'pause') layoutAndBuild();
   });
