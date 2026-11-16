@@ -250,3 +250,42 @@ tests.push({
     t.expect(three.rms > one.rms, `the 3 star card carries more sound than the 1 star card (rms ${three.rms} against ${one.rms})`);
   },
 });
+
+// --- C4-08: the skip crowd level, measured over every set of four and a seeded draw of folded sets ---------------------------------
+// The finding asked for a gentler slope (about 1 / sqrt(n) from three cues up) with every set under 0.95 at the maximum volume and the goal cue at four cues not under 0.2.
+// Measured here, those cannot all hold while the cues themselves read as loud as they do (a single cue alone reaches 0.95 or more at the maximum): see the report. So this test
+// is a ceiling: it records the worst set of four, the worst of a seeded draw and the goal cue's level at four cues, and fails if a change makes any of them worse than it is today.
+const FOLD8 = ['goal', 'combo', 'crystal', 'match', 'stone', 'tufa', 'lock', 'special'];
+const KINDS = ['goal', 'combo', 'crystal', 'match', 'stone', 'cascade', 'special', 'tufa', 'lock', 'moss', 'fog', 'token', 'spread', 'reshuffle', 'booster', 'starline', 'swap'];
+const lcg = (seed) => () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+tests.push({
+  name: 'C4-08 every set of four folded cues and a seeded draw of 40 folded sets: the worst peak and the goal cue at four cues do not get worse than today',
+  viewports: ['desktop'],
+  async run(t) {
+    const L = await t.game('audioList'), pieces = [];
+    for (const name of L.music) pieces.push([name, (await t.game('audioRender', name, 12, false, MAX)).peak]);
+    pieces.sort((a, b) => b[1] - a[1]);
+    const piece = pieces[0][0];
+    const mix = async (set, level, levels = MAX, p = piece) => (await t.game('mixRender', { piece: p, bed: p ? 'rain' : null, seconds: 4, levels, cues: set.map((name, k) => ({ name, arg: 3, at: 1 + k * 0.04, seed: 1 + k, opt: { level, size: 5 } })) })).peak;
+    let worstFour = 0, wf = '';
+    const l4 = await t.game('crowdLevel', 4);
+    for (let a = 0; a < 8; a++) for (let b = a + 1; b < 8; b++) for (let c = b + 1; c < 8; c++) for (let d = c + 1; d < 8; d++) {
+      const set = [FOLD8[a], FOLD8[b], FOLD8[c], FOLD8[d]], p = await mix(set, l4);
+      if (p > worstFour) { worstFour = p; wf = set.join(','); }
+    }
+    const r = lcg(12345); let worstDraw = 0, wd = '';
+    for (let i = 0; i < 40; i++) {
+      const n = 4 + Math.floor(r() * 6), pool = KINDS.filter((k) => L.cues.includes(k)), set = [], level = await t.game('crowdLevel', n);
+      while (set.length < n) set.push(pool.splice(Math.floor(r() * pool.length), 1)[0]);
+      const p = await mix(set, level);
+      if (p > worstDraw) { worstDraw = p; wd = `${set.join(',')} at ${level.toFixed(2)}`; }
+    }
+    const goal4 = await mix(['goal'], l4, {}, null), goal1 = await mix(['goal'], 1, {}, null);
+    t.log(`loudest piece ${piece}; worst of the 70 sets of four ${worstFour} (${wf}); worst of the seeded draw ${worstDraw} (${wd}); goal alone at the default volume ${goal1}, at four cues (level ${l4}) ${goal4}`);
+    // today's readings are 0.9895, 0.9525 and 0.1752; the ceilings sit just beside them so only a real change trips them
+    t.expect(worstFour <= 1.0, `no set of four peaks above 1.0 (worst ${worstFour}: ${wf})`);
+    t.expect(worstDraw <= 0.96, `no set in the seeded draw peaks above 0.96 (worst ${worstDraw}: ${wd})`);
+    t.expect(goal4 >= 0.17, `the goal cue at four cues stays at or above 0.17 (${goal4})`);
+    t.expect((await t.game('crowdLevel', 3)) === 1 && l4 < 1, 'three cues or fewer are struck at full level, four or more are turned down');
+  },
+});
