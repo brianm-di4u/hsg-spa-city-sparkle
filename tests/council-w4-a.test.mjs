@@ -190,6 +190,27 @@ tests.push({
   },
 });
 
+// --- C4-10: the lose card and Help say every way to earn a booster ----------------------------------------------------------------
+tests.push({
+  name: 'C4-10 the lose card fine print and Help both name the booster every 12 stars pays',
+  async run(t) {
+    await inLevel(t);
+    await t.game('scene', 'lose');
+    await t.waitIdle();
+    const card = await t.page.locator('#modal .card').innerText();
+    t.expect(/three-star wins, finished worlds and every 12 stars/.test(card), `the lose card line names stars (${card.split('\n').pop()})`);
+    t.expect(await t.page.evaluate(() => { const c = document.querySelector('#modal .card'); return c.scrollWidth <= c.clientWidth; }), 'the card does not scroll sideways');
+    await t.shot('C4-10-lose-card');
+    await t.game('scene', 'help');
+    await t.waitIdle();
+    await t.page.locator('#modal [role="tab"]', { hasText: 'Goals' }).click();
+    const help = await t.page.locator('#modal .card').innerText();
+    t.expect(/three-star wins, finished worlds and every 12 stars/.test(help), 'Help (Goals) names the same ways');
+    t.expect(await t.page.evaluate(() => { const c = document.querySelector('#modal .card'); return c.scrollWidth <= c.clientWidth; }), 'Help does not scroll sideways');
+    await t.shot('C4-10-help-goals');
+  },
+});
+
 // --- C4-06: the sound measuring tools start every cue and mix 0.2 s in -----------------------------------------------------------
 // Chromium's offline limiter reads a sound in the first 0.2 s two to four times low (tufa alone at the default volume: 0.28 from time 0, 0.96 from 0.2 s), so a cue
 // rendered at time 0 passed "alone under 0.95" and "0.2 to 0.45" checks that the live game, which never sounds a cue at the instant its context starts, does not.
