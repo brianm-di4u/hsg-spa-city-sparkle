@@ -363,3 +363,59 @@ tests.push({
     await t.shot('C4-12-settings-scrolled');
   },
 });
+
+// --- S5-17: levels glide, and a noise burst rises instead of starting at full gain ----------------------------------------------------------
+async function startAudio(t) {
+  await t.game('scene', 'settings');
+  await t.page.waitForSelector('#vol');
+  await t.page.mouse.click(5, 5); // the first touch starts the audio
+  await t.page.waitForFunction(() => { const a = window.__game.audioState(); return a.master !== null && a.ctx === 'running'; }, null, { timeout: 8000 });
+}
+tests.push({
+  name: 'S5-17 the master and effects gains glide to a new level: nothing jumps, and they arrive',
+  viewports: ['desktop'],
+  async run(t) {
+    await startAudio(t);
+    const r = await t.page.evaluate(() => {
+      const el = document.querySelector('#vol'), before = window.__game.audioState();
+      el.value = '0.9'; el.dispatchEvent(new Event('input', { bubbles: true }));
+      const during = window.__game.audioState(); // the same instant of audio time: a jump would already show
+      return { before, during };
+    });
+    t.equal(r.before.masterNow, r.before.master, 'at rest the gain is where it was asked to be');
+    t.equal(r.during.master, +(0.9 * 1.2).toFixed(3), 'the new level is asked for at once');
+    t.equal(r.during.masterNow, r.before.masterNow, 'but the gain itself has not stepped in the same instant');
+    await t.page.waitForFunction(() => { const a = window.__game.audioState(); return Math.abs(a.masterNow - a.master) < 0.005; }, null, { timeout: 8000 });
+    t.equal((await t.game('audioState')).sfx, 1, 'the effects level is the default one');
+    await t.page.evaluate(() => { const el = document.querySelector('#vol-sfx'); el.value = '0.2'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+    t.equal((await t.game('audioState')).sfx, 0.2, 'and a new one is asked for the same way');
+  },
+});
+tests.push({
+  name: 'S5-17 no cue starts a gain at full level: noise bursts rise like the tones do',
+  viewports: ['desktop'],
+  async run(t) {
+    await startAudio(t);
+    const names = (await t.game('audioList')).cues;
+    const bad = await t.page.evaluate((cues) => {
+      const proto = BaseAudioContext.prototype, make = proto.createGain, log = [];
+      proto.createGain = function () {
+        const node = make.call(this), p = node.gain, ev = [];
+        const set = p.setValueAtTime.bind(p), ramp = p.exponentialRampToValueAtTime.bind(p);
+        p.setValueAtTime = (v, at) => { ev.push(['set', v, at]); return set(v, at); };
+        p.exponentialRampToValueAtTime = (v, at) => { ev.push(['exp', v, at]); return ramp(v, at); };
+        log.push(ev); return node;
+      };
+      const out = [];
+      try {
+        for (const name of cues) {
+          log.length = 0;
+          window.__game.cue(name, 4, {});
+          for (const ev of log) if (ev.length >= 2 && ev[0][0] === 'set' && ev[0][1] > 0.002 && ev[1][0] === 'exp' && ev[1][1] <= 0.001) out.push(`${name}: starts at ${ev[0][1].toFixed(3)} and only decays`);
+        }
+      } finally { proto.createGain = make; }
+      return out;
+    }, names);
+    t.equal(bad.length, 0, `every envelope starts from silence (${bad.slice(0, 3).join('; ')}${bad.length > 3 ? ` and ${bad.length - 3} more` : ''})`);
+  },
+});

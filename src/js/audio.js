@@ -5,7 +5,7 @@
 import { makeAudioKit, measureAudio } from './audio-kit.js';
 import { SCORES, SCENES, WORLD_MOOD } from './music.js';
 
-export const AUDIO = { ctx: null, master: null, sfxGain: null, kit: null, sound: true, music: true, ambience: true, volume: 0.5, musicVolume: 1, sfxVolume: 1, musicLevel: 0, played: [], calls: [], mood: null, holds: new Set(), suspendTimer: 0 };
+export const AUDIO = { ctx: null, master: null, sfxGain: null, kit: null, sound: true, music: true, ambience: true, volume: 0.5, musicVolume: 1, sfxVolume: 1, musicLevel: 0, masterLevel: 0, sfxLevel: 0, played: [], calls: [], mood: null, holds: new Set(), suspendTimer: 0 };
 // Levels of the shipping mix. MASTER_SCALE was 0.6; at 1.2 the default volume (0.5) leaves the cues audible over the music.
 const MASTER_SCALE = 1.2;
 const MUSIC_LEVEL = 0.6, AMBIENCE_LEVEL = 1; // measured: every piece peaks 0.06 to 0.16 and every bed under 0.07 at the default volume
@@ -30,18 +30,25 @@ function ensure() {
 export function unlockAudio() { const c = ensure(); if (c && c.state !== 'running') try { c.resume().catch(() => {}); } catch (_) { /* resume is best effort */ } }
 // A hand-edited save can hold any volume; a gain of NaN throws, and one above 1 is louder than the slider goes.
 const safeVolume = (v, fallback = 0.5) => (Number.isFinite(+v) && v !== null && v !== '' ? Math.min(1, Math.max(0, +v)) : fallback);
+// A level change glides (a time constant of GAIN_GLIDE seconds) instead of jumping, so dragging a slider or flipping a switch makes no zipper noise or click.
+// The first setting of a new audio context is direct: nothing is playing yet and it should start at its level, not rise to it.
+const GAIN_GLIDE = 0.03;
+const leveled = new WeakSet();
+const glide = (param, v, ctx) => { if (leveled.has(ctx)) param.setTargetAtTime(v, ctx.currentTime, GAIN_GLIDE); else param.value = v; };
 export function applyLevels() {
   if (!AUDIO.ctx) return;
-  AUDIO.master.gain.cancelScheduledValues(AUDIO.ctx.currentTime);
-  AUDIO.master.gain.value = safeVolume(AUDIO.volume) * MASTER_SCALE;
+  const ctx = AUDIO.ctx;
+  AUDIO.masterLevel = safeVolume(AUDIO.volume) * MASTER_SCALE; AUDIO.sfxLevel = AUDIO.sound ? safeVolume(AUDIO.sfxVolume, 1) : 0; // what the gains are asked for, kept for the tests
+  glide(AUDIO.master.gain, AUDIO.masterLevel, ctx);
   // Music volume and Effects volume (1 is the level the mix was built at; they only turn it down) sit under the same switches as before.
-  AUDIO.sfxGain.gain.value = AUDIO.sound ? safeVolume(AUDIO.sfxVolume, 1) : 0;
+  glide(AUDIO.sfxGain.gain, AUDIO.sfxLevel, ctx);
+  leveled.add(ctx);
   // Sound effects, Music and Ambience are three separate switches. Music never depended on the effects switch: a
   // player who turns the effects off keeps the music, as before the ambience was added.
   AUDIO.musicLevel = AUDIO.music ? MUSIC_LEVEL * safeVolume(AUDIO.musicVolume, 1) : 0; // what the music bus is asked for, kept for the tests
   AUDIO.kit.music.level(AUDIO.musicLevel);
   AUDIO.kit.amb.level(AUDIO.ambience ? AMBIENCE_LEVEL : 0);
-  AUDIO.kit.mute(AUDIO.master.gain.value === 0); // at volume 0 nothing is heard, so no music or bed is built
+  AUDIO.kit.mute(AUDIO.masterLevel === 0); // at volume 0 nothing is heard, so no music or bed is built
 }
 
 // Cue building. A cue is built inside a small context (CUE): the audio context, where it goes, one draw of
@@ -62,6 +69,7 @@ function tone(freq, dur, { type = 'sine', gain = 0.2, at = 0, attack = 0.005, sl
 // One buffer of noise per audio context (two seconds, made once) serves every burst. Each burst starts it at its own offset, from this cue's
 // draw plus a counter, so no two swooshes are sample-identical and nothing is allocated per cue.
 const NOISE_SECONDS = 2;
+const NOISE_ATTACK = 0.002; // 4 ms read 0.963 at the busiest set (0.953 before): a softer start hits the limiter less, so the rest of the set came through louder
 const noiseBuffers = new WeakMap();
 function noiseBuffer(ctx) {
   let buf = noiseBuffers.get(ctx);
@@ -79,7 +87,9 @@ function noise(dur, { gain = 0.15, at = 0, freq = 1200, q = 0.8, type = 'bandpas
   const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
   src.buffer = noiseBuffer(ctx); f.type = type; f.frequency.setValueAtTime(fq, t); f.Q.value = q;
   if (sweep) f.frequency.exponentialRampToValueAtTime(fq * sweep, t + dur);
-  g.gain.setValueAtTime(gain * CUE.j.g * CUE.trim, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  // a burst rises over NOISE_ATTACK seconds, as tone() does, so it never starts at a random sample value
+  const top = gain * CUE.j.g * CUE.trim, rise = Math.min(NOISE_ATTACK, dur / 2);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(top, t + rise); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   src.connect(f); f.connect(g); g.connect(CUE.dest); src.start(t, off, dur + 0.02);
 }
 
@@ -229,7 +239,7 @@ export function resumeAudio() {
 // What a player would hear right now, for tests: the mood, whether it is held, and the two buses' levels.
 export function audioState() {
   const k = AUDIO.kit;
-  return { ctx: AUDIO.ctx ? AUDIO.ctx.state : null, master: AUDIO.master ? +AUDIO.master.gain.value.toFixed(3) : null, mood: AUDIO.mood, held: !!(k && k.held), muted: !!(k && k.muted), holds: [...AUDIO.holds], music: k ? +k.buses.music.gain.value.toFixed(3) : null, musicLevel: k ? +AUDIO.musicLevel.toFixed(3) : null, sfx: AUDIO.sfxGain ? +AUDIO.sfxGain.gain.value.toFixed(3) : null, ambience: k ? +k.buses.ambience.gain.value.toFixed(3) : null, intensity: k ? k.intensity : null, playing: k ? { music: !!k.music.score, ambience: !!k.amb.scene } : null };
+  return { ctx: AUDIO.ctx ? AUDIO.ctx.state : null, master: AUDIO.master ? +AUDIO.masterLevel.toFixed(3) : null, masterNow: AUDIO.master ? +AUDIO.master.gain.value.toFixed(3) : null, mood: AUDIO.mood, held: !!(k && k.held), muted: !!(k && k.muted), holds: [...AUDIO.holds], music: k ? +k.buses.music.gain.value.toFixed(3) : null, musicLevel: k ? +AUDIO.musicLevel.toFixed(3) : null, sfx: AUDIO.sfxGain ? +AUDIO.sfxLevel.toFixed(3) : null, ambience: k ? +k.buses.ambience.gain.value.toFixed(3) : null, intensity: k ? k.intensity : null, playing: k ? { music: !!k.music.score, ambience: !!k.amb.scene } : null };
 }
 export const audioList = () => ({ music: Object.keys(SCORES), ambience: Object.keys(SCENES), cues: CUE_NAMES, cardStarLevel: CARD_STAR_LEVEL.slice() });
 // What a render is heard through: the master volume (the shipped default unless a test asks for another, for example the slider at
