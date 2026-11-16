@@ -268,12 +268,13 @@ tests.push({
     await layoutOk(t, t.vp.width, t.vp.height);
     t.equal(await t.page.locator('#btn-mute').getAttribute('aria-pressed'), 'false', 'it starts as sound on');
     await t.shot('S5-10-hud-mute');
-    for (const [w, h] of [[360, 640], [844, 390]]) {
+    for (const [w, h] of [[360, 640], [844, 390], [667, 375]]) {
       await t.page.setViewportSize({ width: w, height: h });
       await t.page.waitForFunction((n) => window.innerWidth === n, w);
       await t.waitIdle();
       await layoutOk(t, w, h);
       if (w === 844) await t.shot('S5-10-hud-mute-landscape');
+      if (w === 667) await t.shot('S5-10-hud-mute-small-landscape');
     }
     await t.page.setViewportSize({ width: t.vp.width, height: t.vp.height });
   },

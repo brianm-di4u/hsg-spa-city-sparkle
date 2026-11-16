@@ -193,13 +193,15 @@ body.landscape #tray { left: 24px; bottom: 24px; width: 260px; flex-wrap: wrap; 
   body.landscape .hud-goals .goal .n { font-size: 1rem; }
   body.landscape .hud-score { grid-area: score; gap: 2px; }
   body.landscape .hud-score-n { font-size: 1.3rem; }
-  body.landscape #tray { bottom: 8px; padding: 8px; gap: 6px; flex-wrap: nowrap; border-radius: 16px; }
+  /* four boosters on one row and Mute and Pause under them: six buttons of 44 px do not fit the 260 px column in one row */
+  body.landscape #tray { bottom: 8px; padding: 8px; gap: 6px; display: grid; grid-template-columns: repeat(4, 1fr); justify-items: center; border-radius: 16px; }
+  body.landscape #tray .round-mute { grid-column: 3; grid-row: 2; }
+  body.landscape #tray #btn-pause { grid-column: 4; grid-row: 2; }
   body.landscape .booster { width: 44px; height: 52px; border-radius: 12px; padding: 4px 0 2px; }
   body.landscape .booster .b-icon { width: 24px; height: 24px; }
   body.landscape .booster .b-name { font-size: .62rem; }
   body.landscape .booster .b-count { top: -6px; right: -4px; }
   body.landscape #tray .round { width: 44px; height: 44px; flex: none; }
-  body.landscape #tray { width: 310px; }
 }
 
 /* ---------- modal & dialogs ---------- */
