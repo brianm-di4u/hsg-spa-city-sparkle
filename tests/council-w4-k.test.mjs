@@ -40,24 +40,29 @@ const vibrationSwitch = async (t) => {
 };
 
 tests.push({
-  name: 'K-02 a touch player whose save never chose Vibration has it off, written once, with every other setting and all progress kept, and it stays off after a reload',
+  name: 'K-02 a touch player whose save never chose Vibration has it off, stored with the first save, with every other setting and all progress kept, and it stays off after a reload',
   viewports: ['mobile'],
   url: 'index.html?saved=nochoice',
   initScript: seedSave,
   async run(t) {
     t.equal(await vibrationOf(t), false, 'Vibration reads off');
-    const raw = await parsed(t);
-    t.equal(raw.settings.vibration, false, 'and the off is written into the save');
-    t.equal(raw.settings.sound, false, 'Sound effects keep their stored setting');
-    t.equal(raw.settings.volume, 0.7, 'the volume is kept');
-    t.equal(raw.progress['w1-01'].stars, 3, 'progress is kept');
-    t.equal(raw.boosters.hammer, 2, 'boosters are kept');
+    const opened = await rawOf(t);
+    t.equal(Object.keys(JSON.parse(opened).settings).sort().join(), 'music,sound,volume', 'opening the game writes nothing into the stored save');
     await playAMove(t);
     t.equal((await t.page.evaluate(() => window.__vib.length)), 0, 'a match on a touch screen asks the phone for no buzz');
     await t.reload();
     t.equal(await vibrationOf(t), false, 'still off after a reload');
-    t.equal((await parsed(t)).settings.vibration, false, 'and still written as off');
     t.equal(await vibrationSwitch(t), 'false', 'the Settings switch shows off');
+    await t.page.locator('[data-toggle="hints"]').click();
+    const raw = await parsed(t);
+    t.equal(raw.settings.vibration, false, 'the first save the game makes holds the off');
+    t.equal(raw.settings.sound, false, 'Sound effects keep their stored setting');
+    t.equal(raw.settings.volume, 0.7, 'the volume is kept');
+    t.equal(raw.progress['w1-01'].stars, 3, 'progress is kept');
+    t.equal(raw.boosters.hammer, 2, 'boosters are kept');
+    await t.reload();
+    t.equal(await vibrationOf(t), false, 'and it is still off after that save and a reload');
+    await vibrationSwitch(t);
     await t.page.locator('[data-toggle="vibration"]').click();
     t.equal(await vibrationOf(t), true, 'the player can turn it on');
     await t.reload();
@@ -71,7 +76,10 @@ tests.push({
   initScript: seedSave,
   async run(t) {
     t.equal(await vibrationOf(t), false, 'Vibration reads off');
-    t.equal((await parsed(t)).settings.vibration, false, 'and is written as off');
+    t.equal((await parsed(t)).settings, undefined, 'and opening the game writes nothing');
+    t.equal(await vibrationSwitch(t), 'false', 'the Settings switch shows off');
+    await t.page.locator('[data-toggle="hints"]').click();
+    t.equal((await parsed(t)).settings.vibration, false, 'the first save holds the off');
     t.equal((await parsed(t)).progress['w1-01'].stars, 3, 'progress is kept');
   },
 });
@@ -117,6 +125,5 @@ tests.push({
     await t.page.evaluate(() => { sessionStorage.setItem('k-seeded', '1'); localStorage.setItem('spa-city-sparkle:v1', JSON.stringify({ v: 1, settings: { sound: true, music: true, volume: 0.5 }, progress: {}, boosters: { hammer: 1, line: 1, shuffle: 1, plus5: 1 }, lore: [], tutorialSeen: [] })); });
     await t.reload();
     t.equal(await vibrationOf(t), false, 'an older save has it off');
-    t.equal((await parsed(t)).settings.vibration, false, 'and written as off');
   },
 });

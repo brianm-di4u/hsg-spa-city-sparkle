@@ -26,8 +26,8 @@ export const freshSave = () => ({ v: 1, settings: { sound: true, music: true, am
 // Settings as read from a save: the defaults under what the save holds. A save from before the Ambience switch gets it
 // where its Sound effects switch is, so a player who had the effects off hears no new sound.
 // A save that exists but never chose Vibration gets it off (a returning player is not buzzed by a switch they did not choose); only a profile with no save at all takes the touch-screen default (K-02).
+// Opening the game writes nothing, so the off is stored with the first save the game makes after this (every save writes the whole settings); until then it is read from the stored save the same way every visit.
 const readSettings = (saved, stored = false) => { const st = { ...freshSave().settings, ...(saved || {}) }; if (!saved || typeof saved.ambience !== 'boolean') st.ambience = st.sound !== false; if (stored && !(saved && typeof saved.vibration === 'boolean')) st.vibration = false; return st; };
-const choseVibration = (d) => obj(d.settings) && typeof d.settings.vibration === 'boolean';
 // Per-level play record for tuning: stats[levelId] = { tries: runs finished (won or lost), wins, bestMoves: fewest moves a win took }.
 // Small whole numbers; anything else in a damaged save is dropped.
 const int = (v) => (Number.isInteger(v) && v >= 0 ? v : 0);
@@ -72,7 +72,7 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
     const data = { ...freshSave(), ...d, settings: readSettings(d.settings, true), boosters: { ...freshSave().boosters, ...(d.boosters || {}) } };
     data.stats = cleanStats(data.stats); data.daily = cleanDaily(data.daily); if (!Number.isFinite(data.soakBest) || data.soakBest < 0) data.soakBest = 0; if (typeof data.soakDay !== 'string') data.soakDay = null;
     delete data.storageOk;
-    last = { kind: count ? 'identified' : 'legacy', raw, data, payload: d, vibrationUnset: !choseVibration(d) }; return clone(last);
+    last = { kind: count ? 'identified' : 'legacy', raw, data, payload: d }; return clone(last);
   }
   function read() { try { corrupt = null; newer = false; return observe(); } catch (e) { newer = !!e?.newer; corrupt = !newer && typeof e?.raw === 'string' ? e.raw : null; projection.storageOk = false; return null; } }
   // The player opted in (Start fresh or Reset): keep the unreadable text under a backup key, then treat the slot as missing.
@@ -217,8 +217,7 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
     return { ...receipt, observedCurrent: kind === 'adopt' ? clone(o.data.current) : null };
   }
   const store = { data: projection, pending, effects,
-    // A save that holds no Vibration choice reads as off (readSettings) and the choice is written once, here, before anything else is.
-    load() { const o = read(); if (o) { project(o.data, true); if (o.vibrationUnset) store.settings({ vibration: false }); } else projection.storageOk = false; return projection; },
+    load() { const o = read(); if (o) project(o.data, true); else projection.storageOk = false; return projection; },
     settings(changes) {
       Object.assign(pending.settings, Object.fromEntries(Object.entries(changes).filter(([k]) => SETTING_KEYS.includes(k))));
       const o = read(); if (!o) { projection.settings = Object.assign(projection.settings, pending.settings); effects.onChange(); return unsaved(); }
