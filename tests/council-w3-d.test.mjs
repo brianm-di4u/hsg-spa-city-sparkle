@@ -255,6 +255,7 @@ async function totalFor(t) {
   const total = await t.page.evaluate(() => { const g = window.__game; g.act('swap', [1, 1], [1, 0]); return g.act('total'); });
   await t.page.evaluate(() => window.__game.act('skip'));
   await t.waitIdle();
+  await t.page.waitForSelector('.modal .ribbon span');
   return total;
 }
 tests.push({
