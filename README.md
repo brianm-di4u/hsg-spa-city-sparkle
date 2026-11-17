@@ -28,8 +28,9 @@ npm test               # the Playwright harness; screenshots land in screenshots
 ```
 
 `shared/` holds a copy of the Hot Springs Games test harness and inliner, so the repo builds and tests on its own.
-`tools/build-lore.mjs` and `tools/build-route.mjs` regenerate `data/lore.json` and the route from the collection's
-research corpus and run only inside the monorepo; the lore fact check uses the bundled `research/lore-bank.json`.
+`tools/build-lore.mjs` regenerates `data/lore.json` and `data/bonus-lore.json` from the bundled `research/lore-bank.json`
+(or the monorepo's trivia bank when it is there) and runs in this repo on its own; `tools/build-route.mjs` regenerates the
+route from the collection's research corpus and runs only inside the monorepo. The lore fact check uses the bundled bank.
 
 Docs: `PRD.md` (requirements and acceptance criteria), `MECHANICS.md` (engine rules), `DEV-PLAN.md` (milestones,
 test matrix, defect log), `VISUAL-PLAN.md`, `TEST-CAMPAIGN.md`, `REPORT.md`, `VISUAL-REPORT.md`, `SAMPLES.md`, `art-src/PROMPTS.md`

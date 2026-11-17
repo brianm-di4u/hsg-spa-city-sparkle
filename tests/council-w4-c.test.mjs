@@ -451,10 +451,19 @@ tests.push({
   async run() {
     const crypto = await import('node:crypto');
     const { execFileSync } = await import('node:child_process');
-    const file = new URL('../data/lore.json', import.meta.url);
-    const before = fs.readFileSync(file, 'utf8');
-    execFileSync(process.execPath, [fileURLToPath(new URL('../tools/build-lore.mjs', import.meta.url))], { stdio: 'ignore' });
-    assert.equal(fs.readFileSync(file, 'utf8'), before, 'running tools/build-lore.mjs again writes the same file');
+    const os = await import('node:os'), path = await import('node:path');
+    const file = new URL('../data/lore.json', import.meta.url), bonusFile = new URL('../data/bonus-lore.json', import.meta.url);
+    const before = fs.readFileSync(file, 'utf8'), bonusBefore = fs.readFileSync(bonusFile, 'utf8');
+    // The tool runs on a copy in a temporary folder (tools/, research/lore-bank.json and an empty data/), so the repo's own data files are only read, never written.
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sparkle-lore-'));
+    try {
+      fs.mkdirSync(path.join(tmp, 'tools')); fs.mkdirSync(path.join(tmp, 'research')); fs.mkdirSync(path.join(tmp, 'data'));
+      fs.copyFileSync(fileURLToPath(new URL('../tools/build-lore.mjs', import.meta.url)), path.join(tmp, 'tools', 'build-lore.mjs'));
+      fs.copyFileSync(fileURLToPath(new URL('../research/lore-bank.json', import.meta.url)), path.join(tmp, 'research', 'lore-bank.json'));
+      execFileSync(process.execPath, [path.join(tmp, 'tools', 'build-lore.mjs')], { stdio: 'ignore' });
+      assert.equal(fs.readFileSync(path.join(tmp, 'data', 'lore.json'), 'utf8'), before, 'running tools/build-lore.mjs again writes the same lore.json');
+      assert.equal(fs.readFileSync(path.join(tmp, 'data', 'bonus-lore.json'), 'utf8'), bonusBefore, 'and the same bonus-lore.json');
+    } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
     const lore = JSON.parse(before);
     for (const [id, text] of Object.entries(REWORDED)) assert.equal(lore.find((c) => c.id === id).text, text, id + ' reads as approved');
     for (const was of WAS) assert.ok(!lore.some((c) => c.text === was), 'the old text is gone: ' + was.slice(0, 40));
