@@ -25,7 +25,9 @@ const touchScreen = () => typeof matchMedia === 'function' && matchMedia('(point
 export const freshSave = () => ({ v: 1, settings: { sound: true, music: true, ambience: true, volume: 0.5, motion: 'auto', steam: true, hints: true, badges: false, postcardSeen: false, animSpeed: 1, vibration: touchScreen(), musicVolume: 1, sfxVolume: 1, quality: 'auto' }, progress: {}, stats: {}, boosters: { hammer: 1, line: 1, shuffle: 1, plus5: 1 }, lore: [], tutorialSeen: [], current: null, soakDay: null, soakBest: 0, daily: freshDaily() });
 // Settings as read from a save: the defaults under what the save holds. A save from before the Ambience switch gets it
 // where its Sound effects switch is, so a player who had the effects off hears no new sound.
-const readSettings = (saved) => { const st = { ...freshSave().settings, ...(saved || {}) }; if (!saved || typeof saved.ambience !== 'boolean') st.ambience = st.sound !== false; return st; };
+// A save that exists but never chose Vibration gets it off (a returning player is not buzzed by a switch they did not choose); only a profile with no save at all takes the touch-screen default (K-02).
+const readSettings = (saved, stored = false) => { const st = { ...freshSave().settings, ...(saved || {}) }; if (!saved || typeof saved.ambience !== 'boolean') st.ambience = st.sound !== false; if (stored && !(saved && typeof saved.vibration === 'boolean')) st.vibration = false; return st; };
+const choseVibration = (d) => obj(d.settings) && typeof d.settings.vibration === 'boolean';
 // Per-level play record for tuning: stats[levelId] = { tries: runs finished (won or lost), wins, bestMoves: fewest moves a win took }.
 // Small whole numbers; anything else in a damaged save is dropped.
 const int = (v) => (Number.isInteger(v) && v >= 0 ? v : 0);
@@ -67,10 +69,10 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
     if (!obj(d) || d.v !== VERSION || ['settings', 'progress', 'boosters'].some((k) => own(d, k) && !obj(d[k]))) throw Object.assign(Error('Unsupported save'), { raw });
     const count = META.filter((k) => own(d, k)).length;
     if (count && (count !== META.length || META.some((k) => typeof d[k] !== 'string' || !d[k]))) throw Object.assign(Error('Partial save identity'), { raw });
-    const data = { ...freshSave(), ...d, settings: readSettings(d.settings), boosters: { ...freshSave().boosters, ...(d.boosters || {}) } };
+    const data = { ...freshSave(), ...d, settings: readSettings(d.settings, true), boosters: { ...freshSave().boosters, ...(d.boosters || {}) } };
     data.stats = cleanStats(data.stats); data.daily = cleanDaily(data.daily); if (!Number.isFinite(data.soakBest) || data.soakBest < 0) data.soakBest = 0; if (typeof data.soakDay !== 'string') data.soakDay = null;
     delete data.storageOk;
-    last = { kind: count ? 'identified' : 'legacy', raw, data, payload: d }; return clone(last);
+    last = { kind: count ? 'identified' : 'legacy', raw, data, payload: d, vibrationUnset: !choseVibration(d) }; return clone(last);
   }
   function read() { try { corrupt = null; newer = false; return observe(); } catch (e) { newer = !!e?.newer; corrupt = !newer && typeof e?.raw === 'string' ? e.raw : null; projection.storageOk = false; return null; } }
   // The player opted in (Start fresh or Reset): keep the unreadable text under a backup key, then treat the slot as missing.
@@ -215,7 +217,8 @@ export function createSaveStore({ storage = () => globalThis.localStorage, newTo
     return { ...receipt, observedCurrent: kind === 'adopt' ? clone(o.data.current) : null };
   }
   const store = { data: projection, pending, effects,
-    load() { const o = read(); if (o) project(o.data, true); else projection.storageOk = false; return projection; },
+    // A save that holds no Vibration choice reads as off (readSettings) and the choice is written once, here, before anything else is.
+    load() { const o = read(); if (o) { project(o.data, true); if (o.vibrationUnset) store.settings({ vibration: false }); } else projection.storageOk = false; return projection; },
     settings(changes) {
       Object.assign(pending.settings, Object.fromEntries(Object.entries(changes).filter(([k]) => SETTING_KEYS.includes(k))));
       const o = read(); if (!o) { projection.settings = Object.assign(projection.settings, pending.settings); effects.onChange(); return unsaved(); }
