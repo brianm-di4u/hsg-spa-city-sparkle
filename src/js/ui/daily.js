@@ -16,13 +16,23 @@ export const dailySeed = (k) => +k.replace(/-/g, '');
 const inPool = (l) => l.world <= 3 && l.moves != null && l.goals.length && !(l.tags || []).some((t) => t.startsWith('intro:')) && l.band && l.band[0] >= 0.6;
 export function dailyPool(levels) { return levels.filter(inPool); }
 
+// A level whose board was changed for the journey after the Daily began (wave 4 gave Park Hotel 30 moves and a spawner layer) keeps the board the Daily dealt before,
+// because what a date gives does not change: its moves and its layers as they were. A level not listed here is dealt exactly as it is in the journey.
+const DAILY_BOARD = { 'w3-08': { moves: 32, drop: ['flow'] } };
+function asDealt(base) {
+  const was = DAILY_BOARD[base.id];
+  if (!was) return base;
+  const grid = { ...base.grid }; for (const k of was.drop) delete grid[k];
+  return { ...base, moves: was.moves, grid };
+}
+
 // The same level and board for everyone on the same calendar day; never the same level two days running.
 export function dailyLevel(levels, key) {
   const pool = dailyPool(levels);
   const at = (k) => hash32('daily', dayNumber(k)) % pool.length;
   let i = at(key);
   if (i === at(addDays(key, -1))) i = (i + 1) % pool.length;
-  const base = pool[i];
+  const base = asDealt(pool[i]);
   const L = { ...base, id: 'daily', name: base.name, mode: 'daily', tags: [] };
   delete L.tip;
   return { level: L, from: base.id, seed: dailySeed(key), key };
