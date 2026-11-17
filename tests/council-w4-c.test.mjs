@@ -187,6 +187,8 @@ tests.push({
     const card = await t.page.locator('#modal .bonus-card').innerText();
     t.expect(card.includes(bonusOf(1).text) && card.includes(bonusOf(1).title) && /New bonus card/i.test(card), 'the world card shows it, marked as new');
     t.equal(await t.page.locator('#modal .bonus-card').count(), 1, 'once');
+    // the live region is filled 30 ms after it is cleared, so wait for the text rather than read it at once
+    await t.page.waitForFunction((title) => document.getElementById('live').textContent.includes(title), bonusOf(1).title, { timeout: 5000 });
     t.expect((await t.page.locator('#live').textContent()).includes(bonusOf(1).title), 'and a screen reader hears it');
     await t.checkLayout();
     await t.shot('C4-05-world-complete');
