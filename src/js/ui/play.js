@@ -10,7 +10,7 @@ import { BOARD, buildBoard, drawStatic, startAnim, drawAnim } from '../view/boar
 import { frameAt } from '../view/player.js';
 import { buildBackdrop, drawAmbient } from '../view/backdrop.js';
 import { goalIcon } from '../view/vector-art.js';
-import { sfx, unlockAudio, startMusic, setMusicIntensity, crowdLevel } from '../audio.js';
+import { sfx, unlockAudio, startMusic, setMusicIntensity, crowdLevel, beatLevel } from '../audio.js';
 import { SAVE, prepareSaveAction, recordComputedAction, saveSettledAction } from './save.js';
 import { ensurePack } from '../art.js';
 import { haptic, pulseFor, PULSE } from './haptics.js';
@@ -422,7 +422,7 @@ function beatSounds(evs, merged = false) {
     else if (e.t === 'spread') s1('spread');
     else if (e.t === 'reshuffle') s1('reshuffle');
   }
-  const level = crowdLevel(cues.length);
+  const level = merged ? crowdLevel(cues.length) : beatLevel(cues.length);
   cues.forEach(([n, a, o], k) => sfx(n, a, { pan: at, level, at: merged ? k * SKIP_GAP : 0, ...o }));
 }
 // The player skipped: the beats that had not played yet are folded into one set of sounds, so the information in them (a special made, a

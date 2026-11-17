@@ -8,7 +8,7 @@ import { BOARD } from '../view/board-view.js';
 import { visibleMotes } from '../view/backdrop.js';
 import { boardFromAscii, cloneState, hashState } from '../engine/grid.js';
 import { legalMoves } from '../engine/moves.js';
-import { AUDIO, audioList, audioRender, audioState, cueRender, mixRender, crowdLevel, sfx } from '../audio.js';
+import { AUDIO, audioList, audioRender, audioState, cueRender, mixRender, crowdLevel, beatLevel, sfx } from '../audio.js';
 
 export const HOOK = { seed: 1, artReady: () => true };
 
@@ -58,6 +58,7 @@ export function installHooks() {
     cueRender: (name, arg, opt, seconds, wantWav, seed, levels) => cueRender(name, arg, opt, seconds, wantWav, seed, levels),
     mixRender: (spec) => mixRender(spec),
     crowdLevel: (n) => crowdLevel(n),
+    beatLevel: (n) => beatLevel(n),
     cue: (name, arg, opt) => { sfx(name, arg, opt); return true; },
     getState: () => summary(),
     dailyPick(key) { const p = dailyLevel(LEVELS, key || todayKey()); return { key: p.key, from: p.from, name: p.level.name, moves: p.level.moves, seed: p.seed, stars: p.level.stars }; },

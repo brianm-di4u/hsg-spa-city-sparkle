@@ -182,6 +182,9 @@ export function runCue(name, arg, opt, ctx, dest, rnd) {
 // From three cues up each is struck at sqrt(3 / n), so the sound grows as the square root of the count (0.87 at four, 0.77 at five, 0.58 at nine) instead of falling as 1.5 / n (0.375 at four, which left
 // a goal chime in a fold of four at 0.18, under the 0.2 floor).
 export const crowdLevel = (n) => (n <= 3 ? 1 : Math.max(0.2, Math.sqrt(3 / n)));
+// A beat strikes its cues at one instant, so they sum with nothing between them: at sqrt(3 / n) five different cues together read 1.04 at the maximum volume (worst of random sets, tests/council-w4-k).
+// From four cues up a beat is struck at 1.5 / n instead (0.375 at four, 0.3 at five; the same sets read 0.70 to 0.75). A skip spaces its cues 40 ms apart and keeps crowdLevel.
+export const beatLevel = (n) => (n <= 3 ? 1 : Math.max(0.2, 1.5 / n));
 // The big cues pull the music down for a moment so they are heard over it.
 const DUCKS = { win: [6, 700], lose: [6, 700], world: [6, 1100] };
 
