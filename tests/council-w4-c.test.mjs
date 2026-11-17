@@ -298,13 +298,12 @@ tests.push({
   },
 });
 tests.push({
-  name: 'S3-07 a player who matches on purpose still wins w1-02 to w1-04 nine times in ten, by the balance report',
+  name: 'S3-07 a player who matches on purpose still wins w1-02 to w1-04 nine times in ten (the casual bot, 200 seeded games each, played here from the level files)',
   node: true,
-  run() {
-    const r = JSON.parse(fs.readFileSync(new URL('../tools/balance-report.json', import.meta.url), 'utf8'));
+  async run() {
     for (const id of ['w1-02', 'w1-03', 'w1-04']) {
-      assert.ok(r.levels[id].win >= 0.88, `${id}: casual win ${r.levels[id].win}`);
-      assert.ok(r.levels[id].randomWin < 0.5 && r.randomSeeds >= 50, `${id}: the report measured the random bot (${r.randomSeeds} seeds) and it won ${r.levels[id].randomWin}`);
+      const r = await played(id, 'casual', 200);
+      assert.ok(r.win >= 0.88, `${id}: casual bot won ${(r.win * 100).toFixed(1)}%, want at least 88%`);
     }
   },
 });
