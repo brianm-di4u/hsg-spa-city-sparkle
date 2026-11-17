@@ -35,3 +35,39 @@ tests.push({
     assert.ok(journey.grid.flow, 'and its spawner layer');
   },
 });
+
+// --- C4-06 (follow-up): a cue's loudness follows its level, with no stray first sample ---------------------------------------------------
+// A noise burst that began part-way through a render block passed its first sample at the gain node's default of 1 before the burst's own silent start took hold, so crystal, token and the Encore sting
+// carried one full-size click (0.94 to 0.97 at the maximum volume) however quiet the cue was asked to be. Every gain now starts at silence the moment it is made.
+tests.push({
+  name: 'C4-06 a cue struck at level 0.05 is far quieter than at level 1, for every cue (no unscaled click: crystal, token and the Encore sting read 0.94 or more at any level before)',
+  viewports: ['desktop'],
+  async run(t) {
+    const L = await t.game('audioList'), rows = [];
+    for (const name of L.cues) {
+      let loud = 0, quiet = 0;
+      for (const seed of [1, 2]) {
+        loud = Math.max(loud, (await t.game('cueRender', name, 0, { level: 1 }, 3, false, seed, { volume: 1 })).peak);
+        quiet = Math.max(quiet, (await t.game('cueRender', name, 0, { level: 0.05 }, 3, false, seed, { volume: 1 })).peak);
+      }
+      rows.push([name, loud, quiet]);
+      t.expect(quiet < 0.3 * loud, `${name}: at level 0.05 it peaks ${quiet}, under 0.3 of its ${loud} at level 1`);
+    }
+    t.log(`peak at level 1 / level 0.05, maximum volume: ${rows.map((r) => `${r[0]} ${r[1]}/${r[2]}`).join('; ')}`);
+  },
+});
+
+// --- C4-08 and C4-06 (follow-up): the cue levels as the owner decided (69) ------------------------------------------------------------
+tests.push({
+  name: 'C4-08 crowdLevel is 1 up to three cues and sqrt(3 / n) above, and the trims keep every cue under 0.7 alone at the maximum volume',
+  viewports: ['desktop'],
+  async run(t) {
+    for (const [n, want] of [[1, 1], [2, 1], [3, 1], [4, Math.sqrt(0.75)], [6, Math.sqrt(0.5)], [12, 0.5]]) t.expect(Math.abs((await t.game('crowdLevel', n)) - want) < 1e-9, `crowdLevel(${n}) is ${want.toFixed(3)}`);
+    const L = await t.game('audioList'), over = [];
+    for (const name of L.cues) for (const arg of [0, 1, 2, 3]) {
+      const p = (await t.game('cueRender', name, arg, name === 'match' ? { size: 5 } : {}, 3, false, 1, { volume: 1 })).peak;
+      if (p >= 0.7) over.push(`${name} ${arg} ${p}`);
+    }
+    t.expect(over.length === 0, `no cue alone peaks 0.7 or more at the maximum volume as heard (${over.join('; ')})`);
+  },
+});

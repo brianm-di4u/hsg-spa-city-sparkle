@@ -7,9 +7,6 @@ const NEW_CUES = ['goal', 'low', 'world', 'earned', 'intro', 'combo', 'starline'
 const CALLS = CUES.map((c) => [c, { match: 3, token: 2, star: 2, starline: 2, low: 3 }[c] || 0, c === 'match' ? { size: 5, pan: 0.3 } : {}]);
 const CUE_MIN = 0.18, CUE_MAX = 0.45; // standards: gameplay cues peak 0.2 to 0.45 (a little room below for the random gain spread)
 const SCALE = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24];
-// Fitted from time 0 (wave 2 and 3): cueRender now starts a cue at 0.2 s by default (C4-06), where the offline limiter reads a cue two to four times
-// louder, so this test passes start: 0 to keep reading what it was fitted against. The reading as heard is in council-w4-a; the trims that bring it into range wait for the owner's loudness pass.
-const FROM_ZERO = { start: 0 };
 
 // --- measurements ---------------------------------------------------------------------------------------------------
 tests.push({
@@ -21,7 +18,7 @@ tests.push({
     const out = [];
     for (const [name, arg, opt] of CALLS) {
       const peaks = [];
-      for (const seed of [1, 2, 3, 4, 5]) peaks.push((await t.game('cueRender', name, arg, opt, 3, false, seed, FROM_ZERO)).peak);
+      for (const seed of [1, 2, 3, 4, 5]) peaks.push((await t.game('cueRender', name, arg, opt, 3, false, seed)).peak);
       const lo = Math.min(...peaks), hi = Math.max(...peaks);
       out.push(`${name} ${lo}-${hi}`);
       t.expect(lo >= CUE_MIN && hi <= CUE_MAX, `${name} peaks ${lo} to ${hi}, inside ${CUE_MIN} to ${CUE_MAX}`);
@@ -34,7 +31,7 @@ tests.push({
   viewports: ['desktop'],
   async run(t) {
     let cue = 0;
-    for (const [name, arg, opt] of CALLS) cue = Math.max(cue, (await t.game('cueRender', name, arg, opt, 3, false, 1, FROM_ZERO)).peak);
+    for (const [name, arg, opt] of CALLS) cue = Math.max(cue, (await t.game('cueRender', name, arg, opt, 3, false, 1)).peak);
     const music = (await t.game('audioRender', 'avenue', 20, false)).peak, bed = (await t.game('audioRender', 'rain', 10, false)).peak;
     t.log(`loudest cue ${cue}, music ${music}, bed ${bed}, sum ${(cue + music + bed).toFixed(3)}`);
     t.expect(cue + music + bed < 0.95, 'the sum of the three peaks is under 0.95');

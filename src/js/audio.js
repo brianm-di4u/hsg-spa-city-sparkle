@@ -63,7 +63,7 @@ function tone(freq, dur, { type = 'sine', gain = 0.2, at = 0, attack = 0.005, sl
   const o = ctx.createOscillator(), g = ctx.createGain();
   o.type = type; o.frequency.setValueAtTime(f, t);
   if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f * slide), t + dur);
-  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  g.gain.value = 0.0001; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   o.connect(g); g.connect(CUE.dest); o.start(t); o.stop(t + dur + 0.05);
 }
 // One buffer of noise per audio context (two seconds, made once) serves every burst. Each burst starts it at its own offset, from this cue's
@@ -89,7 +89,8 @@ function noise(dur, { gain = 0.15, at = 0, freq = 1200, q = 0.8, type = 'bandpas
   if (sweep) f.frequency.exponentialRampToValueAtTime(fq * sweep, t + dur);
   // a burst rises over NOISE_ATTACK seconds, as tone() does, so it never starts at a random sample value
   const top = gain * CUE.j.g * CUE.trim, rise = Math.min(NOISE_ATTACK, dur / 2);
-  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(top, t + rise); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  // the gain starts at silence from the moment the node exists: a source that begins part-way through a render block would otherwise pass its first sample at the default gain of 1
+  g.gain.value = 0.0001; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(top, t + rise); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   src.connect(f); f.connect(g); g.connect(CUE.dest); src.start(t, off, dur + 0.02);
 }
 
@@ -104,17 +105,16 @@ const note = (base, step) => {
   if (CUE.minor && (semis % 12 === 4 || semis % 12 === 11)) semis -= 1;
   return C4 * 2 ** ((semis + CUE.shift) / 12);
 };
-// A fuller win phrase is scaled down by star count so all three peak inside the cue range (measured with cueRender; a plain win is unchanged).
-const WIN_FIT = [1, 1, 0.6, 0.38];
+// A fuller win phrase is scaled down by star count so all three peak together inside the cue range (measured with cueRender; a plain win is unchanged).
+const WIN_FIT = [1, 1, 0.79, 0.63]; // was [1, 1, 0.6, 0.38] before the trims of CUE_TRIM (each win now peaks 0.46 to 0.6 at the maximum volume; the fuller phrases were fitted lower because they were louder)
 // The star cues of the results card ring one after another under the win phrase and over the music; each is turned down (measured with mixRender at a delayed start, as it sounds live) so the whole card stays under 0.95 at the maximum volume.
 const STAR_FIT = [1, 0.8, 0.8, 0.83];
-// The results cards ring the stars a second time at these levels (screens.js), measured with the card's real timing (win at 0, stars at 380, 560 and 740 ms, the earned chime at 810, 990 or 1170 ms,
-// the mix starting 0.2 s in) over every bed, with the stars and the chime struck 50 ms early or late and two draws of each cue, at the maximum volume. The first star rings in every card and over the
-// win phrase, and the cards read 0.99 (1 star), 0.95 (2) and 0.96 (3) over the worst bed; with these they read 0.91, 0.91 and 0.92. Alone, a star cue keeps the level STAR_FIT gives it, so the
-// fitting of a cue by itself (S5-02) is untouched. Was [1, 1, 1, 1].
-export const CARD_STAR_LEVEL = [1, 0.55, 0.85, 0.72];
-// Level trim per cue, measured with cueRender so gameplay cues peak between 0.2 and 0.45 at the default volume (before this they peaked 0.01 to 0.15).
-const CUE_TRIM = { select: 25, swap: 23, bounce: 24, match: 10.6, cascade: 13.6, stone: 7.4, crystal: 6.6, special: 14, tufa: 29, lock: 37, moss: 33, fog: 17, token: 11, spread: 80, reshuffle: 12, win: 5.4, lose: 5.8, star: 19, click: 59, booster: 24, goal: 5.7, low: 7, world: 5.5, earned: 7.3, intro: 5.7, combo: 7.6, starline: 17, encore: 6.1 };
+// The results cards ring the stars a second time (screens.js) at these levels, struck with the card's real timing (win at 0, stars at 380, 560 and 740 ms, the earned chime at 810, 990 or 1170 ms).
+export const CARD_STAR_LEVEL = [1, 1, 1, 1]; // was [1, 0.55, 0.85, 0.72] while the cues were louder; with the trims of CUE_TRIM the cards peak well under 0.95 at the full level (tests/council-w4-a), so it is one line to turn them down again
+// Level trim per cue, measured with cueRender (struck 0.2 s in, as heard): gameplay cues peak between 0.2 and 0.45 at the default volume, and none peaks above about 0.6 at the maximum volume (the owner's loudness
+// decision 69; the worst of every argument and four draws). The trims before it were fitted from time 0, where the limiter reads a cue two to four times low, so at the maximum volume 14 cues alone peaked 0.95 to 1.25:
+// { select: 25, swap: 23, bounce: 24, match: 10.6, cascade: 13.6, stone: 7.4, crystal: 6.6, special: 14, tufa: 29, lock: 37, moss: 33, fog: 17, token: 11, spread: 80, reshuffle: 12, win: 5.4, lose: 5.8, star: 19, click: 59, booster: 24, goal: 5.7, low: 7, world: 5.5, earned: 7.3, intro: 5.7, combo: 7.6, starline: 17, encore: 6.1 }.
+const CUE_TRIM = { select: 5.15, swap: 6.42, bounce: 5.66, match: 2.84, cascade: 3.29, stone: 1.6, crystal: 4.9, special: 6.69, tufa: 5.77, lock: 8.21, moss: 8.71, fog: 4.05, token: 6.78, spread: 23, reshuffle: 9.84, win: 3.84, lose: 4.47, star: 8.36, click: 16.5, booster: 5.98, goal: 3.67, low: 1.84, world: 4.41, earned: 6.48, intro: 5.7, combo: 4.35, starline: 7.94, encore: 4.48 };
 export { tuneOf };
 export const CUE_NAMES = Object.keys(CUE_TRIM);
 const pannerFor = (ctx, dest, pan) => { if (!pan || !ctx.createStereoPanner) return dest; const p = ctx.createStereoPanner(); p.pan.value = Math.max(-0.7, Math.min(0.7, pan)); p.connect(dest); return p; };
@@ -179,7 +179,9 @@ export function runCue(name, arg, opt, ctx, dest, rnd) {
 }
 // Cues struck together (the sounds of one beat, or of every beat a skip folds into one) get quieter as they pile up, so even at the maximum
 // volume a folded set (goal, combo, crystal, match, stone ...) stays under 0.95 at the speakers, summed (tests/council-w3-d). Up to three together are as loud as one.
-export const crowdLevel = (n) => (n <= 3 ? 1 : Math.max(0.2, 1.5 / n));
+// From three cues up each is struck at sqrt(3 / n), so the sound grows as the square root of the count (0.87 at four, 0.77 at five, 0.58 at nine) instead of falling as 1.5 / n (0.375 at four, which left
+// a goal chime in a fold of four at 0.18, under the 0.2 floor).
+export const crowdLevel = (n) => (n <= 3 ? 1 : Math.max(0.2, Math.sqrt(3 / n)));
 // The big cues pull the music down for a moment so they are heard over it.
 const DUCKS = { win: [6, 700], lose: [6, 700], world: [6, 1100] };
 
