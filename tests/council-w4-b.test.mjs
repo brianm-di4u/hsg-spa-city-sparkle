@@ -216,11 +216,15 @@ function fakePad() {
 }
 const BTN = { a: 0, b: 1, start: 9, up: 12, down: 13, left: 14, right: 15 };
 const connect = (t) => t.page.evaluate(() => window.dispatchEvent(new Event('gamepadconnected')));
-// Holds one control for two frames (a press is acted on at the first poll, a repeat needs 380 ms), then lets go.
+// Holds one control until the game has answered it (the cursor, the pick, the scene, the phase or the focus changes; at most six frames), then lets go at once. A press is acted on at the
+// first poll and a held direction repeats after 380 ms, so the control must not stay down for a fixed number of frames: on a loaded machine two frames can be longer than that and the
+// stick repeated (the test then read the cursor one piece too far left).
 const press = (t, what) => t.page.evaluate(async ([w, i]) => {
   const frame = () => new Promise((r) => requestAnimationFrame(r)), p = window.__pad;
+  const look = () => { const s = window.__game.getState(), a = document.activeElement; return JSON.stringify([s.cursor, s.selected, s.scene, s.phase, s.movesUsed, a && (a.dataset.act || a.id || a.textContent.slice(0, 20))]); };
+  const before = look();
   if (w === 'stickL') p.axes[0] = -1; else if (w === 'stickD') p.axes[1] = 1; else p.buttons[i].pressed = true;
-  await frame(); await frame();
+  for (let n = 0; n < 6; n++) { await frame(); if (look() !== before) break; }
   p.axes[0] = 0; p.axes[1] = 0; if (i != null) p.buttons[i].pressed = false;
   await frame();
 }, [what, BTN[what] ?? null]);
