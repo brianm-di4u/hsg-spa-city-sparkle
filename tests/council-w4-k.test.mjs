@@ -127,3 +127,27 @@ tests.push({
     t.equal(await vibrationOf(t), false, 'an older save has it off');
   },
 });
+
+// --- K-03: Free Soak shows a running score, and Help says it is not saved -------------------------------------------------------------------
+const WORLD1 = Object.fromEntries(Array.from({ length: 10 }, (_, i) => ['w1-' + String(i + 1).padStart(2, '0'), { stars: 2, best: 1000 }]));
+tests.push({
+  name: 'K-03 Free Soak shows its running score and Help says that score is not saved, not that none is kept',
+  async run(t) {
+    await t.game('act', 'progress', WORLD1);
+    await t.game('scene', 'help', 'goals');
+    await t.waitIdle();
+    const help = await t.page.evaluate(() => document.getElementById('modal').innerText);
+    t.expect(/The running score is not saved/.test(help), 'Help says the running score is not saved');
+    t.expect(!/no score kept/.test(help), 'and no longer says no score is kept');
+    await t.shot('K-03-help-goals');
+    await t.game('scene', 'freesoak');
+    await t.waitIdle();
+    const legal = await t.game('act', 'legal');
+    await t.game('act', 'swap', ...legal[0]);
+    await t.waitIdle(8000);
+    const hud = await t.page.evaluate(() => { const el = document.getElementById('hud-score'), r = el.getBoundingClientRect(); return { text: el.textContent, shown: r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden' }; });
+    t.expect(hud.shown && /[1-9]/.test(hud.text), `the HUD shows a running score (${hud.text})`);
+    await t.shot('K-03-free-soak-hud');
+    t.equal(await rawOf(t) === null ? 0 : (await parsed(t)).soakBest, 0, 'and none of it is saved');
+  },
+});

@@ -148,7 +148,7 @@ tests.push({
     await t.game('scene', 'help', 'goals');
     await t.waitIdle();
     const r = await t.page.evaluate(() => { const m = document.getElementById('modal'); return { text: m.innerText, wide: m.scrollWidth > m.clientWidth + 1 }; });
-    t.expect(/Free Soak: an endless board with no goals, no move limit and no score kept/.test(r.text), 'Help names it');
+    t.expect(/Free Soak: an endless board with no goals and no move limit\. The running score is not saved\./.test(r.text), 'Help names it');
     t.expect(!r.wide, 'no sideways overflow');
   },
 });
