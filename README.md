@@ -36,6 +36,18 @@ Docs: `PRD.md` (requirements and acceptance criteria), `MECHANICS.md` (engine ru
 test matrix, defect log), `VISUAL-PLAN.md`, `TEST-CAMPAIGN.md`, `REPORT.md`, `VISUAL-REPORT.md`, `SAMPLES.md`, `art-src/PROMPTS.md`
 (art provenance), and `research/town-content.md` (every Hot Springs fact the game uses, with sources).
 
+## Paths outside this repo
+
+The game and its tests use files inside this repo, and the build uses the repo's own `shared/tools/inline.mjs` and `shared/test-harness/art-pack.mjs`. The tools below can also use shared material from the Hot
+Springs Games workspace (`reference/`, `research/`, or a sibling checkout in `repos/`). They find the workspace through the
+`HSG_WORKSPACE` environment variable; when it is unset, the workspace is this repo's grandparent, which is right when the
+repo sits at `<workspace>/repos/<repo>`. When the workspace copy is not there, each tool falls back to a path in this repo or
+skips that step with a message.
+
+- `tools/build-vendor.mjs` (part of `npm run build`): copies `research/match3-route.json` to `data/route.json`, else keeps the committed `data/route.json`.
+- `tools/check-facts.mjs`: the audited bank at `repos/hsg-trivia/data/questions.json`, else `research/lore-bank.json` here.
+- `tools/build-lore.mjs`: the same bank, else `research/lore-bank.json` here. `tools/build-route.mjs` reads `research/places.json` and writes `research/match3-route.json` in the workspace.
+
 ## Changes
 - **v1.1.0**: new paintings for the title screen and all six world backdrops, in portrait and landscape. They
   pack at WebP quality 0.6 (was 0.66) to stay inside the 6 MB asset budget.
