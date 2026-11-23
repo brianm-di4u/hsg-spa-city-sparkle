@@ -65,6 +65,13 @@ tests.push({
   initScript: () => {
     const old = Storage.prototype.setItem;
     Storage.prototype.setItem = function (k, v) { if (k === 'spa-city-sparkle:v1') throw Error('storage blocked for this test'); return old.call(this, k, v); };
+    // The toast lasts 4.2 s, which a slow renderer can spend before the first look: once it has shown, keep it up.
+    let shown = false;
+    new MutationObserver(() => {
+      const el = document.getElementById('toast');
+      if (!el) return;
+      if (el.classList.contains('show')) shown = true; else if (shown) el.classList.add('show');
+    }).observe(document, { subtree: true, attributes: true, attributeFilter: ['class'] });
   },
   async run(t) {
     await inLevel(t);
