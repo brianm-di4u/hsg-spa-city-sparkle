@@ -39,7 +39,7 @@ const items = [
 ];
 if (items.length && !process.argv.includes('--no-pack')) {
   fs.writeFileSync(path.join(src, 'art.json'), JSON.stringify({ quality: 0.8, items }, null, 1) + '\n');
-  const packer = [path.join(game, '..', '..', 'shared', 'test-harness', 'art-pack.mjs'), path.join(game, 'shared', 'test-harness', 'art-pack.mjs')].find((p) => fs.existsSync(p));
+  const packer = path.join(game, 'shared', 'test-harness', 'art-pack.mjs'); // the repo's own vendored packer
   execFileSync(process.execPath, [packer, game], { stdio: 'inherit' });
   // the packer writes into assets/; keep the WebP files as build inputs instead of shipping them twice
   fs.mkdirSync(packed, { recursive: true });

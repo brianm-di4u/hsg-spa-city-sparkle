@@ -2,6 +2,7 @@
 const KEY='spa-city-sparkle:v1';
 const saved=(p)=>p.evaluate((k)=>JSON.parse(localStorage.getItem(k)),KEY);
 const raw=(p)=>p.evaluate((k)=>localStorage.getItem(k),KEY);
+// Close the second tab before a screenshot: with two pages drawing, the CI software renderer can stall the capture.
 async function tab(t){const p=await t.page.context().newPage();await p.goto(t.page.url());await p.waitForFunction(()=>!!window.__game);return p;}
 async function game(t){await t.game('newGame',{level:'w1-01',seed:7,tips:false});await t.waitIdle();}
 export const tests=[
@@ -9,17 +10,17 @@ export const tests=[
  const b=await tab(t);await game(t);const legal=await t.game('act','legal');await t.game('act','swap',...legal[0]);await t.waitIdle(8000);const before=await saved(t.page),engine=await t.game('engineState');
  await b.locator('[data-act="settings"]').click();await b.locator('[data-toggle="sound"]').click();const after=await saved(b);
  t.equal(after.current,before.current,'opaque current preserved');t.equal(after.tutorialSeen,before.tutorialSeen,'tutorial flags preserved');t.equal(after.boosters,before.boosters,'wallet preserved');
- await t.reload();await t.waitIdle();await t.page.locator('[data-act="continue"]').click();await t.waitIdle();t.equal(await t.game('engineState'),engine,'real Continue restores exact state in labelled fixture');await t.shot('save-stale-preference-preserved');await b.close();
+ await t.reload();await t.waitIdle();await t.page.locator('[data-act="continue"]').click();await t.waitIdle();t.equal(await t.game('engineState'),engine,'real Continue restores exact state in labelled fixture');await b.close();await t.shot('save-stale-preference-preserved');
 }},
 {name:'known foreign slot rejects booster before any engine mutation even in test context',async run(t){
  await game(t);const b=await tab(t);await b.evaluate(()=>window.__game.newGame({level:'w1-02'}));const before=await t.game('engineState'),stored=await raw(b);
- const r=await t.game('act','booster','shuffle');t.equal(r.valid,false,'stale normal action refused');t.equal(await t.game('engineState'),before,'entire engine state unchanged');t.equal(await raw(t.page),stored,'foreign stored board unchanged');await t.shot('save-stale-booster-refused');await b.close();
+ const r=await t.game('act','booster','shuffle');t.equal(r.valid,false,'stale normal action refused');t.equal(await t.game('engineState'),before,'entire engine state unchanged');t.equal(await raw(t.page),stored,'foreign stored board unchanged');await b.close();await t.shot('save-stale-booster-refused');
 }},
 {name:'dependent forced fixture win and unpaid cost abandon together after foreign slot',async run(t){
  await game(t);await t.page.evaluate(()=>{const old=Storage.prototype.setItem;window.__restoreFixtureStorage=()=>{Storage.prototype.setItem=old;};Storage.prototype.setItem=function(k,v){if(k==='spa-city-sparkle:v1')throw Error('fixture blocked publication');return old.call(this,k,v);};});
  await t.game('act','booster','shuffle');await t.waitIdle(8000);const b=await tab(t);await b.evaluate(()=>window.__game.newGame({level:'w1-02'}));const foreign=await raw(b);await t.page.evaluate(()=>window.__restoreFixtureStorage());
  await t.game('scene','win','w1-01');await t.waitIdle();t.equal(await raw(t.page),foreign,'no dependent win or cost publishes over foreign slot');
- await t.game('newGame',{level:'w1-01'});await t.game('newGame',{level:'w1-01'});const after=await saved(t.page);t.equal(after.progress,{},'unpublished dependent reward discarded too');t.equal(after.boosters.shuffle,1,'unpublished debit not charged alone');await t.shot('save-dependent-pair-abandoned');await b.close();
+ await t.game('newGame',{level:'w1-01'});await t.game('newGame',{level:'w1-01'});const after=await saved(t.page);t.equal(after.progress,{},'unpublished dependent reward discarded too');t.equal(after.boosters.shuffle,1,'unpublished debit not charged alone');await b.close();await t.shot('save-dependent-pair-abandoned');
 }},
 {name:'failed Sound write plus real Volume input retains explicit pending settings and effects',async run(t){
  await t.waitIdle();await t.page.locator('[data-act="settings"]').click();await t.page.evaluate(()=>{const old=Storage.prototype.setItem;let fail=true;Storage.prototype.setItem=function(k,v){if(k==='spa-city-sparkle:v1'&&fail){fail=false;throw Error('fixture failed Sound');}return old.call(this,k,v);};});

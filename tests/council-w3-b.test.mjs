@@ -187,7 +187,7 @@ tests.push({
 });
 
 // --- S1-03: a piece follows the finger, and the slide carries on from where it was pulled to -----------------------------
-// Pointer input is real: the mouse on a desktop, CDP touch on the phone. The finger is held (holdEndMs) while the state is read.
+// Pointer input is real: the mouse on a desktop, CDP touch on the phone. The finger is held while the state is read.
 async function board(t) {
   await t.game('newGame', { level: 'w1-01', seed: 3, tips: false });
   await t.waitIdle();
@@ -197,12 +197,18 @@ async function board(t) {
   const at = (i, fx = 0, fy = 0) => [rect.x + L.bx + ((i % s.board.w) + 0.5 + fx) * L.cell, rect.y + L.by + (((i / s.board.w) | 0) + 0.5 + fy) * L.cell];
   return { s, L, at, rect };
 }
-async function pull(t, from, to, holdMs, during) {
-  const run = t.viewport === 'mobile'
-    ? t.touchDrag(from, to, { steps: 6, holdEndMs: holdMs })
-    : (async () => { await t.page.mouse.move(...from); await t.page.mouse.down(); await t.page.mouse.move(...to, { steps: 6 }); await t.page.waitForTimeout(holdMs); await t.page.mouse.up(); })();
-  await during();
-  await run;
+// Presses at from, moves to to, and holds until during() has read the state, however long that takes, then lets go.
+async function pull(t, from, to, during) {
+  if (t.viewport !== 'mobile') {
+    await t.page.mouse.move(...from); await t.page.mouse.down(); await t.page.mouse.move(...to, { steps: 6 });
+    try { await during(); } finally { await t.page.mouse.up(); }
+    return;
+  }
+  const cdp = await t.page.context().newCDPSession(t.page);
+  const touch = (type, pts) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map(([x, y]) => ({ x, y, id: 1, radiusX: 4, radiusY: 4, force: 1 })) });
+  await touch('touchStart', [from]);
+  for (let i = 1; i <= 6; i++) await touch('touchMove', [[from[0] + (to[0] - from[0]) * i / 6, from[1] + (to[1] - from[1]) * i / 6]]);
+  try { await during(); } finally { await touch('touchEnd', []); await cdp.detach(); }
 }
 const waitDrag = (t, pred) => t.page.waitForFunction(`(${pred})(window.__game.getState().drag)`, null, { timeout: 5000 });
 tests.push({
@@ -216,7 +222,7 @@ tests.push({
     const rest = await t.game('act', 'sprite', id), restJ = await t.game('act', 'sprite', idj);
     const dist = L.cell * 0.18; // short of the 0.3 cell that makes the swap
     let seen;
-    await pull(t, at(i), [at(i)[0] + dist, at(i)[1] + 1], 1200, async () => {
+    await pull(t, at(i), [at(i)[0] + dist, at(i)[1] + 1], async () => {
       await waitDrag(t, `(d) => d && !d.released && d.dx > ${dist * 0.97}`);
       await t.page.waitForFunction(({ id, x, dist }) => { const p = window.__game.act('sprite', id); return p && p.x > x + dist * 0.9; }, { id, x: rest.x, dist }, { timeout: 5000 });
       seen = { drag: (await t.state()).drag, a: await t.game('act', 'sprite', id), b: await t.game('act', 'sprite', idj) };
@@ -242,7 +248,7 @@ tests.push({
     const i = s.board.cells.findIndex((c, k) => c && k % s.board.w === 0); // on the left edge, so a pull to the left has no neighbour
     t.expect(i >= 0, 'there is a cell on the left edge');
     let seen;
-    await pull(t, at(i), [at(i)[0] - L.cell * 0.25, at(i)[1] + 1], 800, async () => {
+    await pull(t, at(i), [at(i)[0] - L.cell * 0.25, at(i)[1] + 1], async () => {
       await waitDrag(t, (d) => d && d.dx < 0);
       seen = (await t.state()).drag;
     });

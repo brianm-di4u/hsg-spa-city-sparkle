@@ -21,7 +21,9 @@ if (fs.existsSync(pixiPkg)) {
 } else if (!fs.existsSync(path.join(game, 'vendor', 'pixi.min.js'))) {
   throw new Error('vendor/pixi.min.js missing and tools/dev not installed');
 }
-// The route lives in the shared corpus in the monorepo; a standalone game repo keeps the copied file.
-for (const p of [path.join(game, '..', '..', 'research', 'match3-route.json'), path.join(game, 'research', 'match3-route.json')]) {
+// The route lives in the shared corpus, <workspace>/research/ ($HSG_WORKSPACE, else this repo's grandparent); a repo-local
+// research/match3-route.json is next; with neither, the committed data/route.json is kept.
+const workspace = process.env.HSG_WORKSPACE || path.resolve(game, '..', '..');
+for (const p of [path.join(workspace, 'research', 'match3-route.json'), path.join(game, 'research', 'match3-route.json')]) {
   if (fs.existsSync(p)) { fs.copyFileSync(p, path.join(game, 'data', 'route.json')); console.log('data: route.json from', path.relative(game, p)); break; }
 }

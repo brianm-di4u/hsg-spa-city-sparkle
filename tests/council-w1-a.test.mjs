@@ -64,7 +64,7 @@ tests.push(
       await t.page.waitForTimeout(1000);
       t.expect((await oscCount(t)) > 0, 'music is playing in the visible tab');
       await setHidden(t, true);
-      await t.page.waitForTimeout(600);
+      await t.page.waitForFunction(() => window.__ctxs[0].state === 'suspended', null, { timeout: 5000 }).catch(() => {});
       t.equal(await t.page.evaluate(() => window.__ctxs[0].state), 'suspended', 'context suspended while hidden');
       const before = await oscCount(t);
       await t.page.waitForTimeout(1500);
@@ -74,7 +74,7 @@ tests.push(
       await t.page.waitForTimeout(1200);
       t.expect((await oscCount(t)) > before, 'music plays again after returning');
       await t.page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
-      await t.page.waitForTimeout(600);
+      await t.page.waitForFunction(() => window.__ctxs[0].state === 'suspended', null, { timeout: 5000 }).catch(() => {});
       t.equal(await t.page.evaluate(() => window.__ctxs[0].state), 'suspended', 'pagehide suspends too');
     },
   },
