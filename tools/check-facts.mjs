@@ -11,7 +11,10 @@ import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 export function checkFacts() {
   const lore = JSON.parse(fs.readFileSync(path.join(here, '..', 'data', 'lore.json'), 'utf8'));
-  const bankPath = [path.join(here, '..', '..', 'hsg-trivia', 'data', 'questions.json'), path.join(here, '..', 'research', 'lore-bank.json')].find((p) => fs.existsSync(p));
+  // The audited bank in the sibling checkout <workspace>/repos/hsg-trivia/ ($HSG_WORKSPACE, else this repo's grandparent),
+  // else the snapshot this repo carries.
+  const workspace = process.env.HSG_WORKSPACE || path.resolve(here, '..', '..', '..');
+  const bankPath = [path.join(workspace, 'repos', 'hsg-trivia', 'data', 'questions.json'), path.join(here, '..', 'research', 'lore-bank.json')].find((p) => fs.existsSync(p));
   if (!bankPath) return { skipped: true, problems: [], count: lore.length };
   const raw = JSON.parse(fs.readFileSync(bankPath, 'utf8'));
   const bank = raw.questions || raw;

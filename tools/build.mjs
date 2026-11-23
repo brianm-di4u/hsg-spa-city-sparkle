@@ -12,8 +12,8 @@ run('tools/build-vendor.mjs');
 run('tools/build-fonts.mjs');
 run('tools/build-levels.mjs');
 if (fs.existsSync(path.join(game, 'tools', 'build-art.mjs')) && !process.argv.includes('--skip-art')) run('tools/build-art.mjs');
-// the shared inliner: the monorepo copy, or the game repo's own shared/ copy
-const inliner = [path.join(game, '..', '..', 'shared', 'tools', 'inline.mjs'), path.join(game, 'shared', 'tools', 'inline.mjs')].find((p) => fs.existsSync(p));
+// the repo's own vendored inliner (shared/tools/), never a copy outside the repo
+const inliner = path.join(game, 'shared', 'tools', 'inline.mjs');
 execFileSync(process.execPath, [inliner, game], { stdio: 'inherit' });
 const kb = fs.statSync(path.join(game, 'index.html')).size / 1024;
 console.log(`index.html ${kb.toFixed(0)} KB`);

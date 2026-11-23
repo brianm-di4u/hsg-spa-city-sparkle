@@ -7,7 +7,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(HERE, '..', '..', '..');
+// The shared corpus is <workspace>/research/; the workspace is $HSG_WORKSPACE, else this repo's grandparent.
+const ROOT = process.env.HSG_WORKSPACE || path.resolve(HERE, '..', '..', '..');
 const places = JSON.parse(fs.readFileSync(path.join(ROOT, 'research', 'places.json'), 'utf8')).places;
 const P = new Map(places.map((p) => [p.id, p]));
 

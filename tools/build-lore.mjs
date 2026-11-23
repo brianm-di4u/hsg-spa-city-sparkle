@@ -11,9 +11,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(HERE, '..', '..', '..');
-// The monorepo's bank when it is there; otherwise the snapshot this repo carries (research/lore-bank.json), so the tool runs in the standalone repo.
-const bankPath = [path.join(ROOT, 'games', 'trivia', 'data', 'questions.json'), path.join(HERE, '..', 'research', 'lore-bank.json')].find((p) => fs.existsSync(p));
+// The workspace: $HSG_WORKSPACE, else this repo's grandparent (the workspace root when the repo sits in <workspace>/repos/).
+const WORKSPACE = process.env.HSG_WORKSPACE || path.resolve(HERE, '..', '..', '..');
+// The audited bank in the sibling checkout <workspace>/repos/hsg-trivia/ when it is there; otherwise the snapshot this repo
+// carries (research/lore-bank.json), so the tool runs in a standalone clone.
+const bankPath = [path.join(WORKSPACE, 'repos', 'hsg-trivia', 'data', 'questions.json'), path.join(HERE, '..', 'research', 'lore-bank.json')].find((p) => fs.existsSync(p));
 const bank = JSON.parse(fs.readFileSync(bankPath, 'utf8'));
 const byId = new Map(bank.questions.map((q) => [q.id, q]));
 // Same filter as games/mahjong/tools/extract-facts.mjs (research/00-INDEX.md content rules).
