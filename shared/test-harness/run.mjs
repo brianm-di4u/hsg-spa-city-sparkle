@@ -401,7 +401,7 @@ export async function runSuite({ gameDir, testDir, milestone = 'latest', viewpor
       });
       const page = await context.newPage();
       // On CI the software renderer can need more than Playwright's 30 s default for a screenshot or a wait.
-      if (process.env.CI) page.setDefaultTimeout(90000);
+      if (process.env.CI) context.setDefaultTimeout(90000); // the context, so pages a test opens itself get it too
       page.on('console', (m) => { if (m.type() === 'error') results.consoleErrors.push(m.text()); });
       page.on('pageerror', (e) => results.consoleErrors.push('pageerror: ' + e.message));
 
