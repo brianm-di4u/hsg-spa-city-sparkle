@@ -201,7 +201,9 @@ async function pull(t, from, to, holdMs, during) {
   const run = t.viewport === 'mobile'
     ? t.touchDrag(from, to, { steps: 6, holdEndMs: holdMs })
     : (async () => { await t.page.mouse.move(...from); await t.page.mouse.down(); await t.page.mouse.move(...to, { steps: 6 }); await t.page.waitForTimeout(holdMs); await t.page.mouse.up(); })();
-  await during();
+  // If the check fails while the finger is still down, let the drag settle before the page closes, so it cannot
+  // reject later as an unhandled error that stops the whole run.
+  try { await during(); } catch (e) { await run.catch(() => {}); throw e; }
   await run;
 }
 const waitDrag = (t, pred) => t.page.waitForFunction(`(${pred})(window.__game.getState().drag)`, null, { timeout: 5000 });

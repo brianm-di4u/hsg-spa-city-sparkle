@@ -10,5 +10,17 @@
   {
     "test": "S5-06 a first three-star win marks the new booster with the earned cue",
     "why": "waits a fixed 15 s for the win ribbon, which the software renderer misses"
+  },
+  {
+    "test": "S5-05 hiding the tab suspends audio and stops the music tick",
+    "why": "headless Chromium on the runner keeps the audio context running when the tab is hidden"
+  },
+  {
+    "test": "S5-01 the Pause card and a hidden tab fade music and ambience out",
+    "why": "waits 5 s for the audio fade, which the runner misses; same hidden-tab audio as S5-05"
+  },
+  {
+    "test": "S1-03 a pull toward the edge or a hole only gives a little",
+    "why": "holds the finger down for a fixed 800 ms while the state is read, a window the runner misses"
   }
 ]
