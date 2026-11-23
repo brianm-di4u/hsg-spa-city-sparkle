@@ -19,13 +19,13 @@ concurrency:
 jobs:
   suite:
     # The suite is split across runners (HSG_SHARD) so the longest one finishes well inside the time limit.
-    name: suite ${{ matrix.shard }}/3
+    name: suite ${{ matrix.shard }}/5
     runs-on: windows-latest
     timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2, 3, 4, 5]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -41,7 +41,7 @@ jobs:
       - name: Test
         run: npm test -- --no-gallery --milestone ci
         env:
-          HSG_SHARD: ${{ matrix.shard }}/3
+          HSG_SHARD: ${{ matrix.shard }}/5
       - name: Upload screenshots and report
         if: failure()
         uses: actions/upload-artifact@v4

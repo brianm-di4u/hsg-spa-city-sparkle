@@ -400,6 +400,8 @@ export async function runSuite({ gameDir, testDir, milestone = 'latest', viewpor
         return route.abort();
       });
       const page = await context.newPage();
+      // On CI the software renderer can need more than Playwright's 30 s default for a screenshot or a wait.
+      if (process.env.CI) page.setDefaultTimeout(90000);
       page.on('console', (m) => { if (m.type() === 'error') results.consoleErrors.push(m.text()); });
       page.on('pageerror', (e) => results.consoleErrors.push('pageerror: ' + e.message));
 
@@ -415,7 +417,12 @@ export async function runSuite({ gameDir, testDir, milestone = 'latest', viewpor
         : `${origin}/${relGame ? relGame + '/' : ''}${rel}`; // a game at the repo root has relGame '' ("//assets" would parse as a host)
       const started = Date.now();
       try {
-        await page.goto(url, { waitUntil: 'load' });
+        // Windows runners now and then refuse a local socket (ERR_NO_BUFFER_SPACE); one retry gets past it.
+        await page.goto(url, { waitUntil: 'load' }).catch(async (e) => {
+          if (!/ERR_NO_BUFFER_SPACE/.test(String(e))) throw e;
+          await new Promise((r) => setTimeout(r, 2000));
+          await page.goto(url, { waitUntil: 'load' });
+        });
         await page.waitForFunction(() => !!window.__game, null, { timeout: 10000 }).catch(() => t.fail('window.__game test hooks never appeared'));
         t.loadMs = Date.now() - started;
         await test.run(t);

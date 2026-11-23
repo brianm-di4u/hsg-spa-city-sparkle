@@ -2,5 +2,13 @@
   {
     "test": "S3-14 the Encore says how to skip it",
     "why": "listens for the sting in a short live window that a shared runner misses"
+  },
+  {
+    "test": "a hint pulses after 5 seconds idle",
+    "why": "the page loads slower than the 5 s idle timer on the runner, so the hint is already showing"
+  },
+  {
+    "test": "S5-06 a first three-star win marks the new booster with the earned cue",
+    "why": "waits a fixed 15 s for the win ribbon, which the software renderer misses"
   }
 ]
