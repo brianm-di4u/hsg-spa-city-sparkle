@@ -19,7 +19,9 @@ export const tests = [];
 
 // A tap on a phone, a mouse click on a desktop: the pointer input a player has.
 async function press(t, selector) {
-  if (t.viewport === 'mobile') { const b = await t.page.locator(selector).boundingBox(); await t.tap([b.x + b.width / 2, b.y + b.height / 2]); } else await t.page.locator(selector).click();
+  // A card rises into place as it opens (main.css .modal.enter .card, 0.32 s): measure the button once it has stopped, or the tap lands
+  // where it was (28 px lower for Resume) and misses it. A mouse click waits for that itself (Playwright's stability check).
+  if (t.viewport === 'mobile') { await t.waitForAnimations(); const b = await t.page.locator(selector).boundingBox(); await t.tap([b.x + b.width / 2, b.y + b.height / 2]); } else await t.page.locator(selector).click();
 }
 const active = (t) => t.page.evaluate(() => { const a = document.activeElement; return a ? (a.id || a.className || a.tagName) : null; });
 async function inLevel(t) { await t.game('newGame', { level: 'w1-01', seed: 3, tips: false }); await t.waitIdle(); }
