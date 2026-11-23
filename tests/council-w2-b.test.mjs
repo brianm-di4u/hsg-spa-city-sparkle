@@ -162,8 +162,12 @@ tests.push(
       t.expect(!(await sounds(t)).includes('goal'), 'one tufa layer of six is progress, not a goal');
       await setup(t, BOARD, { moves: 10, goals: [{ type: 'stone', need: 1 }] });
       await t.game('act', 'swap', [1, 1], [1, 0]);
-      await t.waitIdle(8000);
-      const s = await sounds(t);
+      // The move wins the level. Read the sounds as its Encore is announced: the Encore's own cues push this move's out of the last-20 list.
+      const s = await t.page.evaluate(() => new Promise((done) => {
+        const end = performance.now() + 30000;
+        const look = () => { const l = window.__game.getState().sounds; if (l.includes('encore') || performance.now() > end) done(l); else requestAnimationFrame(look); };
+        look();
+      }));
       t.expect(s.includes('goal'), `the goal cue played (${s.join(',')})`);
       t.equal(s.filter((x) => x === 'goal').length, 1, 'once');
     },

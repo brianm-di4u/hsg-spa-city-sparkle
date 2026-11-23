@@ -4,10 +4,13 @@ const BASE5 = ['a b c d e', 'c d e a b', 'e a b c d', 'b c d e a', 'd e a b c'];
 const edit = (rows, edits) => { const g = rows.map((r) => r.split(' ')); for (const [x, y, v] of edits) g[y][x] = v; return g.map((r) => r.join(' ')); };
 
 async function frozenAt(t, name, type, n, frac = 0) {
-  const total = await t.game('act', 'replay');
-  let ms = await t.game('act', 'beatAt', type, n);
-  if (ms == null) { t.fail(`${name}: no ${type} beat`); ms = total / 2; }
-  await t.game('act', 'clock', ms + frac);
+  // One call, so the replay cannot run to its end between starting it and freezing the clock (a slow renderer's frames can take seconds).
+  const found = await t.page.evaluate(([type, n, frac]) => {
+    const g = window.__game, total = g.act('replay'), ms = g.act('beatAt', type, n);
+    g.act('clock', ms == null ? total / 2 : ms + frac);
+    return ms != null;
+  }, [type, n, frac]);
+  if (!found) t.fail(`${name}: no ${type} beat`);
   await t.waitFrames(3);
   await t.shot(name, { wait: false });
   await t.game('act', 'clock', null);
